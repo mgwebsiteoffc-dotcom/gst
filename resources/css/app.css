@@ -1,0 +1,18 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/* Tailwind 4 scans Blade templates for class names. */
+@source "../views/**/*.blade.php";
+
+@theme {
+    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Print styles so the in-app invoice view matches the PDF closely. */
+@media print {
+    aside, form, .no-print { display: none !important; }
+    main { padding: 0 !important; }
+}
+
+/* Prevent Alpine-managed elements flashing before hydration. */
+[x-cloak] { display: none !important; }

@@ -1,0 +1,53 @@
+{
+    "name": "bikribook/saas",
+    "type": "project",
+    "description": "GST Billing & Inventory SaaS (Sleek Bill style) with e-Invoice, e-Way Bill and Shopify integration.",
+    "keywords": ["laravel", "gst", "invoicing", "saas", "shopify", "e-invoice"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10",
+        "laravel/sanctum": "^4.0",
+        "laravel/cashier": "^15.6",
+        "livewire/livewire": "^3.5",
+        "spatie/laravel-permission": "^6.9",
+        "spatie/laravel-activitylog": "^4.9",
+        "barryvdh/laravel-dompdf": "^3.0",
+        "maatwebsite/excel": "^3.1",
+        "guzzlehttp/guzzle": "^7.9",
+        "simplesoftwareio/simple-qrcode": "^4.2",
+        "predis/predis": "^2.2",
+        "razorpay/razorpay": "^2.9"
+    },
+    "require-dev": {
+        "fakerphp/faker": "^1.23",
+        "laravel/pint": "^1.18",
+        "laravel/sail": "^1.35",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.5",
+        "pestphp/pest": "^3.5",
+        "pestphp/pest-plugin-laravel": "^3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": { "psr-4": { "Tests\\": "tests/" } },
+    "scripts": {
+        "post-autoload-dump": ["@php artisan package:discover --ansi"],
+        "setup": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
+            "@php artisan key:generate --ansi",
+            "@php artisan migrate --seed",
+            "@php artisan storage:link"
+        ],
+        "test": ["@php artisan test"]
+    },
+    "config": { "optimize-autoloader": true, "sort-packages": true, "allow-plugins": { "pestphp/pest-plugin": true, "php-http/discovery": true } },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}
