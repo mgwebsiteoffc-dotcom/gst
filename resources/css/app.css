@@ -1,11 +1,101 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 
 /* Tailwind 4 scans Blade templates for class names. */
 @source "../views/**/*.blade.php";
 
 @theme {
-    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+    /* One accent colour, referenced everywhere. */
+    --color-brand-50:  oklch(0.962 0.018 272.3);
+    --color-brand-100: oklch(0.930 0.034 272.8);
+    --color-brand-500: oklch(0.585 0.233 277.1);
+    --color-brand-600: oklch(0.511 0.262 276.9);
+    --color-brand-700: oklch(0.457 0.240 277.0);
+}
+
+/* ---------------------------------------------------------------
+   Form controls
+   The forms plugin resets browser styling; these rules give every
+   control the same height, padding, radius and focus ring so a page
+   never looks half-finished no matter which element is used.
+   --------------------------------------------------------------- */
+/* Deliberately unlayered: must override @tailwindcss/forms' base reset. */
+input:not([type]), input[type="text"], input[type="email"], input[type="url"], input[type="password"],
+input[type="number"], input[type="date"], input[type="datetime-local"], input[type="month"],
+input[type="search"], input[type="tel"], input[type="time"], input[type="week"],
+select, textarea {
+    @apply block w-full border border-slate-300 bg-white
+           px-3 py-2 text-sm text-slate-900
+           transition duration-100
+           placeholder:text-slate-400;
+
+    /* Plain CSS: the forms plugin resets border-radius and outline, and a
+       utility class does not reliably win against its base rule. */
+    border-radius: 0.5rem;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+}
+
+input:focus, select:focus, textarea:focus,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+    outline: none;
+    border-color: var(--color-indigo-500);
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-indigo-500) 18%, transparent);
+}
+
+input:disabled, select:disabled, textarea:disabled {
+    @apply cursor-not-allowed bg-slate-50 text-slate-500;
+}
+
+/* Native pickers need a little more room than a plain text field. */
+input[type="date"], input[type="datetime-local"], input[type="time"] {
+    min-height: 2.375rem;
+}
+
+select {
+    @apply pr-9;
+}
+
+textarea {
+    @apply min-h-[4.5rem] leading-relaxed;
+}
+
+input[type="checkbox"], input[type="radio"] {
+    @apply h-4 w-4 shrink-0 border-slate-300 text-indigo-600 transition;
+    box-shadow: none;
+}
+
+input[type="checkbox"]:focus, input[type="radio"]:focus {
+    box-shadow: 0 0 0 3px color-mix(in oklch, var(--color-indigo-500) 25%, transparent);
+}
+
+input[type="checkbox"] { border-radius: 0.25rem; }
+input[type="radio"] { border-radius: 9999px; }
+
+input[type="file"] {
+    @apply block w-full text-sm text-slate-600
+           file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100
+           file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700
+           hover:file:bg-slate-200;
+}
+
+input[type="color"] {
+    @apply h-[2.375rem] w-14 cursor-pointer border border-slate-300 p-1;
+    border-radius: 0.5rem;
+}
+
+label { @apply text-slate-700; }
+
+/* Strip the spinner from number inputs — money fields don't need it. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+/* Right-align and tabular-space anything showing money. */
+@utility money {
+    @apply text-right font-medium tabular-nums;
 }
 
 /* Print styles so the in-app invoice view matches the PDF closely. */
