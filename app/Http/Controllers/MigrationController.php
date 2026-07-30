@@ -27,6 +27,7 @@ class MigrationController extends Controller
     {
         $tenant = TenantContext::get();
         $history = ImportJob::where('tenant_id', $tenant->id)
+            ->with('user')
             ->orderByDesc('created_at')
             ->limit(25)
             ->get();
@@ -164,6 +165,7 @@ class MigrationController extends Controller
     public function show(ImportJob $job)
     {
         $this->authorizeJob($job);
+        $job->load('user');
 
         return view('migration.show', [
             'job' => $job,

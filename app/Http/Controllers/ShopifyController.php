@@ -6,6 +6,7 @@ use App\Jobs\ImportShopifyOrder;
 use App\Jobs\ImportShopifyRefund;
 use App\Models\ShopifyStore;
 use App\Services\Shopify\ShopifyOAuthService;
+use App\Services\Shopify\ShopifyOrderSync;
 use App\Services\Shopify\ShopifyProductSync;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
@@ -18,7 +19,7 @@ class ShopifyController extends Controller
     public function index()
     {
         return view('shopify.index', [
-            'stores' => ShopifyStore::with('logs')->get(),
+            'stores' => ShopifyStore::with(['logs' => fn ($q) => $q->latest()->limit(15)])->get(),
             'tenant' => \App\Support\TenantContext::get(),
         ]);
     }
@@ -48,6 +49,27 @@ class ShopifyController extends Controller
         $count = $sync->sync($store);
 
         return back()->with('success', "$count products/variants synced.");
+    }
+
+    public function syncOrders(ShopifyStore $store, ShopifyOrderSync $sync, Request $request)
+    {
+        // Allow specifying a "since" date, or default to last 30 days
+        $since = $request->input('since', now()->subDays(30)->toIso8601String());
+
+        $stats = $sync->sync($store, $since);
+        $created = $stats['created'];
+        $skipped = $stats['skipped'];
+        $failed = $stats['failed'];
+        $total = $created + $skipped + $failed;
+
+        $message = "Order sync complete: {$total} orders fetched";
+        if ($created > 0) $message .= ", {$created} invoices created";
+        if ($skipped > 0) $message .= ", {$skipped} already existed";
+        if ($failed > 0) $message .= ", {$failed} failed";
+
+        $flash = $failed > 0 ? 'error' : 'success';
+
+        return back()->with($flash, $message . '.');
     }
 
     public function updateSettings(Request $request, ShopifyStore $store)

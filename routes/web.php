@@ -128,6 +128,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             Route::post('install', [ShopifyController::class, 'install'])->name('install');
             Route::get('callback', [ShopifyController::class, 'callback'])->name('callback');
             Route::post('{store}/sync-products', [ShopifyController::class, 'syncProducts'])->name('sync');
+            Route::post('{store}/sync-orders', [ShopifyController::class, 'syncOrders'])->name('sync-orders');
             Route::put('{store}/settings', [ShopifyController::class, 'updateSettings'])->name('settings');
         });
     });
