@@ -20,6 +20,7 @@ use App\Http\Controllers\EinvoiceController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShopifyController;
 use Illuminate\Support\Facades\Route;
@@ -139,6 +140,16 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('settings/nic/test', [SettingsController::class, 'testNic'])->name('settings.nic.test');
 
     Route::view('billing/plans', 'billing.plans')->name('billing.plans');
+
+    // Migration / Import
+    Route::get('migration', [MigrationController::class, 'index'])->name('migration.index');
+    Route::post('migration/upload', [MigrationController::class, 'upload'])->name('migration.upload');
+    Route::get('migration/{job}', [MigrationController::class, 'show'])->name('migration.show');
+    Route::get('migration/{job}/review', [MigrationController::class, 'review'])->name('migration.review');
+    Route::put('migration/{job}/mapping', [MigrationController::class, 'updateMapping'])->name('migration.mapping');
+    Route::post('migration/{job}/execute', [MigrationController::class, 'execute'])->name('migration.execute');
+    Route::get('migration/{job}/progress', [MigrationController::class, 'progress'])->name('migration.progress');
+    Route::delete('migration/{job}', [MigrationController::class, 'destroy'])->name('migration.destroy');
     });
 });
 

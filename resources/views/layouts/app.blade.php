@@ -44,6 +44,7 @@
         ],
         'Setup' => [
             ['settings.index', 'Settings', []],
+            ['migration.index', 'Data Migration', []],
             ['shopify.index', 'Shopify', []],
         ],
     ]);
