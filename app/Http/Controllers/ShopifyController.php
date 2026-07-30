@@ -72,6 +72,31 @@ class ShopifyController extends Controller
         return back()->with($flash, $message . '.');
     }
 
+    /**
+     * Disconnect the Shopify store. Clears the access token, sets status to
+     * 'disconnected', and optionally removes all sync logs.
+     */
+    public function disconnect(ShopifyStore $store, Request $request)
+    {
+        $keepLogs = (bool) $request->input('keep_logs', false);
+
+        // Null the token and mark disconnected
+        $store->update([
+            'access_token' => null,
+            'status' => 'disconnected',
+            'auto_create_invoice' => false,
+            'sync_products' => false,
+        ]);
+
+        // Optionally wipe sync history
+        if (! $keepLogs) {
+            $store->logs()->delete();
+        }
+
+        return redirect()->route('shopify.index')
+            ->with('success', "Disconnected {$store->shop_domain}. You can reconnect anytime.");
+    }
+
     public function updateSettings(Request $request, ShopifyStore $store)
     {
         $store->update($request->validate([

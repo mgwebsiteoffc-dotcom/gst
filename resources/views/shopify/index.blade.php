@@ -105,6 +105,47 @@
                         </x-btn>
                     </div>
                 </form>
+
+                {{-- Disconnect --}}
+                <div class="mt-6 border-t border-slate-200 pt-4">
+                    <div x-data="{ confirm: false }">
+                        <button @click="confirm = true"
+                                class="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-medium text-rose-600 transition hover:bg-rose-50">
+                            <svg class="h-3.5 w-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 10.5V6.75a4.5 4.5 0 1 1 9 0v3.75M3.75 21.75h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H3.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                            Disconnect store
+                        </button>
+
+                        <div x-show="confirm" x-cloak x-transition
+                             class="mt-3 rounded-lg border border-rose-200 bg-rose-50 p-4">
+                            <p class="text-sm font-medium text-rose-800">
+                                Are you sure you want to disconnect {{ $store->shop_domain }}?
+                            </p>
+                            <p class="mt-1 text-xs text-rose-700">
+                                This will revoke our access to your Shopify store. Existing invoices will not be deleted.
+                                Webhook events and auto-sync will stop immediately. You can reconnect anytime.
+                            </p>
+
+                            <div class="mt-3 flex items-center gap-3">
+                                <form method="POST" action="{{ route('shopify.disconnect', $store) }}">
+                                    @csrf
+                                    <label class="mb-2 flex items-center gap-2 text-xs text-rose-700">
+                                        <input type="checkbox" name="keep_logs" value="1"
+                                               class="rounded border-rose-300 text-rose-600">
+                                        Keep sync history (logs)
+                                    </label>
+                                    <div class="flex gap-2">
+                                        <x-btn variant="danger" type="submit">
+                                            Yes, disconnect
+                                        </x-btn>
+                                        <x-btn variant="secondary" @click="confirm = false" type="button">
+                                            Cancel
+                                        </x-btn>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </x-card>
 
             <x-card title="Sync activity">

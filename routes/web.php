@@ -103,6 +103,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('document/{document}/convert/{target}', [DocumentController::class, 'convert'])->name('documents.convert');
         Route::post('document/{document}/payment', [DocumentController::class, 'payment'])->name('documents.payment');
         Route::post('document/{document}/cancel', [DocumentController::class, 'cancel'])->name('documents.cancel');
+        Route::post('document/{document}/whatsapp', [DocumentController::class, 'sendWhatsApp'])->name('documents.whatsapp');
+        Route::post('document/{document}/reminder', [DocumentController::class, 'sendReminder'])->name('documents.reminder');
 
         // e-Invoice / e-Way bill
         Route::middleware('subscribed:einvoice')->group(function () {
@@ -129,6 +131,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             Route::get('callback', [ShopifyController::class, 'callback'])->name('callback');
             Route::post('{store}/sync-products', [ShopifyController::class, 'syncProducts'])->name('sync');
             Route::post('{store}/sync-orders', [ShopifyController::class, 'syncOrders'])->name('sync-orders');
+            Route::post('{store}/disconnect', [ShopifyController::class, 'disconnect'])->name('disconnect');
             Route::put('{store}/settings', [ShopifyController::class, 'updateSettings'])->name('settings');
         });
     });
@@ -139,6 +142,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::put('settings/tax-mode', [SettingsController::class, 'taxMode'])->name('settings.tax-mode');
     Route::put('settings/nic', [SettingsController::class, 'nic'])->name('settings.nic');
     Route::post('settings/nic/test', [SettingsController::class, 'testNic'])->name('settings.nic.test');
+    Route::put('settings/whatsapp', [SettingsController::class, 'whatsapp'])->name('settings.whatsapp');
+    Route::post('settings/whatsapp/test', [SettingsController::class, 'testWhatsApp'])->name('settings.whatsapp.test');
 
     Route::view('billing/plans', 'billing.plans')->name('billing.plans');
 

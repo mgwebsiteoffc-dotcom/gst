@@ -8,6 +8,7 @@ use App\Models\Item;
 use App\Models\Party;
 use App\Services\Gst\DocumentService;
 use App\Services\Share\ShareService;
+use App\Services\WhatsApp\WhatsAppService;
 use App\Support\Gstin;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -153,5 +154,60 @@ class DocumentController extends Controller
         $this->service->cancel($document, $request->get('reason'));
 
         return back()->with('success', 'Document cancelled.');
+    }
+
+    /**
+     * Send the document via WhatsApp Business API.
+     */
+    public function sendWhatsApp(Request $request, Document $document, WhatsAppService $whatsapp)
+    {
+        $request->validate([
+            'phone' => ['nullable', 'string', 'max:20'],
+            'message' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        if (! $whatsapp->isConfigured()) {
+            return back()->with('error', 'WhatsApp is not configured. Go to Settings → WhatsApp to set it up.');
+        }
+
+        $phone = $request->input('phone') ?: $document->party?->phone;
+
+        if (! $phone) {
+            return back()->with('error', 'No phone number available. Add a phone number to the customer first.');
+        }
+
+        try {
+            $message = $whatsapp->sendDocument(
+                $document,
+                $phone,
+                $request->input('message')
+            );
+
+            return back()->with('success', "WhatsApp message sent to {$message->to}. Message ID: {$message->whatsapp_message_id}");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'WhatsApp send failed: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Send a payment reminder via WhatsApp.
+     */
+    public function sendReminder(Request $request, Document $document, WhatsAppService $whatsapp)
+    {
+        if (! $whatsapp->isConfigured()) {
+            return back()->with('error', 'WhatsApp is not configured. Go to Settings → WhatsApp to set it up.');
+        }
+
+        if ($document->balance_due <= 0) {
+            return back()->with('error', 'No balance due on this document.');
+        }
+
+        try {
+            $message = $whatsapp->sendPaymentReminder($document);
+
+            return back()->with('success', "Payment reminder sent to {$message->to}.");
+        } catch (\Throwable $e) {
+            return back()->with('error', 'WhatsApp send failed: ' . $e->getMessage());
+        }
     }
 }

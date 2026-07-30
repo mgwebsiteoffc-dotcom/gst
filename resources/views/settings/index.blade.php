@@ -6,6 +6,7 @@
         'business' => 'Business details',
         'branding' => 'Logo & signature',
         'invoicing' => 'Invoicing & terms',
+        'whatsapp' => 'WhatsApp',
         'einvoice' => 'e-Invoice (NIC)',
         'team' => 'Team & roles',
     ];
