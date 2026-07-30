@@ -2,17 +2,85 @@
 @section('title', $document->number)
 
 @section('content')
+    @php
+        $whatsappConfigured = app(\App\Services\WhatsApp\WhatsAppService::class)->isConfigured();
+    @endphp
+
     <div class="flex items-center justify-between mb-4">
         <div>
             <h1 class="text-2xl font-semibold">{{ $document->title }} {{ $document->number }}</h1>
             <p class="text-slate-500 text-sm">{{ $document->party?->name }} · {{ $document->issue_date->format('d M Y') }}</p>
         </div>
         <div class="flex flex-wrap gap-2 text-sm">
+            {{-- WhatsApp Share (opens wa.me link on user's phone) --}}
             <a class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 font-medium text-white hover:bg-emerald-700"
                href="{{ $share['whatsapp'] }}" target="_blank" rel="noopener">
                 <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24"><path d="M17.5 14.4c-.3-.2-1.7-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.7 1-.9 1.2-.2.2-.3.2-.6.1-.3-.2-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.5-.5c.1-.2.2-.3.3-.5 0-.2 0-.4-.1-.5 0-.2-.7-1.5-.9-2.1-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.2.2 2.1 3.2 5.1 4.4 1.9.8 2.6.9 3.5.7.6-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.5-.3M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Z"/></svg>
                 WhatsApp
             </a>
+
+            {{-- WhatsApp Business API Send --}}
+            @if ($whatsappConfigured)
+                <div x-data="{ open: false }" class="relative">
+                    <button @click="open = !open" @click.outside="open = false"
+                            class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-3 py-2 font-medium text-emerald-700 hover:bg-emerald-100">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5"/></svg>
+                        Send via API
+                        <svg class="h-3 w-3" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="m19 9-7 7-7-7"/></svg>
+                    </button>
+
+                    <div x-show="open" x-cloak x-transition.origin.top.right
+                         class="absolute right-0 z-30 mt-2 w-80 rounded-xl border border-slate-200 bg-white p-4 shadow-lg">
+                        <form method="POST" action="{{ route('documents.whatsapp', $document) }}">
+                            @csrf
+                            <p class="mb-3 text-sm font-medium text-slate-800">Send via WhatsApp Business API</p>
+
+                            <div class="mb-3">
+                                <label class="mb-1 block text-xs font-medium text-slate-600">Recipient phone</label>
+                                <input type="text" name="phone"
+                                       value="{{ $document->party?->phone }}"
+                                       placeholder="+91 98765 43210"
+                                       class="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm">
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="mb-1 block text-xs font-medium text-slate-600">Custom message (optional)</label>
+                                <textarea name="message" rows="3"
+                                          placeholder="Leave blank for default message..."
+                                          class="w-full rounded-lg border border-slate-300 px-3 py-1.5 text-sm"></textarea>
+                            </div>
+
+                            <p class="mb-3 text-xs text-slate-500">
+                                📎 The invoice PDF will be attached automatically.
+                            </p>
+
+                            <div class="flex gap-2">
+                                <button type="submit" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700">
+                                    Send Now
+                                </button>
+
+                                @if ($document->balance_due > 0)
+                                    <button type="submit" form="reminder-form" formaction="{{ route('documents.reminder', $document) }}"
+                                            class="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-700 hover:bg-amber-100">
+                                        Reminder
+                                    </button>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                {{-- Hidden reminder form --}}
+                <form id="reminder-form" method="POST" action="{{ route('documents.reminder', $document) }}" class="hidden">@csrf</form>
+            @else
+                <a href="{{ route('settings.index', ['tab' => 'whatsapp']) }}"
+                   class="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-2 text-sm text-slate-500 hover:bg-slate-100"
+                   title="Set up WhatsApp Business API to send invoices automatically">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 1.5H8.25A2.25 2.25 0 0 0 6 3.75v16.5a2.25 2.25 0 0 0 2.25 2.25h7.5A2.25 2.25 0 0 0 18 20.25V3.75a2.25 2.25 0 0 0-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-3 18.75h3"/></svg>
+                    Setup WhatsApp API
+                </a>
+            @endif
+
             <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ $share['email'] }}">Email</a>
             <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ route('documents.pdf', $document) }}" target="_blank">PDF</a>
             <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ route('documents.pdf', [$document, 'download' => 1]) }}">Download</a>
