@@ -63,7 +63,7 @@
 
                 <x-field label="Message" name="message" required>
                     <textarea name="message" rows="4" required
-                              class="block w-full rounded-lg border border-slate-300 p-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500">{{ old('message') }}</textarea>
+                             >{{ old('message') }}</textarea>
                 </x-field>
 
                 <button type="submit" class="rounded-lg bg-indigo-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-indigo-700">

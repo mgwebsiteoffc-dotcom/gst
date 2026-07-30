@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 436" width="800" height="436" role="img" aria-label="BikriBook running on laptop, tablet and phone">
+  <rect width="800" height="436" fill="#fff"/>
+  <g fill="none" stroke="#cbd5e1" stroke-width="2">
+    <path d="M400 92c-46-30-96-30-140 0" stroke-dasharray="5 7" stroke-linecap="round"/>
+    <path d="M400 92c46-30 96-30 140 0" stroke-dasharray="5 7" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(360 40)">
+    <rect x="0" y="0" width="80" height="52" rx="12" fill="#eef2ff" stroke="#c7d2fe" stroke-width="2"/>
+    <path d="M26 30a14 14 0 0 1 28 0" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="40" cy="34" r="3.5" fill="#4f46e5"/>
+  </g>
+  <!-- laptop -->
+  <g transform="translate(96 150)">
+    <rect x="0" y="0" width="272" height="172" rx="12" fill="#1e293b"/>
+    <rect x="10" y="10" width="252" height="152" rx="6" fill="#fff"/>
+    <rect x="26" y="28" width="86" height="9" rx="4.5" fill="#312e81"/>
+    <rect x="196" y="26" width="42" height="14" rx="4" fill="#4f46e5"/>
+    <g fill="#e2e8f0">
+      <rect x="26" y="56" width="212" height="8" rx="4"/>
+      <rect x="26" y="76" width="182" height="8" rx="4"/>
+      <rect x="26" y="96" width="200" height="8" rx="4"/>
+      <rect x="26" y="116" width="150" height="8" rx="4"/>
+    </g>
+    <rect x="176" y="132" width="62" height="12" rx="6" fill="#c7d2fe"/>
+    <path d="M-22 172h316l16 20H-38z" fill="#334155"/>
+    <rect x="110" y="178" width="52" height="6" rx="3" fill="#64748b"/>
+  </g>
+  <!-- tablet -->
+  <g transform="translate(410 168)">
+    <rect x="0" y="0" width="148" height="196" rx="14" fill="#1e293b"/>
+    <rect x="8" y="8" width="132" height="180" rx="8" fill="#fff"/>
+    <rect x="22" y="24" width="62" height="8" rx="4" fill="#312e81"/>
+    <g fill="#e2e8f0">
+      <rect x="22" y="46" width="104" height="7" rx="3.5"/>
+      <rect x="22" y="63" width="86" height="7" rx="3.5"/>
+      <rect x="22" y="80" width="98" height="7" rx="3.5"/>
+      <rect x="22" y="97" width="72" height="7" rx="3.5"/>
+    </g>
+    <rect x="22" y="120" width="104" height="30" rx="8" fill="#eef2ff"/>
+    <rect x="34" y="131" width="52" height="8" rx="4" fill="#4f46e5"/>
+  </g>
+  <!-- phone -->
+  <g transform="translate(586 196)">
+    <rect x="0" y="0" width="102" height="176" rx="16" fill="#1e293b"/>
+    <rect x="7" y="14" width="88" height="148" rx="8" fill="#fff"/>
+    <rect x="34" y="6" width="34" height="4" rx="2" fill="#475569"/>
+    <rect x="20" y="30" width="46" height="7" rx="3.5" fill="#312e81"/>
+    <g fill="#e2e8f0">
+      <rect x="20" y="50" width="62" height="6" rx="3"/>
+      <rect x="20" y="64" width="48" height="6" rx="3"/>
+      <rect x="20" y="78" width="56" height="6" rx="3"/>
+    </g>
+    <circle cx="51" cy="120" r="19" fill="#10b981"/>
+    <path d="M43 120l6 6 12-13" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g fill="#94a3b8" font-family="system-ui,-apple-system,Segoe UI,sans-serif" font-size="13" text-anchor="middle">
+    <text x="232" y="404">Laptop</text><text x="484" y="404">Tablet</text><text x="637" y="404">Phone</text>
+  </g>
+</svg>

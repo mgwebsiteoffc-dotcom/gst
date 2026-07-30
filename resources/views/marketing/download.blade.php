@@ -8,6 +8,9 @@
         home screen and it behaves exactly like an app.
     </p>
 
+    <x-illustration name="page-download" alt="BikriBook running on a laptop, tablet and phone" eager
+                    class="mx-auto mt-10 w-full max-w-2xl" />
+
     <div class="mt-10 grid gap-6 sm:grid-cols-3">
         @foreach ([
             ['Android', 'Open BikriBook in Chrome, tap the ⋮ menu, then "Add to Home screen".'],

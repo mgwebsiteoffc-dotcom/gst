@@ -132,6 +132,15 @@ class PageController extends Controller
             ['name' => $page['heading'], 'url' => route('solution', $slug)],
         ]))->schema(Seo::softwareApplication());
 
+        // Page FAQs feed the FAQPage schema that answer engines quote.
+        if (! empty($page['faqs'])) {
+            $pairs = collect($page['faqs'])->map(fn ($f) => ['question' => $f[0], 'answer' => $f[1]]);
+
+            if ($schema = Seo::faqPage($pairs)) {
+                $seo->schema($schema);
+            }
+        }
+
         return view('marketing.solution', compact('seo', 'page', 'slug'));
     }
 

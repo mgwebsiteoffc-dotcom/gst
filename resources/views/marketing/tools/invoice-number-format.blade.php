@@ -7,21 +7,27 @@
         <a href="{{ route('tools') }}" class="hover:text-indigo-600">Tools</a> › {{ $name }}
     </nav>
 
-    <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
-    <p class="mt-3 text-slate-600">{{ $desc }}</p>
+    <div class="grid items-center gap-6 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
+            <p class="mt-3 text-slate-600">{{ $desc }}</p>
+        </div>
+        <x-illustration name="page-templates" alt="GST invoice numbering format" eager
+                        class="w-full rounded-xl" />
+    </div>
 
     <div class="mt-8 rounded-2xl border border-slate-200 p-6"
          x-data="{ prefix: 'INV', fy: '2026-27', pad: 4, next: 1,
             get sample() { return `${this.prefix}/${this.fy}/${String(this.next).padStart(+this.pad, '0')}`; } }">
         <div class="grid gap-4 sm:grid-cols-4">
             <div><label class="mb-1 block text-xs text-slate-500">Prefix</label>
-                <input x-model="prefix" maxlength="6" class="w-full rounded-lg border-slate-300 text-sm"></div>
+                <input x-model="prefix" maxlength="6"></div>
             <div><label class="mb-1 block text-xs text-slate-500">Financial year</label>
-                <input x-model="fy" maxlength="7" class="w-full rounded-lg border-slate-300 text-sm"></div>
+                <input x-model="fy" maxlength="7"></div>
             <div><label class="mb-1 block text-xs text-slate-500">Padding</label>
-                <input type="number" x-model.number="pad" min="1" max="8" class="w-full rounded-lg border-slate-300 text-sm"></div>
+                <input type="number" x-model.number="pad" min="1" max="8"></div>
             <div><label class="mb-1 block text-xs text-slate-500">Next number</label>
-                <input type="number" x-model.number="next" min="1" class="w-full rounded-lg border-slate-300 text-sm"></div>
+                <input type="number" x-model.number="next" min="1"></div>
         </div>
 
         <div class="mt-5 rounded-xl bg-slate-900 p-5 text-center">

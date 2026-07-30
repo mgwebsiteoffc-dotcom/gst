@@ -10,6 +10,9 @@
             actually standing behind the counter.
         </p>
 
+        <x-illustration name="hero-invoice" alt="Creating and sharing a GST invoice with BikriBook"
+                        class="my-8 w-full rounded-2xl not-prose" />
+
         <h2>Why we built it</h2>
         <p>
             GST made a proper tax invoice compulsory for millions of Indian businesses overnight.

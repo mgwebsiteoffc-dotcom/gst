@@ -28,7 +28,13 @@
                 </div>
             </div>
 
-            <div id="apply">@include('marketing.partners._form', ['type' => 'channel'])</div>
+            <div>
+                <x-illustration name="partner-channel" alt="Channel partners earning recurring commission" eager class="w-full rounded-2xl" />
+            </div>
+        </div>
+
+        <div id="apply" class="mx-auto mt-12 max-w-2xl">
+            @include('marketing.partners._form', ['type' => 'channel'])
         </div>
     </div>
 </section>

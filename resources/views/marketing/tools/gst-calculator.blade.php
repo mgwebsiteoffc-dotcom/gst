@@ -7,8 +7,14 @@
         <a href="{{ route('tools') }}" class="hover:text-indigo-600">Tools</a> › {{ $name }}
     </nav>
 
-    <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
-    <p class="mt-3 text-slate-600">{{ $desc }}</p>
+    <div class="grid items-center gap-6 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
+            <p class="mt-3 text-slate-600">{{ $desc }}</p>
+        </div>
+        <x-illustration name="solution-gst-billing" alt="Calculating CGST, SGST and IGST on an invoice" eager
+                        class="w-full rounded-xl" />
+    </div>
 
     <div class="mt-8 rounded-2xl border border-slate-200 p-6"
          x-data="{ amount: 10000, rate: 18, mode: 'exclusive', interstate: false,
@@ -21,11 +27,11 @@
             <div>
                 <label class="mb-1 block text-sm font-medium text-slate-700">Amount (₹)</label>
                 <input type="number" x-model.number="amount" min="0" step="0.01"
-                       class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                      >
             </div>
             <div>
                 <label class="mb-1 block text-sm font-medium text-slate-700">GST rate</label>
-                <select x-model.number="rate" class="w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                <select x-model.number="rate">
                     @foreach ([0, 0.25, 3, 5, 12, 18, 28, 40] as $slab)
                         <option value="{{ $slab }}">{{ rtrim(rtrim(number_format($slab, 2), '0'), '.') }}%</option>
                     @endforeach

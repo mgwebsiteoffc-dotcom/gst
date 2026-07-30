@@ -5,6 +5,8 @@
     <div class="mx-auto max-w-4xl px-4 text-center lg:px-6">
         <h1 class="text-4xl font-bold tracking-tight text-slate-900">Integrations</h1>
         <p class="mt-4 text-lg text-slate-600">Connect BikriBook to the tools you already use.</p>
+        <x-illustration name="page-integrations" alt="BikriBook connected to Shopify, UPI, WhatsApp and the REST API"
+                        eager class="mx-auto mt-10 w-full max-w-2xl" />
     </div>
 </section>
 

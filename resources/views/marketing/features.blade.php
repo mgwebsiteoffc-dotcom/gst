@@ -55,11 +55,27 @@
     ];
 @endphp
 
+@php
+    $groupArt = [
+        'Billing &amp; documents' => 'solution-gst-billing',
+        'GST compliance' => 'solution-e-invoicing',
+        'Sharing &amp; getting paid' => 'feature-whatsapp',
+        'Reports that tell you something' => 'feature-reports',
+        'Business operations' => 'feature-inventory',
+    ];
+@endphp
+
 @foreach ($groups as $heading => $items)
-<section class="border-t border-slate-200 py-16">
+<section class="border-t border-slate-200 py-16 {{ $loop->even ? 'bg-slate-50' : '' }}">
     <div class="mx-auto max-w-6xl px-4 lg:px-6">
-        <h2 class="text-2xl font-semibold tracking-tight text-slate-900">{!! $heading !!}</h2>
-        <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div class="mb-8 grid items-center gap-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,5fr)]">
+            <h2 class="text-2xl font-semibold tracking-tight text-slate-900">{!! $heading !!}</h2>
+            @isset($groupArt[$heading])
+                <x-illustration :name="$groupArt[$heading]" :alt="strip_tags($heading)"
+                                class="w-full rounded-xl {{ $loop->even ? 'lg:order-first' : '' }}" />
+            @endisset
+        </div>
+        <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($items as [$t, $d])
                 <article class="rounded-xl border border-slate-200 p-5">
                     <h3 class="font-medium text-slate-900">{!! $t !!}</h3>

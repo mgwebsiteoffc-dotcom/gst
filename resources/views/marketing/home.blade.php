@@ -60,10 +60,13 @@
 
             {{-- Hero illustration --}}
             <div class="relative">
-                <img src="{{ asset('images/hero-invoice.png') }}"
-                     alt="Creating a GST e-invoice in BikriBook on a laptop and sharing it from a phone"
-                     width="1400" height="760" fetchpriority="high" decoding="async"
-                     class="w-full max-w-xl lg:max-w-none">
+                <picture>
+                    <source srcset="{{ asset('images/hero-invoice.webp') }}" type="image/webp">
+                    <img src="{{ asset('images/hero-invoice.png') }}"
+                         alt="Creating a GST e-invoice in BikriBook on a laptop and sharing it from a phone"
+                         width="1200" height="655" fetchpriority="high" decoding="async"
+                         class="w-full max-w-xl lg:max-w-none">
+                </picture>
 
                 <div class="mt-2 flex flex-wrap justify-center gap-2">
                     @foreach (['Shared on WhatsApp', 'UPI ₹34,909 received'] as $chip)

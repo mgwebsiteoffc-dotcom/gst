@@ -55,6 +55,24 @@
         </div>
 
         <p class="mt-8 text-center text-sm text-slate-500">All prices exclude GST. Pay by UPI, card or net banking.</p>
+
+        <div class="mt-14 grid items-center gap-10 rounded-2xl border border-slate-200 bg-slate-50 p-8 lg:grid-cols-2">
+            <div>
+                <h2 class="text-2xl font-bold tracking-tight text-slate-900">Every plan includes the essentials</h2>
+                <p class="mt-3 text-slate-600">
+                    GST and non-GST invoicing, unlimited customers and items, inventory, payment tracking
+                    and GSTR-ready reports. You only pay more for scale and compliance add-ons.
+                </p>
+                <ul class="mt-5 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
+                    @foreach (['Nine document types', 'WhatsApp & UPI sharing', 'Profit & loss reports',
+                               'Party ledgers', 'CSV export', 'Custom branding'] as $inc)
+                        <li class="flex items-start gap-2"><span class="text-emerald-600">✓</span> {{ $inc }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            <x-illustration name="page-templates" alt="GST invoice templates included in every plan"
+                            class="w-full rounded-xl" />
+        </div>
     </div>
 </section>
 

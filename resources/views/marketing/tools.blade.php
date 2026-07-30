@@ -5,6 +5,8 @@
     <div class="mx-auto max-w-4xl px-4 text-center lg:px-6">
         <h1 class="text-4xl font-bold tracking-tight text-slate-900">Free tools for Indian businesses</h1>
         <p class="mt-4 text-lg text-slate-600">No signup, no limits. Answer a GST question in seconds.</p>
+        <x-illustration name="page-tools" alt="GST calculators and code lookup tools" eager
+                        class="mx-auto mt-10 w-full max-w-lg" />
     </div>
 </section>
 

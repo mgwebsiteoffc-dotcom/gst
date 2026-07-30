@@ -7,8 +7,14 @@
         <a href="{{ route('tools') }}" class="hover:text-indigo-600">Tools</a> › {{ $name }}
     </nav>
 
-    <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
-    <p class="mt-3 text-slate-600">{{ $desc }}</p>
+    <div class="grid items-center gap-6 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
+            <p class="mt-3 text-slate-600">{{ $desc }}</p>
+        </div>
+        <x-illustration name="solution-e-invoicing" alt="Validating a GSTIN checksum" eager
+                        class="w-full rounded-xl" />
+    </div>
 
     @php $states = \App\Support\Gstin::STATES; @endphp
 

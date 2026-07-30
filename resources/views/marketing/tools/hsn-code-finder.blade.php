@@ -7,8 +7,14 @@
         <a href="{{ route('tools') }}" class="hover:text-indigo-600">Tools</a> › {{ $name }}
     </nav>
 
-    <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
-    <p class="mt-3 text-slate-600">{{ $desc }}</p>
+    <div class="grid items-center gap-6 sm:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tight text-slate-900">{{ $name }}</h1>
+            <p class="mt-3 text-slate-600">{{ $desc }}</p>
+        </div>
+        <x-illustration name="page-tools" alt="Searching HSN and SAC codes" eager
+                        class="w-full rounded-xl" />
+    </div>
 
     @php
         $codes = [
@@ -41,7 +47,7 @@
         } }">
 
         <input x-model="q" placeholder="Search by product name or code — try 'rice' or '8471'"
-               class="w-full rounded-lg border-slate-300 focus:border-indigo-500 focus:ring-indigo-500">
+              >
 
         <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200">
             <table class="w-full text-sm">

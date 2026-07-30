@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 436" width="800" height="436" role="img" aria-label="Live stock levels with low stock alerts">
+  <rect width="800" height="436" fill="#fff"/>
+  <g transform="translate(70 74)">
+    <rect x="0" y="0" width="430" height="290" rx="14" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <rect x="0" y="0" width="430" height="48" rx="14" fill="#f8fafc"/>
+    <rect x="0" y="34" width="430" height="14" fill="#f8fafc"/>
+    <line x1="0" y1="48" x2="430" y2="48" stroke="#e2e8f0" stroke-width="2"/>
+    <g fill="#64748b" font-family="system-ui,sans-serif" font-size="12">
+      <text x="24" y="30">ITEM</text><text x="252" y="30">HSN</text><text x="360" y="30">STOCK</text>
+    </g>
+    <g font-family="system-ui,sans-serif" font-size="13">
+      <g transform="translate(0 48)">
+        <rect x="24" y="20" width="120" height="8" rx="4" fill="#e2e8f0"/>
+        <rect x="252" y="20" width="56" height="8" rx="4" fill="#eef2ff"/>
+        <text x="386" y="28" fill="#0f172a" text-anchor="middle">90</text>
+        <line x1="16" y1="48" x2="414" y2="48" stroke="#f1f5f9" stroke-width="2"/>
+      </g>
+      <g transform="translate(0 96)">
+        <rect x="24" y="20" width="146" height="8" rx="4" fill="#e2e8f0"/>
+        <rect x="252" y="20" width="56" height="8" rx="4" fill="#eef2ff"/>
+        <text x="386" y="28" fill="#0f172a" text-anchor="middle">35</text>
+        <line x1="16" y1="48" x2="414" y2="48" stroke="#f1f5f9" stroke-width="2"/>
+      </g>
+      <g transform="translate(0 144)">
+        <rect x="8" y="4" width="414" height="44" rx="8" fill="#fffbeb"/>
+        <rect x="24" y="20" width="104" height="8" rx="4" fill="#fde68a"/>
+        <rect x="252" y="20" width="56" height="8" rx="4" fill="#fef3c7"/>
+        <text x="386" y="28" fill="#b45309" text-anchor="middle" font-weight="600">4</text>
+        <circle cx="150" cy="24" r="7" fill="#f59e0b"/>
+        <path d="M150 20v5" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        <circle cx="150" cy="28.5" r="1.2" fill="#fff"/>
+      </g>
+      <g transform="translate(0 192)">
+        <rect x="24" y="20" width="132" height="8" rx="4" fill="#e2e8f0"/>
+        <rect x="252" y="20" width="56" height="8" rx="4" fill="#eef2ff"/>
+        <text x="386" y="28" fill="#0f172a" text-anchor="middle">180</text>
+      </g>
+    </g>
+  </g>
+  <g transform="translate(556 150)">
+    <path d="M0 42l56-24 56 24v66l-56 24-56-24z" fill="#eef2ff" stroke="#c7d2fe" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M0 42l56 24 56-24M56 66v66" fill="none" stroke="#c7d2fe" stroke-width="2"/>
+    <path d="M22 18l68-30v34l-68 30z" fill="#c7d2fe" opacity=".45"/>
+  </g>
+  <g transform="translate(556 300)">
+    <rect x="0" y="0" width="112" height="42" rx="10" fill="#fff" stroke="#e2e8f0" stroke-width="2"/>
+    <g fill="#312e81"><rect x="16" y="12" width="3" height="18"/><rect x="23" y="12" width="2" height="18"/><rect x="29" y="12" width="4" height="18"/><rect x="37" y="12" width="2" height="18"/><rect x="43" y="12" width="3" height="18"/><rect x="50" y="12" width="2" height="18"/><rect x="56" y="12" width="4" height="18"/><rect x="64" y="12" width="2" height="18"/><rect x="70" y="12" width="3" height="18"/><rect x="77" y="12" width="2" height="18"/><rect x="83" y="12" width="4" height="18"/><rect x="91" y="12" width="2" height="18"/></g>
+  </g>
+</svg>

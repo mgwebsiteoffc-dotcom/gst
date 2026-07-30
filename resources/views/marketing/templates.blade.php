@@ -5,6 +5,8 @@
     <div class="mx-auto max-w-4xl px-4 text-center lg:px-6">
         <h1 class="text-4xl font-bold tracking-tight text-slate-900">Free GST invoice formats</h1>
         <p class="mt-4 text-lg text-slate-600">Professional, Rule 46 compliant templates. Pick one in Settings and it applies to every invoice.</p>
+        <x-illustration name="page-templates" alt="Three GST invoice template designs" eager
+                        class="mx-auto mt-10 w-full max-w-xl" />
     </div>
 </section>
 
