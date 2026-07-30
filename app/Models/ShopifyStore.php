@@ -27,8 +27,8 @@ class ShopifyStore extends Model
     protected function accessToken(): Attribute
     {
         return Attribute::make(
-            get: fn ($v) => $v ? Crypt::decryptString($v) : null,
-            set: fn ($v) => $v ? Crypt::encryptString($v) : null,
+            get: fn ($v) => ($v && $v !== '') ? Crypt::decryptString($v) : null,
+            set: fn ($v) => ($v && $v !== '') ? Crypt::encryptString($v) : '',
         );
     }
 
