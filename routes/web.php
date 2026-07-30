@@ -20,6 +20,7 @@ use App\Http\Controllers\EinvoiceController;
 use App\Http\Controllers\ItemController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShopifyController;
 use Illuminate\Support\Facades\Route;
@@ -102,6 +103,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('document/{document}/convert/{target}', [DocumentController::class, 'convert'])->name('documents.convert');
         Route::post('document/{document}/payment', [DocumentController::class, 'payment'])->name('documents.payment');
         Route::post('document/{document}/cancel', [DocumentController::class, 'cancel'])->name('documents.cancel');
+        Route::post('document/{document}/whatsapp', [DocumentController::class, 'sendWhatsApp'])->name('documents.whatsapp');
+        Route::post('document/{document}/reminder', [DocumentController::class, 'sendReminder'])->name('documents.reminder');
 
         // e-Invoice / e-Way bill
         Route::middleware('subscribed:einvoice')->group(function () {
@@ -127,6 +130,8 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             Route::post('install', [ShopifyController::class, 'install'])->name('install');
             Route::get('callback', [ShopifyController::class, 'callback'])->name('callback');
             Route::post('{store}/sync-products', [ShopifyController::class, 'syncProducts'])->name('sync');
+            Route::post('{store}/sync-orders', [ShopifyController::class, 'syncOrders'])->name('sync-orders');
+            Route::post('{store}/disconnect', [ShopifyController::class, 'disconnect'])->name('disconnect');
             Route::put('{store}/settings', [ShopifyController::class, 'updateSettings'])->name('settings');
         });
     });
@@ -137,8 +142,20 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::put('settings/tax-mode', [SettingsController::class, 'taxMode'])->name('settings.tax-mode');
     Route::put('settings/nic', [SettingsController::class, 'nic'])->name('settings.nic');
     Route::post('settings/nic/test', [SettingsController::class, 'testNic'])->name('settings.nic.test');
+    Route::put('settings/whatsapp', [SettingsController::class, 'whatsapp'])->name('settings.whatsapp');
+    Route::post('settings/whatsapp/test', [SettingsController::class, 'testWhatsApp'])->name('settings.whatsapp.test');
 
     Route::view('billing/plans', 'billing.plans')->name('billing.plans');
+
+    // Migration / Import
+    Route::get('migration', [MigrationController::class, 'index'])->name('migration.index');
+    Route::post('migration/upload', [MigrationController::class, 'upload'])->name('migration.upload');
+    Route::get('migration/{job}', [MigrationController::class, 'show'])->name('migration.show');
+    Route::get('migration/{job}/review', [MigrationController::class, 'review'])->name('migration.review');
+    Route::put('migration/{job}/mapping', [MigrationController::class, 'updateMapping'])->name('migration.mapping');
+    Route::post('migration/{job}/execute', [MigrationController::class, 'execute'])->name('migration.execute');
+    Route::get('migration/{job}/progress', [MigrationController::class, 'progress'])->name('migration.progress');
+    Route::delete('migration/{job}', [MigrationController::class, 'destroy'])->name('migration.destroy');
     });
 });
 
