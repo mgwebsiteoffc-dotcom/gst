@@ -115,18 +115,27 @@ class DocumentController extends Controller
         return redirect()->route('documents.show', $document)->with('success', 'Document updated.');
     }
 
-    public function pdf(Document $document, Request $request)
+     public function pdf(Document $document, Request $request)
     {
         $document->load('lines.item', 'party', 'einvoice', 'tenant');
-        $pdf = Pdf::loadView('invoices.pdf', [
+        $template = $request->get('template', $document->tenant->setting('pdf_template', 'classic'));
+
+        $view = match ($template) {
+            'modern' => 'invoices.pdf-modern',
+            'compact' => 'invoices.pdf-compact',
+            default => 'invoices.pdf',
+        };
+
+        $pdf = Pdf::loadView($view, [
             'document' => $document,
-            'template' => $request->get('template', $document->tenant->setting('pdf_template', 'classic')),
+            'template' => $template,
         ])->setPaper('a4');
 
         return $request->boolean('download')
             ? $pdf->download(str_replace('/', '-', $document->number).'.pdf')
             : $pdf->stream();
     }
+
 
     public function convert(Document $document, string $target)
     {

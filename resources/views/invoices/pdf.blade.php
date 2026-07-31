@@ -64,18 +64,23 @@
     <table style="margin-top:8px">
         <tr>
             <td style="width:50%">
+            <td style="{{ $tenant->setting('show_ship_to', false) ? 'width:50%' : 'width:100%' }}">
                 <strong>Bill To</strong><br>
                 {{ $document->party?->name }}<br>
                 <span class="muted">
                     {{ $document->party?->billing_address }}<br>
                     {{ $document->party?->billing_city }} {{ $document->party?->billing_pincode }}<br>
                     @if ($isGst) GSTIN: {{ $document->party?->gstin ?: 'Unregistered' }} @endif
+                    @if ($document->party?->phone) <br>Ph: {{ $document->party?->phone }} @endif
+                    @if ($document->party?->email) <br>{{ $document->party?->email }} @endif
                 </span>
             </td>
+            @if ($tenant->setting('show_ship_to', false))
             <td>
                 <strong>Ship To</strong><br>
                 <span class="muted">{{ data_get($document->party?->shipping_address, 'line1', $document->party?->billing_address) }}</span>
             </td>
+            @endif
         </tr>
     </table>
 

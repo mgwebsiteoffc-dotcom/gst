@@ -155,12 +155,7 @@
                         ['solution', ['shopify'], 'BikriBook x Shopify'],
                         ['integrations', [], 'Integrations'],
                     ],
-                    'Register' => [
-                        ['register', [], 'Get Started'],
-                        ['login', [], 'Login'],
-                        ['contact', [], 'Contact Us'],
-                        ['download', [], 'Download App'],
-                    ],
+                   
                     'Explore' => [
                         ['blog.index', [], 'Blog'],
                         ['solution', ['accountants'], 'For Accountants'],
@@ -170,6 +165,17 @@
                         ['partners.affiliate', [], 'Affiliate Program'],
                         ['simple', ['product-updates'], 'Product Updates'],
                         ['simple', ['careers'], "We're hiring"],
+                    ],
+                     'Free Tools' => [
+                        ['tool', ['gst-calculator'], 'GST Calculator'],
+                        ['tool', ['gstin-validator'], 'GSTIN Validator'],
+                        ['tool', ['hsn-code-finder'], 'HSN Code Finder'],
+                        ['tool', ['gstin-search'], 'GSTIN Search'],
+                        ['tool', ['gst-return-status'], 'GST Return Status'],
+                        ['tool', ['gst-late-fee-calculator'], 'Late Fee Calculator'],
+                        ['tool', ['ifsc-code'], 'IFSC Lookup'],
+                        ['tool', ['einvoice-status'], 'E-Invoice Status'],
+                        ['tool', ['online-ocr'], 'Online OCR'],
                     ],
                     'Legal' => [
                         ['legal', ['privacy-policy'], 'Privacy Policy'],

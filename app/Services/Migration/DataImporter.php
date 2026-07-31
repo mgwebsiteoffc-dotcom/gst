@@ -7,6 +7,7 @@ use App\Models\DocumentLine;
 use App\Models\Expense;
 use App\Models\ImportJob;
 use App\Models\Item;
+use App\Models\MigrationRawData;
 use App\Models\Party;
 use App\Models\Payment;
 use App\Models\StockMovement;
@@ -14,36 +15,23 @@ use App\Models\Warehouse;
 use App\Support\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
-/**
- * Handles importing data from a parsed JSON backup into the database.
- *
- * Features:
- * - Imports in dependency order (parties before documents before lines)
- * - Uses database transactions
- * - Preserves legacy IDs via a mapping table
- * - Idempotent: running the same file twice won't create duplicates
- * - Handles field name translation from legacy formats
- */
 class DataImporter
 {
     protected BackupParser $parser;
     protected MigrationMapper $mapper;
-
-    /** Legacy ID → new ID maps keyed by section */
     protected array $idMap = [];
-
-    /** Running tally */
-    protected array $stats = [
-        'imported' => 0,
-        'updated' => 0,
-        'skipped' => 0,
-        'failed' => 0,
-    ];
-
+    protected array $stats = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0];
     protected array $errors = [];
     protected int $tenantId;
+    protected ?ImportJob $currentJob = null;
+    protected ?string $sourceFile = null;
+
+    /** Common tax_id → GST rate mappings from legacy apps */
+    protected array $taxIdToRate = [
+        0 => 0, 1 => 1, 2 => 3, 3 => 5, 5 => 5, 6 => 6, 12 => 12,
+        14 => 14, 18 => 18, 28 => 28,
+    ];
 
     public function __construct(BackupParser $parser, MigrationMapper $mapper)
     {
@@ -51,15 +39,14 @@ class DataImporter
         $this->mapper = $mapper;
     }
 
-    /**
-     * Run the full import process.
-     */
     public function import(ImportJob $job): array
     {
         $this->tenantId = TenantContext::id() ?: $job->tenant_id;
         $this->stats = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0];
         $this->errors = [];
         $this->idMap = [];
+        $this->currentJob = $job;
+        $this->sourceFile = $job->filename;
 
         $job->markImporting();
 
@@ -68,7 +55,6 @@ class DataImporter
             $mapping = $job->mapping ?? [];
             $order = $this->mapper->getImportOrder($mapping);
 
-            // Calculate total records
             $totalRecords = 0;
             foreach ($order as $section) {
                 $totalRecords += count($data[$section] ?? []);
@@ -84,11 +70,7 @@ class DataImporter
                 $records = $data[$section];
                 $action = $mapping[$section]['action'] ?? 'import';
 
-                $job->updateProgress(
-                    $mapping[$section]['label'] ?? $section,
-                    $processed,
-                    $totalRecords
-                );
+                $job->updateProgress($mapping[$section]['label'] ?? $section, $processed, $totalRecords);
 
                 $result = $this->importSection($section, $records, $action);
 
@@ -98,59 +80,45 @@ class DataImporter
                 $this->stats['failed'] += $result['failed'];
 
                 $processed += count($records);
-                $job->updateProgress(
-                    $mapping[$section]['label'] ?? $section,
-                    $processed,
-                    $totalRecords
-                );
+                $job->updateProgress($mapping[$section]['label'] ?? $section, $processed, $totalRecords);
             }
 
             $job->markCompleted($this->stats);
-
-            // Clean up temp file
             $this->parser->cleanup($job);
 
-            return [
-                'success' => true,
-                'stats' => $this->stats,
-                'errors' => $this->errors,
-            ];
+            return ['success' => true, 'stats' => $this->stats, 'errors' => $this->errors];
         } catch (\Throwable $e) {
-            Log::error('Import failed: ' . $e->getMessage(), [
-                'job_id' => $job->id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            $this->errors[] = [
-                'section' => 'general',
-                'message' => $e->getMessage(),
-                'severity' => 'error',
-            ];
-
+            Log::error('Import failed: ' . $e->getMessage(), ['job_id' => $job->id, 'trace' => $e->getTraceAsString()]);
+            $this->errors[] = ['section' => 'general', 'message' => $e->getMessage(), 'severity' => 'error'];
             $job->markFailed($this->errors);
-
-            return [
-                'success' => false,
-                'stats' => $this->stats,
-                'errors' => $this->errors,
-            ];
+            return ['success' => false, 'stats' => $this->stats, 'errors' => $this->errors];
         }
     }
 
-    /**
-     * Import a single section with transaction support.
-     */
     protected function importSection(string $section, array $records, string $action): array
     {
         $stats = ['imported' => 0, 'updated' => 0, 'skipped' => 0, 'failed' => 0];
 
         DB::beginTransaction();
-
         try {
             foreach ($records as $index => $record) {
+                // Store raw data for every record (searchable backup)
+                $this->storeRawData($section, $record);
+
+                // Skip deleted records from old system
+                if (($record['deleted'] ?? '') === 'y') {
+                    $stats['skipped']++;
+                    $this->updateRawStatus($section, $record['id'] ?? null, 'skipped', 'Marked as deleted in source');
+                    continue;
+                }
+
                 try {
                     $result = $this->importRecord($section, $record, $action);
                     $stats[$result]++;
+                    $this->updateRawStatus($section, $record['id'] ?? null,
+                        $result === 'skipped' ? 'skipped' : 'mapped',
+                        $result === 'imported' ? 'Created new record' : ($result === 'updated' ? 'Updated existing' : 'Duplicate skipped')
+                    );
                 } catch (\Throwable $e) {
                     $stats['failed']++;
                     $this->errors[] = [
@@ -160,9 +128,9 @@ class DataImporter
                         'message' => $e->getMessage(),
                         'severity' => 'error',
                     ];
+                    $this->updateRawStatus($section, $record['id'] ?? null, 'failed', $e->getMessage());
                 }
             }
-
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -172,33 +140,68 @@ class DataImporter
         return $stats;
     }
 
-    /**
-     * Import a single record.
-     * Returns: 'imported', 'updated', or 'skipped'
-     */
     protected function importRecord(string $section, array $record, string $action): string
     {
         return match (true) {
-            in_array($section, ['parties', 'clients', 'customers', 'suppliers', 'vendors'])
+            in_array($section, ['parties', 'clients', 'customers', 'suppliers', 'vendors', 'contacts'])
                 => $this->importParty($record, $action, $section),
             in_array($section, ['items', 'products', 'services'])
                 => $this->importItem($record, $action),
             in_array($section, ['documents', 'invoices', 'quotations', 'bills'])
                 => $this->importDocument($record, $action, $section),
-            in_array($section, ['document_lines', 'invoice_items', 'line_items', 'items_detail'])
+            in_array($section, ['document_lines', 'invoice_items', 'invoice_products', 'line_items', 'items_detail'])
                 => $this->importDocumentLine($record, $action, $section),
             in_array($section, ['payments', 'transactions'])
                 => $this->importPayment($record, $action),
+            in_array($section, ['payment_documents', 'payment_receipts'])
+                => $this->importPaymentDocument($record, $action),
+            in_array($section, ['invoice_payments', 'payment_links'])
+                => $this->importInvoicePayment($record, $action),
             in_array($section, ['expenses', 'bills_payable'])
                 => $this->importExpense($record, $action),
             in_array($section, ['warehouses', 'locations'])
                 => $this->importWarehouse($record, $action),
             in_array($section, ['stock_movements', 'inventory_logs'])
                 => $this->importStockMovement($record, $action),
-            in_array($section, ['settings', 'brands'])
+            in_array($section, ['settings', 'brands', 'config', 'preferences'])
                 => $this->importSettings($record, $action),
             default => 'skipped',
         };
+    }
+
+    // =========================================================================
+    // RAW DATA STORAGE
+    // =========================================================================
+
+    protected function storeRawData(string $section, array $record): void
+    {
+        try {
+            MigrationRawData::create([
+                'tenant_id' => $this->tenantId,
+                'import_job_id' => $this->currentJob?->id,
+                'section' => $section,
+                'source_file' => $this->sourceFile,
+                'legacy_id' => $record['id'] ?? null,
+                'data' => $record,
+                'status' => 'imported',
+            ]);
+        } catch (\Throwable $e) {
+            // Don't fail the import if raw storage fails
+            Log::warning('Failed to store raw data', ['section' => $section, 'error' => $e->getMessage()]);
+        }
+    }
+
+    protected function updateRawStatus(string $section, $legacyId, string $status, string $notes = ''): void
+    {
+        try {
+            MigrationRawData::where('tenant_id', $this->tenantId)
+                ->where('import_job_id', $this->currentJob?->id)
+                ->where('section', $section)
+                ->where('legacy_id', $legacyId)
+                ->update(['status' => $status, 'notes' => $notes]);
+        } catch (\Throwable $e) {
+            // Non-critical
+        }
     }
 
     // =========================================================================
@@ -211,26 +214,20 @@ class DataImporter
         $fieldMap = $this->mapper->getFieldMapping('parties');
         $data = $this->mapFields($record, $fieldMap);
 
-        // Determine party type based on source section
         $typeMap = [
-            'clients' => 'customer',
-            'customers' => 'customer',
-            'suppliers' => 'vendor',
-            'vendors' => 'vendor',
+            'clients' => 'customer', 'customers' => 'customer',
+            'suppliers' => 'vendor', 'vendors' => 'vendor',
             'parties' => $data['type'] ?? 'customer',
         ];
         $data['type'] = $typeMap[$section] ?? 'customer';
 
-        // Required fields
         if (empty($data['name'])) {
             throw new \RuntimeException('Party name is required.');
         }
 
-        // Check for existing party (idempotency)
         $existing = $this->findExistingParty($data, $legacyId);
 
         if ($existing && $action === 'import') {
-            // Already exists and action is "import as new" — skip to avoid duplicates
             $this->storeIdMapping('parties', $legacyId, $existing->id);
             return 'skipped';
         }
@@ -241,43 +238,29 @@ class DataImporter
             return 'updated';
         }
 
-        // Create new
         $party = Party::create(array_merge(
             $this->cleanPartyData($data),
             ['tenant_id' => $this->tenantId]
         ));
 
         $this->storeIdMapping('parties', $legacyId, $party->id);
-
         return 'imported';
     }
 
     protected function findExistingParty(array $data, $legacyId): ?Party
     {
-        // First try by GSTIN (most unique)
         if (!empty($data['gstin'])) {
-            $existing = Party::where('tenant_id', $this->tenantId)
-                ->where('gstin', $data['gstin'])
-                ->first();
-            if ($existing) return $existing;
+            $e = Party::where('tenant_id', $this->tenantId)->where('gstin', $data['gstin'])->first();
+            if ($e) return $e;
         }
-
-        // Then try by email
         if (!empty($data['email'])) {
-            $existing = Party::where('tenant_id', $this->tenantId)
-                ->where('email', $data['email'])
-                ->first();
-            if ($existing) return $existing;
+            $e = Party::where('tenant_id', $this->tenantId)->where('email', $data['email'])->first();
+            if ($e) return $e;
         }
-
-        // Then try by exact name
         if (!empty($data['name'])) {
-            $existing = Party::where('tenant_id', $this->tenantId)
-                ->where('name', $data['name'])
-                ->first();
-            if ($existing) return $existing;
+            $e = Party::where('tenant_id', $this->tenantId)->where('name', $data['name'])->first();
+            if ($e) return $e;
         }
-
         return null;
     }
 
@@ -289,7 +272,6 @@ class DataImporter
             'billing_state_code', 'billing_pincode', 'billing_country',
             'shipping_address', 'opening_balance', 'credit_days',
         ];
-
         return array_intersect_key($data, array_flip($allowed));
     }
 
@@ -307,15 +289,24 @@ class DataImporter
             throw new \RuntimeException('Item name is required.');
         }
 
-        // Normalize type
+        // Handle tax_id → gst_rate (legacy apps use tax_id like 18 for 18%)
+        if (isset($record['tax_id']) && !isset($data['gst_rate'])) {
+            $data['gst_rate'] = $this->resolveTaxRate($record['tax_id']);
+        }
+
+        // Normalize type: 's' = service, 'g' = goods
         if (isset($data['type'])) {
-            $data['type'] = match (strtolower($data['type'])) {
-                'service', 'services' => 'service',
+            $data['type'] = match (strtolower((string)$data['type'])) {
+                's', 'service', 'services' => 'service',
                 default => 'goods',
             };
         }
 
-        // Check for existing (idempotency)
+        // HSN or SAC — use whichever is available
+        if (empty($data['hsn_sac'])) {
+            $data['hsn_sac'] = $record['hsn'] ?? $record['sac'] ?? $record['hsn_code'] ?? null;
+        }
+
         $existing = $this->findExistingItem($data, $legacyId);
 
         if ($existing && $action === 'import') {
@@ -335,28 +326,19 @@ class DataImporter
         ));
 
         $this->storeIdMapping('items', $legacyId, $item->id);
-
         return 'imported';
     }
 
     protected function findExistingItem(array $data, $legacyId): ?Item
     {
-        // By SKU
         if (!empty($data['sku'])) {
-            $existing = Item::where('tenant_id', $this->tenantId)
-                ->where('sku', $data['sku'])
-                ->first();
-            if ($existing) return $existing;
+            $e = Item::where('tenant_id', $this->tenantId)->where('sku', $data['sku'])->first();
+            if ($e) return $e;
         }
-
-        // By name
         if (!empty($data['name'])) {
-            $existing = Item::where('tenant_id', $this->tenantId)
-                ->where('name', $data['name'])
-                ->first();
-            if ($existing) return $existing;
+            $e = Item::where('tenant_id', $this->tenantId)->where('name', $data['name'])->first();
+            if ($e) return $e;
         }
-
         return null;
     }
 
@@ -367,7 +349,6 @@ class DataImporter
             'sale_price', 'purchase_price', 'gst_rate', 'cess_rate',
             'price_inclusive_tax', 'track_inventory', 'opening_stock', 'reorder_level',
         ];
-
         return array_intersect_key($data, array_flip($allowed));
     }
 
@@ -381,26 +362,67 @@ class DataImporter
         $fieldMap = $this->mapper->getFieldMapping('documents');
         $data = $this->mapFields($record, $fieldMap);
 
+        // Skip cancelled/deleted
+        if (($record['cancelled'] ?? 0) == 1) {
+            throw new \RuntimeException('Document was cancelled in source system.');
+        }
+
         if (empty($data['number']) || empty($data['issue_date'])) {
             throw new \RuntimeException('Document number and issue_date are required.');
         }
 
-        // Map doc_type from section name if not set
+        // Determine doc_type
         if (empty($data['doc_type'])) {
             $data['doc_type'] = match ($section) {
                 'quotations' => 'quotation',
                 'proformas' => 'proforma',
-                'purchase_orders', 'purchase_bills' => $section,
-                'credit_notes' => 'credit_note',
-                'debit_notes' => 'debit_note',
                 default => 'invoice',
             };
         }
 
-        // Resolve party_id from legacy ID mapping
-        $data['party_id'] = $this->resolveId('parties', $data['party_id'] ?? null);
+        // Resolve party_id from legacy mapping
+        if (!empty($record['client_id'])) {
+            $data['party_id'] = $this->resolveId('parties', $record['client_id']);
+        }
 
-        // Check for existing (idempotency) — unique on [tenant_id, doc_type, number]
+        // If no party_id resolved but client info is embedded, auto-create party
+        if (empty($data['party_id']) && !empty($record['client_name'])) {
+            $party = $this->autoCreatePartyFromInvoice($record);
+            if ($party) {
+                $data['party_id'] = $party->id;
+                $this->storeIdMapping('parties', $record['client_id'] ?? null, $party->id);
+            }
+        }
+
+        // Tax mode from gst_type field
+        $data['tax_mode'] = match ($record['gst_type'] ?? 'g') {
+            'g', 'gst' => 'gst',
+            default => 'non_gst',
+        };
+
+        // Reverse charge
+        $data['reverse_charge'] = (bool)($record['reverse_charges'] ?? 0);
+
+        // Status
+        if (empty($data['status'])) {
+            $data['status'] = match (true) {
+                ($record['is_paid'] ?? 0) == 1 => 'paid',
+                ($record['is_draft'] ?? 0) == 1 => 'draft',
+                ($record['sent'] ?? 0) == 1 => 'sent',
+                default => 'sent',
+            };
+        }
+
+        // Amount paid / balance
+        $grandTotal = (float)($data['grand_total'] ?? $record['total_all'] ?? 0);
+        $amountPaid = (float)($data['amount_paid'] ?? 0);
+        if (($record['is_paid'] ?? 0) == 1) {
+            $amountPaid = $grandTotal;
+        }
+        $data['amount_paid'] = $amountPaid;
+        $data['balance_due'] = $grandTotal - $amountPaid;
+
+        // Existing check
         $existing = Document::where('tenant_id', $this->tenantId)
             ->where('doc_type', $data['doc_type'])
             ->where('number', $data['number'])
@@ -419,15 +441,38 @@ class DataImporter
 
         $doc = Document::create(array_merge(
             $this->cleanDocumentData($data),
-            [
-                'tenant_id' => $this->tenantId,
-                'source' => 'migration',
-            ]
+            ['tenant_id' => $this->tenantId, 'source' => 'migration']
         ));
 
         $this->storeIdMapping('documents', $legacyId, $doc->id);
-
         return 'imported';
+    }
+
+    /**
+     * Auto-create a party from embedded client info in an invoice.
+     */
+    protected function autoCreatePartyFromInvoice(array $record): ?Party
+    {
+        $name = $record['client_name'] ?? null;
+        if (empty($name)) return null;
+
+        $existing = Party::where('tenant_id', $this->tenantId)->where('name', $name)->first();
+        if ($existing) return $existing;
+
+        return Party::create([
+            'tenant_id' => $this->tenantId,
+            'type' => 'customer',
+            'name' => $name,
+            'contact_person' => $record['client_contact'] ?? null,
+            'email' => $record['client_email'] ?? null,
+            'phone' => $record['client_telephone'] ?? null,
+            'billing_address' => $record['client_billing_address'] ?? null,
+            'billing_city' => $record['client_billing_city'] ?? null,
+            'billing_pincode' => $record['client_billing_zip'] ?? null,
+            'billing_country' => 'IN',
+            'gst_treatment' => !empty($record['client_gstin']) ? 'regular' : 'consumer',
+            'gstin' => $record['client_gstin'] ?? null,
+        ]);
     }
 
     protected function cleanDocumentData(array $data): array
@@ -441,7 +486,6 @@ class DataImporter
             'tds_total', 'tcs_total', 'shipping_charge', 'round_off', 'grand_total',
             'amount_paid', 'balance_due', 'notes', 'terms', 'meta', 'tax_mode',
         ];
-
         return array_intersect_key($data, array_flip($allowed));
     }
 
@@ -455,9 +499,13 @@ class DataImporter
         $fieldMap = $this->mapper->getFieldMapping('document_lines');
         $data = $this->mapFields($record, $fieldMap);
 
-        // Resolve relationships
-        $data['document_id'] = $this->resolveId('documents', $data['document_id'] ?? null);
-        $data['item_id'] = $this->resolveId('items', $data['item_id'] ?? null);
+        // Resolve document_id from invoice_id
+        $invoiceId = $data['document_id'] ?? $record['invoice_id'] ?? null;
+        $data['document_id'] = $this->resolveId('documents', $invoiceId);
+
+        // Resolve item_id from product_id
+        $productId = $data['item_id'] ?? $record['product_id'] ?? null;
+        $data['item_id'] = $this->resolveId('items', $productId);
 
         if (empty($data['document_id'])) {
             throw new \RuntimeException('Document reference is required for line items.');
@@ -467,7 +515,40 @@ class DataImporter
             throw new \RuntimeException('Line item name is required.');
         }
 
-        // For idempotency: check if this exact line already exists
+        // Handle tax_id → gst_rate
+        if (isset($record['tax_id']) && !isset($data['gst_rate'])) {
+            $data['gst_rate'] = $this->resolveTaxRate($record['tax_id']);
+        }
+
+        // Use pre-calculated totals from legacy system
+        $gstRate = (float)($data['gst_rate'] ?? 0);
+        $taxableValue = (float)($data['taxable_value'] ?? $record['total_no_tax'] ?? 0);
+        $totalTax = (float)($record['total_tax'] ?? 0);
+        $lineTotal = (float)($data['line_total'] ?? $record['total_all'] ?? 0);
+
+        // Split GST into CGST/SGST or IGST based on rate
+        $data['taxable_value'] = $taxableValue;
+        $data['line_total'] = $lineTotal;
+
+        if ($gstRate > 0) {
+            $halfRate = $gstRate / 2;
+            $data['cgst_amount'] = round($taxableValue * $halfRate / 100, 2);
+            $data['sgst_amount'] = round($taxableValue * $halfRate / 100, 2);
+            $data['igst_amount'] = 0;
+        }
+
+        // Cess
+        if (isset($record['cess_percentage'])) {
+            $data['cess_rate'] = (float)$record['cess_percentage'];
+            $data['cess_amount'] = (float)($record['cess_value'] ?? 0);
+        }
+
+        // HSN/SAC
+        if (empty($data['hsn_sac'])) {
+            $data['hsn_sac'] = $record['hsn'] ?? $record['sac'] ?? null;
+        }
+
+        // Idempotency
         if ($action === 'import') {
             $existing = DocumentLine::where('document_id', $data['document_id'])
                 ->where('name', $data['name'])
@@ -483,7 +564,6 @@ class DataImporter
 
         $line = DocumentLine::create($this->cleanDocumentLineData($data));
         $this->storeIdMapping('document_lines', $legacyId, $line->id);
-
         return 'imported';
     }
 
@@ -495,7 +575,6 @@ class DataImporter
             'taxable_value', 'gst_rate', 'cgst_amount', 'sgst_amount', 'igst_amount',
             'cess_rate', 'cess_amount', 'line_total',
         ];
-
         return array_intersect_key($data, array_flip($allowed));
     }
 
@@ -509,15 +588,38 @@ class DataImporter
         $fieldMap = $this->mapper->getFieldMapping('payments');
         $data = $this->mapFields($record, $fieldMap);
 
-        // Resolve relationships
+        // Handle amount field variations
+        $data['amount'] = $data['amount'] ?? $record['amount_payment'] ?? $record['amount'] ?? null;
+
+        // Handle date field variations
+        $data['paid_on'] = $data['paid_on'] ?? $record['pay_date'] ?? $record['payment_date'] ?? null;
+
+        // Direction: 'r' = receipt (in), 'p' = payment (out)
+        if (empty($data['direction'])) {
+            $type = $record['type'] ?? 'r';
+            $data['direction'] = in_array($type, ['r', 'receipt', 'in'], true) ? 'in' : 'out';
+        }
+
+        // Method from payment_type
+        if (empty($data['method']) && isset($record['payment_type'])) {
+            $data['method'] = match (strtolower($record['payment_type'])) {
+                'bank transfer', 'neft', 'rtgs', 'imps' => 'bank',
+                'cash' => 'cash',
+                'cheque', 'check' => 'cheque',
+                'upi' => 'upi',
+                'card', 'credit card', 'debit card' => 'card',
+                default => 'bank',
+            };
+        }
+
         $data['document_id'] = $this->resolveId('documents', $data['document_id'] ?? null);
-        $data['party_id'] = $this->resolveId('parties', $data['party_id'] ?? null);
+        $data['party_id'] = $this->resolveId('parties', $data['party_id'] ?? $record['client_id'] ?? null);
 
         if (empty($data['amount']) || empty($data['paid_on'])) {
             throw new \RuntimeException('Payment amount and date are required.');
         }
 
-        // Idempotency: check by amount + date + reference + document
+        // Idempotency
         $query = Payment::where('tenant_id', $this->tenantId)
             ->where('amount', $data['amount'])
             ->where('paid_on', $data['paid_on']);
@@ -525,7 +627,6 @@ class DataImporter
         if (!empty($data['reference'])) {
             $query->where('reference', $data['reference']);
         }
-
         if (!empty($data['document_id'])) {
             $query->where('document_id', $data['document_id']);
         }
@@ -543,7 +644,6 @@ class DataImporter
         ));
 
         $this->storeIdMapping('payments', $legacyId, $payment->id);
-
         return 'imported';
     }
 
@@ -553,241 +653,263 @@ class DataImporter
             'document_id', 'party_id', 'direction', 'amount', 'paid_on',
             'method', 'reference', 'note',
         ];
-
         return array_intersect_key($data, array_flip($allowed));
     }
 
     // =========================================================================
-    // Expense Import
+    // Payment Document Import (standalone receipts)
+    // =========================================================================
+
+    protected function importPaymentDocument(array $record, string $action): string
+    {
+        $legacyId = $record['id'] ?? null;
+
+        $amount = (float)($record['amount_payment'] ?? $record['amount'] ?? 0);
+        $paidOn = $record['pay_date'] ?? $record['payment_date'] ?? null;
+        $partyId = $this->resolveId('parties', $record['client_id'] ?? $record['vendor_id'] ?? null);
+
+        if (empty($amount) || empty($paidOn)) {
+            throw new \RuntimeException('Payment document requires amount and date.');
+        }
+
+        $method = match (strtolower($record['payment_type'] ?? '')) {
+            'bank transfer', 'neft', 'rtgs', 'imps' => 'bank',
+            'cash' => 'cash',
+            'cheque', 'check' => 'cheque',
+            'upi' => 'upi',
+            default => 'bank',
+        };
+
+        $direction = ($record['type'] ?? 'r') === 'r' ? 'in' : 'out';
+
+        // Idempotency
+        $existing = Payment::where('tenant_id', $this->tenantId)
+            ->where('amount', $amount)
+            ->where('paid_on', $paidOn)
+            ->where('reference', $record['reference'] ?? null)
+            ->first();
+
+        if ($existing) {
+            $this->storeIdMapping('payment_documents', $legacyId, $existing->id);
+            return 'skipped';
+        }
+
+        $payment = Payment::create([
+            'tenant_id' => $this->tenantId,
+            'party_id' => $partyId,
+            'direction' => $direction,
+            'amount' => $amount,
+            'paid_on' => $paidOn,
+            'method' => $method,
+            'reference' => $record['reference'] ?? $record['number'] ?? null,
+            'note' => $record['note'] ?? null,
+        ]);
+
+        $this->storeIdMapping('payment_documents', $legacyId, $payment->id);
+        return 'imported';
+    }
+
+    // =========================================================================
+    // Invoice-Payment Link Import
+    // =========================================================================
+
+    protected function importInvoicePayment(array $record, string $action): string
+    {
+        $legacyId = $record['id'] ?? null;
+
+        $documentId = $this->resolveId('documents', $record['invoice_id'] ?? null);
+        $paymentId = $this->resolveId('payments', $record['payment_id'] ?? null);
+        $amount = (float)($record['amount'] ?? 0);
+
+        if (!$documentId || !$amount) {
+            return 'skipped';
+        }
+
+        // If we have a payment_id, link it; otherwise create a new payment
+        if ($paymentId) {
+            Payment::where('id', $paymentId)
+                ->where('tenant_id', $this->tenantId)
+                ->update(['document_id' => $documentId]);
+            return 'updated';
+        }
+
+        // Create a payment record for this link
+        $doc = Document::find($documentId);
+        if (!$doc) return 'skipped';
+
+        $existing = Payment::where('tenant_id', $this->tenantId)
+            ->where('document_id', $documentId)
+            ->where('amount', $amount)
+            ->first();
+
+        if ($existing) return 'skipped';
+
+        Payment::create([
+            'tenant_id' => $this->tenantId,
+            'document_id' => $documentId,
+            'party_id' => $doc->party_id,
+            'direction' => 'in',
+            'amount' => $amount,
+            'paid_on' => $doc->issue_date,
+            'method' => 'bank',
+            'note' => 'Imported from legacy invoice-payment link',
+        ]);
+
+        return 'imported';
+    }
+
+    // =========================================================================
+    // Expense, Warehouse, Stock, Settings (same as before)
     // =========================================================================
 
     protected function importExpense(array $record, string $action): string
     {
         $legacyId = $record['id'] ?? null;
-        $fieldMap = $this->mapper->getFieldMapping('expenses');
-        $data = $this->mapFields($record, $fieldMap);
-
-        // Resolve relationships
+        $data = $this->mapFields($record, $this->mapper->getFieldMapping('expenses'));
         $data['party_id'] = $this->resolveId('parties', $data['party_id'] ?? null);
 
         if (empty($data['amount']) || empty($data['spent_on'])) {
             throw new \RuntimeException('Expense amount and date are required.');
         }
 
-        // Idempotency
-        $query = Expense::where('tenant_id', $this->tenantId)
-            ->where('amount', $data['amount'])
-            ->where('spent_on', $data['spent_on']);
-
-        if (!empty($data['reference'])) {
-            $query->where('reference', $data['reference']);
-        }
-
-        $existing = $query->first();
+        $existing = Expense::where('tenant_id', $this->tenantId)
+            ->where('amount', $data['amount'])->where('spent_on', $data['spent_on'])->first();
 
         if ($existing) {
             $this->storeIdMapping('expenses', $legacyId, $existing->id);
             return $action === 'merge' ? 'updated' : 'skipped';
         }
 
-        $expense = Expense::create(array_merge(
-            $this->cleanExpenseData($data),
-            ['tenant_id' => $this->tenantId]
-        ));
-
+        $expense = Expense::create(array_merge($data, ['tenant_id' => $this->tenantId]));
         $this->storeIdMapping('expenses', $legacyId, $expense->id);
-
         return 'imported';
     }
-
-    protected function cleanExpenseData(array $data): array
-    {
-        $allowed = [
-            'party_id', 'category', 'spent_on', 'amount', 'gst_amount',
-            'itc_eligible', 'reference', 'note',
-        ];
-
-        return array_intersect_key($data, array_flip($allowed));
-    }
-
-    // =========================================================================
-    // Warehouse Import
-    // =========================================================================
 
     protected function importWarehouse(array $record, string $action): string
     {
         $legacyId = $record['id'] ?? null;
-        $data = $record;
+        if (empty($record['name'])) throw new \RuntimeException('Warehouse name is required.');
 
-        if (empty($data['name'])) {
-            throw new \RuntimeException('Warehouse name is required.');
-        }
-
-        $existing = Warehouse::where('tenant_id', $this->tenantId)
-            ->where('name', $data['name'])
-            ->first();
-
+        $existing = Warehouse::where('tenant_id', $this->tenantId)->where('name', $record['name'])->first();
         if ($existing) {
             $this->storeIdMapping('warehouses', $legacyId, $existing->id);
-            if ($action === 'merge') {
-                $existing->update([
-                    'state_code' => $data['state_code'] ?? $existing->state_code,
-                    'address' => $data['address'] ?? $existing->address,
-                ]);
-                return 'updated';
-            }
-            return 'skipped';
+            return $action === 'merge' ? 'updated' : 'skipped';
         }
 
-        $warehouse = Warehouse::create([
-            'tenant_id' => $this->tenantId,
-            'name' => $data['name'],
-            'state_code' => $data['state_code'] ?? null,
-            'address' => $data['address'] ?? null,
-            'is_default' => $data['is_default'] ?? false,
-        ]);
-
-        $this->storeIdMapping('warehouses', $legacyId, $warehouse->id);
-
+        $w = Warehouse::create(['tenant_id' => $this->tenantId, 'name' => $record['name'],
+            'state_code' => $record['state_code'] ?? null, 'address' => $record['address'] ?? null]);
+        $this->storeIdMapping('warehouses', $legacyId, $w->id);
         return 'imported';
     }
-
-    // =========================================================================
-    // Stock Movement Import
-    // =========================================================================
 
     protected function importStockMovement(array $record, string $action): string
     {
         $legacyId = $record['id'] ?? null;
-        $data = $record;
+        $record['item_id'] = $this->resolveId('items', $record['item_id'] ?? null);
+        $record['warehouse_id'] = $this->resolveId('warehouses', $record['warehouse_id'] ?? null);
 
-        // Resolve relationships
-        $data['item_id'] = $this->resolveId('items', $data['item_id'] ?? null);
-        $data['warehouse_id'] = $this->resolveId('warehouses', $data['warehouse_id'] ?? null);
-
-        if (empty($data['item_id']) || empty($data['direction']) || empty($data['quantity'])) {
-            throw new \RuntimeException('Item, direction, and quantity are required for stock movements.');
+        if (empty($record['item_id']) || empty($record['direction']) || empty($record['quantity'])) {
+            throw new \RuntimeException('Item, direction, and quantity required.');
         }
 
-        // Idempotency: skip if same movement already exists
         $existing = StockMovement::where('tenant_id', $this->tenantId)
-            ->where('item_id', $data['item_id'])
-            ->where('direction', $data['direction'])
-            ->where('quantity', $data['quantity'])
-            ->where('moved_on', $data['moved_on'] ?? now()->toDateString())
-            ->first();
+            ->where('item_id', $record['item_id'])->where('direction', $record['direction'])
+            ->where('quantity', $record['quantity'])->where('moved_on', $record['moved_on'] ?? now()->toDateString())->first();
 
         if ($existing) {
             $this->storeIdMapping('stock_movements', $legacyId, $existing->id);
             return 'skipped';
         }
 
-        $movement = StockMovement::create([
-            'tenant_id' => $this->tenantId,
-            'item_id' => $data['item_id'],
-            'warehouse_id' => $data['warehouse_id'],
-            'direction' => $data['direction'],
-            'quantity' => $data['quantity'],
-            'rate' => $data['rate'] ?? 0,
-            'moved_on' => $data['moved_on'] ?? now()->toDateString(),
-            'note' => $data['note'] ?? null,
-        ]);
-
-        $this->storeIdMapping('stock_movements', $legacyId, $movement->id);
-
+        $m = StockMovement::create(['tenant_id' => $this->tenantId, 'item_id' => $record['item_id'],
+            'warehouse_id' => $record['warehouse_id'], 'direction' => $record['direction'],
+            'quantity' => $record['quantity'], 'rate' => $record['rate'] ?? 0,
+            'moved_on' => $record['moved_on'] ?? now()->toDateString(), 'note' => $record['note'] ?? null]);
+        $this->storeIdMapping('stock_movements', $legacyId, $m->id);
         return 'imported';
     }
 
-    // =========================================================================
-    // Settings Import (special — updates the tenant)
-    // =========================================================================
-
     protected function importSettings(array $record, string $action): string
     {
-        // Settings are merged into the tenant's settings array
         $tenant = \App\Models\Tenant::find($this->tenantId);
-
-        if (!$tenant) {
-            throw new \RuntimeException('Tenant not found.');
-        }
-
-        if ($action === 'skip') {
-            return 'skipped';
-        }
+        if (!$tenant || $action === 'skip') return 'skipped';
 
         $currentSettings = $tenant->settings ?? [];
         $importedSettings = [];
 
-        // Extract meaningful settings from the backup
-        $settingKeys = ['invoice_terms', 'invoice_notes', 'default_currency', 'fiscal_year_start',
-            'payment_terms', 'company_email', 'company_phone', 'website'];
+        // Handle key-value config records (like the old app's config.json)
+        if (isset($record['KEY']) || isset($record['key'])) {
+            $key = $record['KEY'] ?? $record['key'];
+            $value = $record['value'] ?? '';
 
-        foreach ($settingKeys as $key) {
-            if (isset($record[$key])) {
-                $importedSettings[$key] = $record[$key];
-            }
+            // Map old config keys to new settings
+            $keyMap = [
+                'default_invoice_note' => 'invoice_notes',
+                'date_format' => 'date_format',
+                'low_stock_value' => 'low_stock_threshold',
+                'fiscal_year_setup' => 'fiscal_year_start',
+                'page_results' => 'records_per_page',
+            ];
+
+            $mappedKey = $keyMap[$key] ?? $key;
+            $importedSettings[$mappedKey] = $value;
         }
 
-        // Also accept nested 'settings' key
+        // Handle regular settings records
+        $settingKeys = ['invoice_terms', 'invoice_notes', 'default_currency', 'fiscal_year_start',
+            'payment_terms', 'company_email', 'company_phone', 'website'];
+        foreach ($settingKeys as $key) {
+            if (isset($record[$key])) $importedSettings[$key] = $record[$key];
+        }
         if (isset($record['settings']) && is_array($record['settings'])) {
             $importedSettings = array_merge($importedSettings, $record['settings']);
         }
 
-        if (empty($importedSettings)) {
-            return 'skipped';
-        }
+        if (empty($importedSettings)) return 'skipped';
 
-        if ($action === 'merge') {
-            $tenant->update(['settings' => array_merge($currentSettings, $importedSettings)]);
-            return 'updated';
-        }
+        $tenant->update(['settings' => $action === 'merge'
+            ? array_merge($currentSettings, $importedSettings)
+            : $importedSettings]);
 
-        // Import as new: overwrite
-        $tenant->update(['settings' => $importedSettings]);
-        return 'imported';
+        return $action === 'merge' ? 'updated' : 'imported';
     }
 
     // =========================================================================
     // Helpers
     // =========================================================================
 
-    /**
-     * Map legacy field names to canonical names.
-     */
     protected function mapFields(array $record, array $fieldMap): array
     {
         $mapped = [];
-
         foreach ($record as $key => $value) {
             $canonicalKey = $fieldMap[$key] ?? $key;
-            // Don't overwrite already-mapped values (canonical wins)
             if (!isset($mapped[$canonicalKey]) || !isset($record[$canonicalKey])) {
                 $mapped[$canonicalKey] = $value;
             }
         }
-
         return $mapped;
     }
 
-    /**
-     * Store a legacy-to-new ID mapping.
-     */
     protected function storeIdMapping(string $section, $legacyId, int $newId): void
     {
-        if ($legacyId !== null) {
-            $this->idMap[$section][$legacyId] = $newId;
-        }
+        if ($legacyId !== null) $this->idMap[$section][$legacyId] = $newId;
+    }
+
+    protected function resolveId(string $section, $legacyId): ?int
+    {
+        return $legacyId !== null ? ($this->idMap[$section][$legacyId] ?? null) : null;
     }
 
     /**
-     * Resolve a legacy ID to a new ID using the mapping table.
+     * Resolve a tax_id (like 18, 5, 12) to a GST rate percentage.
      */
-    protected function resolveId(string $section, $legacyId): ?int
+    protected function resolveTaxRate($taxId): float
     {
-        if ($legacyId === null) {
-            return null;
+        if (is_numeric($taxId)) {
+            $rate = (float)$taxId;
+            // If it looks like a percentage already (0-40), use it directly
+            if ($rate >= 0 && $rate <= 40) return $rate;
         }
-
-        return $this->idMap[$section][$legacyId] ?? null;
+        return $this->taxIdToRate[(int)$taxId] ?? 18.0;
     }
 }

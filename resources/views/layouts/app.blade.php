@@ -7,7 +7,7 @@
     <title>@yield('title', 'Dashboard') · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full text-slate-800 antialiased">
+<body class="h-full text-slate-800 antialiased" >
 @php
     $tenant = \App\Support\TenantContext::get();
     $partnerProfile = auth()->check() && ! auth()->user()->tenant_id && ! auth()->user()->is_super_admin
@@ -25,6 +25,7 @@
             ['documents.index', 'Invoices', ['type' => 'invoice']],
             ['documents.index', 'Quotations', ['type' => 'quotation']],
             ['documents.index', 'Credit Notes', ['type' => 'credit_note']],
+            ['payments.index', 'Payments Received', []],
         ],
         'Purchases' => [
             ['documents.index', 'Purchase Orders', ['type' => 'purchase_order']],
@@ -33,6 +34,7 @@
         'Records' => [
             ['parties.index', 'Clients & Vendors', []],
             ['items.index', 'Products & Services', []],
+              ['bulk.index', 'Bulk Import/Export', []], 
         ],
         'Reports' => [
             ['reports.pl', 'Profit & Loss', []],
@@ -164,7 +166,7 @@
             </div>
         </header>
 
-        <main class="flex-1 px-4 py-6 lg:px-8">
+<main class="min-w-0 flex-1 overflow-x-hidden px-4 py-6 lg:px-8">
             @if (session('success') || session('error'))
                 <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
                      class="mb-5 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm {{ session('error') ? 'border-rose-200 bg-rose-50 text-rose-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800' }}">

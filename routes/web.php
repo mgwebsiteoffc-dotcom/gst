@@ -23,6 +23,8 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShopifyController;
+use App\Http\Controllers\BulkController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 // ---------------------------------------------------------------
@@ -62,7 +64,7 @@ Route::get('robots.txt', [BlogController::class, 'robots'])->name('robots');
 Route::get('legal/{page}', [PageController::class, 'legal'])->name('legal');
 
 // Signed public invoice link shared over WhatsApp/email.
-Route::get('i/{document}', [\App\Http\Controllers\DocumentController::class, 'publicView'])
+Route::get('i/{document}', [DocumentController::class, 'publicView'])
     ->middleware('signed')->name('documents.public');
 
 // Shopify webhooks: HMAC-verified, no session/CSRF.
@@ -91,6 +93,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::get('branding', [BrandingController::class, 'edit'])->name('branding.edit');
         Route::post('branding', [BrandingController::class, 'update'])->name('branding.update');
         Route::delete('branding/{type}', [BrandingController::class, 'removeImage'])->name('branding.remove');
+        Route::get('branding/preview', [BrandingController::class, 'previewInvoice'])->name('branding.preview');
 
         // Documents (invoice, quotation, proforma, challan, CN/DN, PO, purchase bill)
         Route::get('documents/{type}', [DocumentController::class, 'index'])->name('documents.index');
@@ -105,6 +108,12 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('document/{document}/cancel', [DocumentController::class, 'cancel'])->name('documents.cancel');
         Route::post('document/{document}/whatsapp', [DocumentController::class, 'sendWhatsApp'])->name('documents.whatsapp');
         Route::post('document/{document}/reminder', [DocumentController::class, 'sendReminder'])->name('documents.reminder');
+
+          // Payments Received
+        Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
+        Route::get('payments/{document}', [PaymentController::class, 'show'])->name('payments.show');
+        Route::post('payments/{document}', [PaymentController::class, 'store'])->name('payments.store');
+        Route::delete('payments/{document}/{payment}', [PaymentController::class, 'destroy'])->name('payments.destroy');
 
         // e-Invoice / e-Way bill
         Route::middleware('subscribed:einvoice')->group(function () {
@@ -147,8 +156,17 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
     Route::view('billing/plans', 'billing.plans')->name('billing.plans');
 
-    // Migration / Import
+        // Bulk Import / Export
+    Route::get('bulk', [BulkController::class, 'index'])->name('bulk.index');
+    Route::get('bulk/{entity}/sample', [BulkController::class, 'sample'])->name('bulk.sample');
+    Route::get('bulk/{entity}/export', [BulkController::class, 'export'])->name('bulk.export');
+    Route::post('bulk/{entity}/preview', [BulkController::class, 'preview'])->name('bulk.preview');
+    Route::post('bulk/{entity}/execute', [BulkController::class, 'execute'])->name('bulk.execute');
+
+
+ // Migration / Import
     Route::get('migration', [MigrationController::class, 'index'])->name('migration.index');
+    Route::get('migration/data', [MigrationController::class, 'rawData'])->name('migration.data');
     Route::post('migration/upload', [MigrationController::class, 'upload'])->name('migration.upload');
     Route::get('migration/{job}', [MigrationController::class, 'show'])->name('migration.show');
     Route::get('migration/{job}/review', [MigrationController::class, 'review'])->name('migration.review');

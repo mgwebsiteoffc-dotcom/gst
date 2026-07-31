@@ -19,7 +19,7 @@ class MigrationMapper
                 'key' => 'settings',
                 'label' => 'Settings',
                 'table' => 'tenants',
-                'model' => null, // Special handling - updates tenant
+                'model' => null,
                 'order' => 10,
                 'aliases' => ['settings', 'preferences', 'config'],
             ],
@@ -35,7 +35,7 @@ class MigrationMapper
                 'key' => 'categories',
                 'label' => 'Categories',
                 'table' => 'items',
-                'model' => null, // Merged into items if needed
+                'model' => null,
                 'order' => 20,
                 'aliases' => ['categories', 'item_categories'],
             ],
@@ -53,7 +53,7 @@ class MigrationMapper
                 'table' => 'parties',
                 'model' => \App\Models\Party::class,
                 'order' => 30,
-                'aliases' => ['parties', 'clients', 'customers', 'suppliers', 'vendors'],
+                'aliases' => ['parties', 'clients', 'customers', 'suppliers', 'vendors', 'contacts'],
             ],
             'items' => [
                 'key' => 'items',
@@ -77,7 +77,7 @@ class MigrationMapper
                 'table' => 'document_lines',
                 'model' => \App\Models\DocumentLine::class,
                 'order' => 60,
-                'aliases' => ['document_lines', 'invoice_items', 'line_items', 'items_detail'],
+                'aliases' => ['document_lines', 'invoice_items', 'invoice_products', 'line_items', 'items_detail'],
             ],
             'payments' => [
                 'key' => 'payments',
@@ -86,6 +86,22 @@ class MigrationMapper
                 'model' => \App\Models\Payment::class,
                 'order' => 70,
                 'aliases' => ['payments', 'transactions'],
+            ],
+            'payment_documents' => [
+                'key' => 'payment_documents',
+                'label' => 'Payment Receipts',
+                'table' => 'payments',
+                'model' => \App\Models\Payment::class,
+                'order' => 70,
+                'aliases' => ['payment_documents', 'payment_receipts'],
+            ],
+            'invoice_payments' => [
+                'key' => 'invoice_payments',
+                'label' => 'Invoice Payments',
+                'table' => 'payments',
+                'model' => \App\Models\Payment::class,
+                'order' => 75,
+                'aliases' => ['invoice_payments', 'payment_links'],
             ],
             'expenses' => [
                 'key' => 'expenses',
@@ -201,11 +217,46 @@ class MigrationMapper
     }
 
     /**
+     * Resolve a section key to its canonical name.
+     * e.g., "clients" → "parties", "products" → "items"
+     */
+    public function canonicalSection(string $section): string
+    {
+        $aliases = [
+            'clients' => 'parties',
+            'customers' => 'parties',
+            'suppliers' => 'parties',
+            'vendors' => 'parties',
+            'contacts' => 'parties',
+            'products' => 'items',
+            'services' => 'items',
+            'invoices' => 'documents',
+            'quotations' => 'documents',
+            'bills' => 'documents',
+            'quotes' => 'documents',
+            'invoice_items' => 'document_lines',
+            'line_items' => 'document_lines',
+            'items_detail' => 'document_lines',
+            'transactions' => 'payments',
+            'bills_payable' => 'expenses',
+            'locations' => 'warehouses',
+            'inventory_logs' => 'stock_movements',
+            'preferences' => 'settings',
+            'config' => 'settings',
+        ];
+
+        return $aliases[$section] ?? $section;
+    }
+
+    /**
      * Get field mapping from legacy format to new format.
      * Maps common alternative field names to the canonical field names.
      */
     public function getFieldMapping(string $section): array
     {
+        // Resolve to canonical section name first
+        $section = $this->canonicalSection($section);
+
         $mappings = [
             'parties' => [
                 'client_name' => 'name',
@@ -213,21 +264,31 @@ class MigrationMapper
                 'supplier_name' => 'name',
                 'vendor_name' => 'name',
                 'company_name' => 'name',
+                'name' => 'name',
                 'contact_name' => 'contact_person',
+                'client_contact' => 'contact_person',
                 'mobile' => 'phone',
                 'phone_number' => 'phone',
+                'client_telephone' => 'phone',
                 'email_address' => 'email',
+                'client_email' => 'email',
                 'address' => 'billing_address',
+                'client_billing_address' => 'billing_address',
                 'city' => 'billing_city',
+                'client_billing_city' => 'billing_city',
                 'state' => 'billing_state',
+                'client_billing_state' => 'billing_state',
                 'state_code' => 'billing_state_code',
                 'pincode' => 'billing_pincode',
+                'client_billing_zip' => 'billing_pincode',
                 'zip' => 'billing_pincode',
                 'postal_code' => 'billing_pincode',
                 'country' => 'billing_country',
                 'gst_number' => 'gstin',
+                'client_gstin' => 'gstin',
                 'gst_treatment_type' => 'gst_treatment',
                 'balance' => 'opening_balance',
+                'opening_balance_amount' => 'opening_balance',
             ],
             'items' => [
                 'product_name' => 'name',
@@ -244,10 +305,13 @@ class MigrationMapper
                 'sac_code' => 'hsn_sac',
                 'unit' => 'uqc',
                 'unit_code' => 'uqc',
+                'measuring_unit' => 'uqc',
                 'selling_price' => 'sale_price',
+                'price' => 'sale_price',
                 'mrp' => 'sale_price',
                 'cost_price' => 'purchase_price',
                 'buy_price' => 'purchase_price',
+                'purchase_rate' => 'purchase_price',
                 'tax_rate' => 'gst_rate',
                 'gst_percent' => 'gst_rate',
                 'tax_percent' => 'gst_rate',
@@ -272,10 +336,15 @@ class MigrationMapper
                 'type' => 'doc_type',
                 'document_type' => 'doc_type',
                 'total' => 'grand_total',
+                'total_all' => 'grand_total',
                 'amount' => 'grand_total',
                 'invoice_total' => 'grand_total',
-                'tax_amount' => 'cgst_total', // Will be split in importer
+                'total_no_tax' => 'taxable_value',
+                'total_tax' => 'igst_total',
+                'tax_amount' => 'cgst_total',
                 'note' => 'notes',
+                'internal_notes' => 'notes',
+                'invoice_notes' => 'notes',
                 'remarks' => 'notes',
                 'terms_conditions' => 'terms',
             ],
@@ -288,15 +357,21 @@ class MigrationMapper
                 'description_text' => 'description',
                 'hsn' => 'hsn_sac',
                 'hsn_code' => 'hsn_sac',
+                'sac' => 'hsn_sac',
                 'unit' => 'uqc',
+                'measuring_unit' => 'uqc',
                 'qty' => 'quantity',
                 'unit_price' => 'rate',
                 'price' => 'rate',
                 'discount' => 'discount_amount',
+                'discount_value' => 'discount_amount',
                 'tax_rate' => 'gst_rate',
                 'gst_percent' => 'gst_rate',
                 'total' => 'line_total',
+                'total_all' => 'line_total',
                 'amount' => 'line_total',
+                'total_no_tax' => 'taxable_value',
+                'total_tax' => 'igst_amount',
                 'sort_order' => 'position',
                 'order' => 'position',
             ],
@@ -306,8 +381,10 @@ class MigrationMapper
                 'customer_id' => 'party_id',
                 'client_id' => 'party_id',
                 'payment_date' => 'paid_on',
+                'pay_date' => 'paid_on',
                 'date' => 'paid_on',
                 'payment_method' => 'method',
+                'payment_type' => 'method',
                 'mode' => 'method',
                 'ref' => 'reference',
                 'ref_number' => 'reference',
@@ -315,6 +392,7 @@ class MigrationMapper
                 'remarks' => 'note',
                 'notes' => 'note',
                 'payment_type' => 'direction',
+                'amount_payment' => 'amount',
             ],
             'expenses' => [
                 'vendor_id' => 'party_id',

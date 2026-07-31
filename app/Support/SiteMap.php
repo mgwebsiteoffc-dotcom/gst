@@ -229,6 +229,19 @@ class SiteMap
         'hsn-code-finder' => ['HSN / SAC Code Finder', 'Search HSN codes for goods and SAC codes for services.'],
         'gstin-validator' => ['GSTIN Validator', 'Check any GSTIN\'s format, checksum and state in one step.'],
         'invoice-number-format' => ['Invoice Number Format Guide', 'What a GST-legal invoice series must look like.'],
+        'gstin-search' => ['GSTIN Search by PAN or Name', 'Look up a business\'s GST registration using PAN number or business name.'],
+        'gst-return-status' => ['Check GST Return Status', 'Verify whether a taxpayer has filed their GSTR-1, GSTR-3B and other returns on time.'],
+        'gst-case-laws' => ['Search GST Case Laws', 'Browse important GST case laws, rulings and judgements from Indian courts.'],
+        'einvoice-status' => ['E-Invoice Status of GSTIN', 'Check if a GSTIN is enabled for e-invoicing and view its e-invoice compliance status.'],
+        'gst-reports' => ['GST Reports Download', 'Quick links to download GSTR-1, GSTR-2A, GSTR-3B and other GST reports from the government portal.'],
+        'gst-invoice-generator' => ['GST Invoice Generator', 'Create a free GST-compliant tax invoice online — no signup required.'],
+        'boe-pdf-to-excel' => ['BOE PDF to Excel Converter', 'Convert Bill of Entry PDF documents into editable Excel spreadsheets.'],
+        'pdf-to-csv' => ['PDF to CSV Converter', 'Extract tabular data from PDF files and convert to CSV format.'],
+        'ifsc-code' => ['IFSC Code Lookup', 'Find any bank branch\'s IFSC code, or look up branch details from an IFSC code.'],
+        'online-ocr' => ['Online OCR', 'Extract text from images, scanned PDFs and photos — free online OCR tool.'],
+        'mca-company-search' => ['MCA Company Search', 'Search company registration details, directors and CIN from the MCA database.'],
+        'gst-late-fee-calculator' => ['GST Late Fee Calculator', 'Calculate late filing fees and interest for GSTR-1, GSTR-3B and other returns.'],
+        'gst-filing-preference' => ['GST Filing Preference', 'Check and understand your GST return filing preferences — monthly or QRMP scheme.'],
     ];
 
     public static function solution(string $slug): ?array

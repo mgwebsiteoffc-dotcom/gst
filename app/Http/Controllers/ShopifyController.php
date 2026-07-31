@@ -53,7 +53,6 @@ class ShopifyController extends Controller
 
     public function syncOrders(ShopifyStore $store, ShopifyOrderSync $sync, Request $request)
     {
-        // Allow specifying a "since" date, or default to last 30 days
         $since = $request->input('since', now()->subDays(30)->toIso8601String());
 
         $stats = $sync->sync($store, $since);
@@ -80,15 +79,16 @@ class ShopifyController extends Controller
     {
         $keepLogs = (bool) $request->input('keep_logs', false);
 
-        // Null the token and mark disconnected
-        $store->update([
-            'access_token' => null,
-            'status' => 'disconnected',
-            'auto_create_invoice' => false,
-            'sync_products' => false,
-        ]);
+        \Illuminate\Support\Facades\DB::table('shopify_stores')
+            ->where('id', $store->id)
+            ->update([
+                'access_token' => '',
+                'status' => 'disconnected',
+                'auto_create_invoice' => false,
+                'sync_products' => false,
+                'updated_at' => now(),
+            ]);
 
-        // Optionally wipe sync history
         if (! $keepLogs) {
             $store->logs()->delete();
         }
@@ -138,7 +138,6 @@ class ShopifyController extends Controller
             default => $log->update(['status' => 'skipped', 'message' => 'Unhandled topic']),
         };
 
-        // Shopify requires a 200 within 5 seconds — all work is queued.
         return response()->json(['ok' => true]);
     }
 }

@@ -35,6 +35,7 @@ class BrandingController extends Controller
             'website' => ['nullable', 'string', 'max:255'],
             'accent_color' => ['nullable', 'string', 'max:9'],
             'pdf_template' => ['required', Rule::in(['classic', 'modern', 'compact'])],
+             'show_ship_to' => ['nullable', 'boolean'],
             'default_terms' => ['nullable', 'string', 'max:2000'],
             'invoice_footer' => ['nullable', 'string', 'max:500'],
             'bank_name' => ['nullable', 'string', 'max:100'],
@@ -93,6 +94,7 @@ class BrandingController extends Controller
                     'upi' => $data['bank_upi'] ?? null,
                 ],
                 'pdf_template' => $data['pdf_template'],
+                'show_ship_to' => (bool) ($data['show_ship_to'] ?? false),
                 'default_terms' => $data['default_terms'] ?? null,
                 'invoice_footer' => $data['invoice_footer'] ?? null,
             ]),
@@ -117,5 +119,63 @@ class BrandingController extends Controller
 
         return redirect()->route('settings.index', ['tab' => 'branding'])
             ->with('success', ucfirst($type).' removed.');
+    }
+     /**
+     * Preview invoice PDF with current branding/template settings.
+     */
+    public function previewInvoice(Request $request)
+    {
+        $tenant = TenantContext::get();
+        $template = $request->get('template', $tenant->setting('pdf_template', 'classic'));
+
+        $doc = new \App\Models\Document([
+            'doc_type' => 'invoice', 'number' => 'SAMPLE/2026-27/0001',
+            'issue_date' => now(), 'due_date' => now()->addDays(30),
+            'status' => 'sent', 'tax_mode' => $tenant->defaultTaxMode(),
+            'supply_type' => 'B2B', 'place_of_supply_code' => $tenant->state_code ?: '27',
+            'is_interstate' => false, 'reverse_charge' => false, 'currency' => 'INR',
+            'subtotal' => 25000, 'discount_total' => 0, 'taxable_value' => 25000,
+            'cgst_total' => 2250, 'sgst_total' => 2250, 'igst_total' => 0, 'cess_total' => 0,
+            'shipping_charge' => 0, 'round_off' => 0.40,
+            'grand_total' => 29500.40, 'amount_paid' => 10000, 'balance_due' => 19500.40,
+            'notes' => 'This is a sample invoice preview with your current template and branding settings.',
+            'terms' => $tenant->setting('default_terms', 'Payment due within 30 days of invoice date.'),
+        ]);
+        $doc->tenant = $tenant;
+        $doc->setRelation('einvoice', null);
+
+        $party = new \App\Models\Party([
+            'name' => 'Sample Customer Pvt Ltd', 'gstin' => '27AABCS1234F1Z5',
+            'gst_treatment' => 'regular',
+            'billing_address' => '123 Business Park, Sector 15', 'billing_city' => 'Mumbai',
+            'billing_state' => 'Maharashtra', 'billing_state_code' => '27',
+            'billing_pincode' => '400001', 'billing_country' => 'IN',
+            'email' => 'accounts@samplecustomer.com', 'phone' => '+91 98765 43210',
+        ]);
+        $doc->setRelation('party', $party);
+
+        $line1 = new \App\Models\DocumentLine([
+            'name' => 'Web Development Service', 'description' => 'Custom website development - July 2026',
+            'hsn_sac' => '998314', 'uqc' => 'HRS', 'quantity' => 40, 'rate' => 500,
+            'discount_amount' => 0, 'taxable_value' => 20000, 'gst_rate' => 18,
+            'cgst_amount' => 1800, 'sgst_amount' => 1800, 'igst_amount' => 0, 'cess_amount' => 0,
+            'line_total' => 23600, 'position' => 1,
+        ]);
+        $line2 = new \App\Models\DocumentLine([
+            'name' => 'Hosting & Maintenance', 'description' => 'Annual server hosting plan',
+            'hsn_sac' => '998315', 'uqc' => 'NOS', 'quantity' => 1, 'rate' => 5000,
+            'discount_amount' => 0, 'taxable_value' => 5000, 'gst_rate' => 18,
+            'cgst_amount' => 450, 'sgst_amount' => 450, 'igst_amount' => 0, 'cess_amount' => 0,
+            'line_total' => 5900, 'position' => 2,
+        ]);
+        $doc->setRelation('lines', collect([$line1, $line2]));
+
+        $view = match ($template) {
+            'modern' => 'invoices.pdf-modern',
+            default => 'invoices.pdf',
+        };
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView($view, ['document' => $doc, 'template' => $template])->setPaper('a4');
+        return $pdf->stream('invoice-preview-' . $template . '.pdf');
     }
 }
