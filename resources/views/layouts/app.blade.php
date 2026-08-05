@@ -58,6 +58,7 @@
             ['admin.dashboard', 'Overview', []],
             ['admin.tenants.index', 'Businesses', []],
             ['admin.plans.index', 'Subscription Plans', []],
+            ['admin.hsn-codes.index', 'HSN / SAC Codes', []],
         ];
         $groups['Partners'] = [
             ['admin.partners.index', 'Partners', []],

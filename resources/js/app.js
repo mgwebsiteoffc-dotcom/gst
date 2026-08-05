@@ -46,6 +46,8 @@ Alpine.data('invoiceEditor', (config = {}) => ({
     sellerState: config.sellerState ?? null,
     placeOfSupply: config.placeOfSupply ?? null,
     partyId: config.partyId ?? '',
+    partyQuery: '',
+    partyOpen: false,
     parties: config.parties ?? {},
     catalog: config.catalog ?? [],
     lines: config.lines?.length ? config.lines : [],
@@ -58,6 +60,7 @@ Alpine.data('invoiceEditor', (config = {}) => ({
 
     init() {
         if (!this.lines.length) this.addLine();
+        if (this.partyId) this.partyQuery = this.partyLabel(this.partyId);
         // Enter in the last row adds a new line instead of submitting the form.
         this.$el.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && e.target.matches('input:not([type=submit])')) {
@@ -99,6 +102,26 @@ Alpine.data('invoiceEditor', (config = {}) => ({
         if (!Number(line.rate)) {
             line.rate = Number(this.isPurchase ? item.purchase_price : item.sale_price) || 0;
         }
+    },
+
+    partyLabel(id) {
+        const p = this.parties[String(id)];
+        if (!p) return '';
+        return p.name + (p.gstin ? ` — ${p.gstin}` : '');
+    },
+
+    get filteredParties() {
+        const q = this.partyQuery.trim().toLowerCase();
+        return Object.entries(this.parties)
+            .map(([id, p]) => ({ id, label: p.name + (p.gstin ? ` — ${p.gstin}` : '') }))
+            .filter((p) => !q || p.label.toLowerCase().includes(q));
+    },
+
+    selectParty(p) {
+        this.partyId = p.id;
+        this.partyQuery = p.label;
+        this.partyOpen = false;
+        this.onPartyChange();
     },
 
     onPartyChange() {

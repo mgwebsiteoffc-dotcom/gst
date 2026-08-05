@@ -391,7 +391,6 @@ class MigrationMapper
                 'transaction_id' => 'reference',
                 'remarks' => 'note',
                 'notes' => 'note',
-                'payment_type' => 'direction',
                 'amount_payment' => 'amount',
             ],
             'expenses' => [

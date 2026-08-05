@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\PostController as AdminPost;
 use App\Http\Controllers\Admin\CommissionPlanController as AdminCommissionPlan;
 use App\Http\Controllers\Admin\PartnerController as AdminPartner;
 use App\Http\Controllers\Admin\PayoutController as AdminPayout;
+use App\Http\Controllers\Admin\HsnCodeController as AdminHsnCode;
 use App\Http\Controllers\Admin\PlanController as AdminPlan;
 use App\Http\Controllers\Admin\TenantController as AdminTenant;
 use App\Http\Controllers\Marketing\BlogController;
@@ -25,6 +26,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShopifyController;
 use App\Http\Controllers\BulkController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\HsnCodeController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\RecurringInvoiceController;
 use Illuminate\Support\Facades\Route;
@@ -90,6 +92,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
 
         // Products & services
         Route::resource('items', ItemController::class)->except('show');
+        Route::get('hsn-codes/search', [HsnCodeController::class, 'search'])->name('hsn-codes.search');
 
         // Business profile / branding
         Route::get('branding', [BrandingController::class, 'edit'])->name('branding.edit');
@@ -235,6 +238,11 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::post('plans', [AdminPlan::class, 'store'])->name('plans.store');
     Route::put('plans/{plan}', [AdminPlan::class, 'update'])->name('plans.update');
     Route::delete('plans/{plan}', [AdminPlan::class, 'destroy'])->name('plans.destroy');
+
+    Route::get('hsn-codes', [AdminHsnCode::class, 'index'])->name('hsn-codes.index');
+    Route::post('hsn-codes', [AdminHsnCode::class, 'store'])->name('hsn-codes.store');
+    Route::put('hsn-codes/{hsnCode}', [AdminHsnCode::class, 'update'])->name('hsn-codes.update');
+    Route::delete('hsn-codes/{hsnCode}', [AdminHsnCode::class, 'destroy'])->name('hsn-codes.destroy');
 
     // Businesses and their users
     Route::get('tenants', [AdminTenant::class, 'index'])->name('tenants.index');

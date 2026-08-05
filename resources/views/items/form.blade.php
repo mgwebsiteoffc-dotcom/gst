@@ -3,7 +3,25 @@
 
 @section('content')
 <form method="POST" action="{{ $item->exists ? route('items.update', $item) : route('items.store') }}"
-      x-data="{ type: @js(old('type', $item->type ?? 'goods')), track: @js((bool) old('track_inventory', $item->track_inventory ?? true)) }">
+      x-data="{
+          type: @js(old('type', $item->type ?? 'goods')),
+          track: @js((bool) old('track_inventory', $item->track_inventory ?? true)),
+          gstRate: @js((string) (float) old('gst_rate', $item->gst_rate ?? 18)),
+          hsn: @js(old('hsn_sac', $item->hsn_sac ?? '')),
+          hsnOpen: false,
+          hsnResults: [],
+          searchHsn() {
+              if (this.hsn.trim().length < 2) { this.hsnResults = []; this.hsnOpen = false; return; }
+              axios.get('{{ route('hsn-codes.search') }}', { params: { q: this.hsn, type: this.type } })
+                  .then((res) => { this.hsnResults = res.data; this.hsnOpen = true; });
+          },
+          selectHsn(h) {
+              this.hsn = h.code;
+              if (h.gst_rate !== null) this.gstRate = String(Number(h.gst_rate));
+              this.hsnOpen = false;
+              this.hsnResults = [];
+          },
+      }">
     @csrf
     @if ($item->exists) @method('PUT') @endif
 
@@ -60,10 +78,26 @@
 
                 <div class="grid gap-4 sm:grid-cols-2">
                     <x-field :label="'HSN / SAC'" name="hsn_sac" hint="HSN for goods, SAC for services.">
-                        <x-input name="hsn_sac" maxlength="8" class="font-mono" value="{{ old('hsn_sac', $item->hsn_sac) }}"/>
+                        <div class="relative" @click.outside="hsnOpen = false">
+                            <input type="text" name="hsn_sac" maxlength="8" x-model="hsn"
+                                   @input.debounce.300ms="searchHsn()" @focus="hsnOpen = hsnResults.length > 0"
+                                   autocomplete="off" placeholder="Search or type a code…"
+                                   class="block w-full rounded-lg border-slate-300 font-mono text-sm focus:border-indigo-500 focus:ring-indigo-500">
+
+                            <div x-show="hsnOpen && hsnResults.length" x-cloak
+                                 class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg">
+                                <template x-for="h in hsnResults" :key="h.id">
+                                    <button type="button" @click="selectHsn(h)"
+                                            class="block w-full px-3 py-2 text-left hover:bg-indigo-50">
+                                        <span class="font-mono font-medium" x-text="h.code"></span>
+                                        <span class="text-slate-500" x-text="' — ' + h.description"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
                     </x-field>
                     <x-field label="GST rate" name="gst_rate" required>
-                        <x-select name="gst_rate">
+                        <x-select name="gst_rate" x-model="gstRate">
                             @foreach (config('gst.slabs') as $slab)
                                 <option value="{{ $slab }}" @selected((float) old('gst_rate', $item->gst_rate ?? 18) === (float) $slab)>
                                     {{ rtrim(rtrim(number_format($slab, 2), '0'), '.') }}%

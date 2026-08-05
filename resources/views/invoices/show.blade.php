@@ -81,7 +81,7 @@
                 </a>
             @endif
 
-            @if (! $document->einvoice?->isGenerated() && $document->status !== 'cancelled')
+            @if ($document->status === 'draft' && ! $document->einvoice?->isGenerated())
                 <a class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-medium text-amber-700 hover:bg-amber-100"
                    href="{{ route('documents.edit', $document) }}">Edit</a>
             @endif

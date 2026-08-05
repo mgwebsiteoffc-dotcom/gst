@@ -57,6 +57,7 @@ class DocumentController extends Controller
 
     public function edit(Document $document)
     {
+        abort_unless($document->status === 'draft', 422, 'Only drafts can be edited. Cancel or issue a credit note instead.');
         abort_if($document->einvoice?->isGenerated(), 422, 'Cannot edit a document with a generated IRN.');
 
         $tenant = \App\Support\TenantContext::get();
@@ -111,6 +112,7 @@ class DocumentController extends Controller
 
     public function update(DocumentRequest $request, Document $document)
     {
+        abort_unless($document->status === 'draft', 422, 'Only drafts can be edited. Cancel or issue a credit note instead.');
         abort_if($document->einvoice?->isGenerated(), 422, 'Cannot edit a document with a generated IRN. Issue a credit note.');
         $this->service->update($document, $request->validated());
 

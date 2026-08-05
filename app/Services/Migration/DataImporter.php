@@ -272,7 +272,7 @@ class DataImporter
             'billing_state_code', 'billing_pincode', 'billing_country',
             'shipping_address', 'opening_balance', 'credit_days',
         ];
-        return array_intersect_key($data, array_flip($allowed));
+        return $this->withoutNulls(array_intersect_key($data, array_flip($allowed)));
     }
 
     // =========================================================================
@@ -349,7 +349,7 @@ class DataImporter
             'sale_price', 'purchase_price', 'gst_rate', 'cess_rate',
             'price_inclusive_tax', 'track_inventory', 'opening_stock', 'reorder_level',
         ];
-        return array_intersect_key($data, array_flip($allowed));
+        return $this->withoutNulls(array_intersect_key($data, array_flip($allowed)));
     }
 
     // =========================================================================
@@ -486,7 +486,7 @@ class DataImporter
             'tds_total', 'tcs_total', 'shipping_charge', 'round_off', 'grand_total',
             'amount_paid', 'balance_due', 'notes', 'terms', 'meta', 'tax_mode',
         ];
-        return array_intersect_key($data, array_flip($allowed));
+        return $this->withoutNulls(array_intersect_key($data, array_flip($allowed)));
     }
 
     // =========================================================================
@@ -575,7 +575,7 @@ class DataImporter
             'taxable_value', 'gst_rate', 'cgst_amount', 'sgst_amount', 'igst_amount',
             'cess_rate', 'cess_amount', 'line_total',
         ];
-        return array_intersect_key($data, array_flip($allowed));
+        return $this->withoutNulls(array_intersect_key($data, array_flip($allowed)));
     }
 
     // =========================================================================
@@ -611,6 +611,11 @@ class DataImporter
                 default => 'bank',
             };
         }
+
+        // Fall back to the legacy receipt number so distinct same-day,
+        // same-amount payments (e.g. two invoices paid together) don't
+        // collide in the idempotency check below.
+        $data['reference'] = $data['reference'] ?? $record['number'] ?? null;
 
         $data['document_id'] = $this->resolveId('documents', $data['document_id'] ?? null);
         $data['party_id'] = $this->resolveId('parties', $data['party_id'] ?? $record['client_id'] ?? null);
@@ -653,7 +658,7 @@ class DataImporter
             'document_id', 'party_id', 'direction', 'amount', 'paid_on',
             'method', 'reference', 'note',
         ];
-        return array_intersect_key($data, array_flip($allowed));
+        return $this->withoutNulls(array_intersect_key($data, array_flip($allowed)));
     }
 
     // =========================================================================
@@ -883,11 +888,21 @@ class DataImporter
         $mapped = [];
         foreach ($record as $key => $value) {
             $canonicalKey = $fieldMap[$key] ?? $key;
-            if (!isset($mapped[$canonicalKey]) || !isset($record[$canonicalKey])) {
-                $mapped[$canonicalKey] = $value;
+            // Several legacy field names can alias to the same canonical key
+            // (e.g. "price" and "mrp" both -> sale_price). Once a real value
+            // has landed on that key, a later null alias must not blank it out.
+            if ($value === null && array_key_exists($canonicalKey, $mapped)) {
+                continue;
             }
+            $mapped[$canonicalKey] = $value;
         }
         return $mapped;
+    }
+
+    /** Drop null entries so DB column defaults apply instead of NOT NULL errors. */
+    protected function withoutNulls(array $data): array
+    {
+        return array_filter($data, fn ($v) => $v !== null);
     }
 
     protected function storeIdMapping(string $section, $legacyId, int $newId): void

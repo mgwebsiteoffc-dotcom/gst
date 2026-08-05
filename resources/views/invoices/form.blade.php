@@ -28,11 +28,11 @@
           taxMode: @js(old('tax_mode', $taxMode)),
           partyId: @js(old('party_id', $document?->party_id)),
           issueDate: @js(old('issue_date', ($document?->issue_date ?? now())->format('Y-m-d'))),
-          dueDate: @js(old('due_date', $document?->due_date?->format('Y-m-d'))),
+          dueDate: @js(old('due_date', $isEdit ? $document?->due_date?->format('Y-m-d') : now()->addDays(7)->format('Y-m-d'))),
           isExport: @js((bool) old('is_export', $document?->is_export)),
           sellerState: @js($tenant->state_code),
           placeOfSupply: @js(old('place_of_supply_code', $document?->place_of_supply_code ?? $tenant->state_code)),
-          parties: @js($parties->keyBy('id')->map(fn($p) => ['state' => $p->resolvedStateCode(), 'gstin' => $p->gstin, 'credit_days' => $p->credit_days])),
+          parties: @js($parties->keyBy('id')->map(fn($p) => ['name' => $p->name, 'state' => $p->resolvedStateCode(), 'gstin' => $p->gstin, 'credit_days' => $p->credit_days])),
           catalog: @js($items),
           lines: @js($initialLines),
           shipping: @js((float) old('shipping_charge', $document?->shipping_charge ?? 0)),
@@ -78,15 +78,24 @@
 
             <div class="grid gap-4 sm:grid-cols-2">
                 <x-field label="Select contact" name="party_id" required class="sm:col-span-2">
-                    <x-select name="party_id" x-model="partyId" @change="onPartyChange()">
-                        <option value="">— Choose a contact —</option>
-                        @php $selectedParty = old('party_id', $document?->party_id); @endphp
-                        @foreach ($parties as $p)
-                            <option value="{{ $p->id }}" @selected((int) $selectedParty === (int) $p->id)>
-                                {{ $p->name }}{{ $p->gstin ? ' — '.$p->gstin : '' }}
-                            </option>
-                        @endforeach
-                    </x-select>
+                    <div class="relative" @click.outside="partyOpen = false">
+                        <input type="text" x-model="partyQuery" placeholder="Search by name or GSTIN…"
+                               autocomplete="off" @focus="partyOpen = true" @input="partyOpen = true"
+                               @keydown.escape="partyOpen = false"
+                               class="block w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
+                        <input type="hidden" name="party_id" :value="partyId">
+
+                        <div x-show="partyOpen" x-cloak @keydown.escape.window="partyOpen = false"
+                             class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-200 bg-white py-1 text-sm shadow-lg">
+                            <template x-for="p in filteredParties" :key="p.id">
+                                <button type="button" @click="selectParty(p)"
+                                        class="block w-full px-3 py-2 text-left hover:bg-indigo-50"
+                                        :class="String(p.id) === String(partyId) ? 'bg-indigo-50 text-indigo-700' : ''"
+                                        x-text="p.label"></button>
+                            </template>
+                            <div class="px-3 py-2 text-slate-400" x-show="!filteredParties.length">No contacts found</div>
+                        </div>
+                    </div>
                 </x-field>
 
                 <x-field label="Issue date" name="issue_date" required>
@@ -96,7 +105,7 @@
 
                 <x-field label="Due date" name="due_date">
                     <x-input type="date" name="due_date" x-model="dueDate"
-                             value="{{ old('due_date', $document?->due_date?->format('Y-m-d')) }}" />
+                             value="{{ old('due_date', $isEdit ? $document?->due_date?->format('Y-m-d') : now()->addDays(7)->format('Y-m-d')) }}" />
                 </x-field>
 
                 <template x-if="taxMode === 'gst'">
@@ -123,7 +132,7 @@
         </x-card>
 
         {{-- Right: live summary --}}
-        <x-card title="Summary" class="lg:row-span-2 h-fit lg:sticky lg:top-20">
+        <x-card title="Summary" class="h-fit lg:sticky lg:top-20">
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-slate-500">Subtotal</dt><dd x-text="money(subtotal)"></dd></div>
                 <div class="flex justify-between" x-show="discountTotal > 0">
@@ -171,7 +180,7 @@
         </x-card>
 
         {{-- Line items --}}
-        <x-card class="lg:col-span-2 !p-0" title="Items">
+        <x-card class="lg:col-span-3 !p-0" title="Items">
             <x-slot:actions>
                 <x-btn variant="ghost" size="sm" :href="route('items.create')" target="_blank">+ New product</x-btn>
             </x-slot:actions>
