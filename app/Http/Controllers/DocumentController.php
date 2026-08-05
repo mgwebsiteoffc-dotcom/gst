@@ -84,9 +84,11 @@ class DocumentController extends Controller
     public function show(Document $document)
     {
         $document->load('lines.item', 'party', 'payments', 'einvoice', 'ewayBill');
+        $document->load(['activities' => fn ($q) => $q->with('causer')->latest()->limit(20)]);
 
         return view('invoices.show', [
             'document' => $document,
+            'activities' => $document->activities,
             'share' => [
                 'whatsapp' => $this->share->whatsappUrl($document),
                 'email' => $this->share->mailtoUrl($document),
@@ -163,6 +165,22 @@ class DocumentController extends Controller
         $this->service->cancel($document, $request->get('reason'));
 
         return back()->with('success', 'Document cancelled.');
+    }
+
+    /**
+     * Only drafts may be deleted — an issued document is part of the GST
+     * audit trail and must be cancelled (or offset with a credit note) instead.
+     */
+    public function destroy(Document $document)
+    {
+        abort_unless($document->status === 'draft', 422, 'Only drafts can be deleted. Cancel the document instead.');
+        abort_if($document->einvoice?->isGenerated(), 422, 'Cannot delete a document with a generated IRN.');
+
+        $type = $document->doc_type;
+        $document->lines()->delete();
+        $document->delete();
+
+        return redirect()->route('documents.index', $type)->with('success', 'Draft '.$document->number.' deleted.');
     }
 
     /**

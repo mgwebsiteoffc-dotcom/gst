@@ -24,7 +24,9 @@ use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\ShopifyController;
 use App\Http\Controllers\BulkController;
+use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\RecurringInvoiceController;
 use Illuminate\Support\Facades\Route;
 
 // ---------------------------------------------------------------
@@ -108,6 +110,27 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         Route::post('document/{document}/cancel', [DocumentController::class, 'cancel'])->name('documents.cancel');
         Route::post('document/{document}/whatsapp', [DocumentController::class, 'sendWhatsApp'])->name('documents.whatsapp');
         Route::post('document/{document}/reminder', [DocumentController::class, 'sendReminder'])->name('documents.reminder');
+        Route::delete('document/{document}', [DocumentController::class, 'destroy'])->name('documents.destroy');
+
+        // Recurring invoices — schedules that auto-generate invoices daily.
+        Route::get('recurring-invoices', [RecurringInvoiceController::class, 'index'])->name('recurring.index');
+        Route::get('recurring-invoices/create', [RecurringInvoiceController::class, 'create'])->name('recurring.create');
+        Route::post('recurring-invoices', [RecurringInvoiceController::class, 'store'])->name('recurring.store');
+        Route::get('recurring-invoices/{recurring_invoice}', [RecurringInvoiceController::class, 'show'])->name('recurring.show');
+        Route::get('recurring-invoices/{recurring_invoice}/edit', [RecurringInvoiceController::class, 'edit'])->name('recurring.edit');
+        Route::put('recurring-invoices/{recurring_invoice}', [RecurringInvoiceController::class, 'update'])->name('recurring.update');
+        Route::post('recurring-invoices/{recurring_invoice}/pause', [RecurringInvoiceController::class, 'pause'])->name('recurring.pause');
+        Route::post('recurring-invoices/{recurring_invoice}/resume', [RecurringInvoiceController::class, 'resume'])->name('recurring.resume');
+        Route::post('recurring-invoices/{recurring_invoice}/run', [RecurringInvoiceController::class, 'run'])->name('recurring.run');
+        Route::delete('recurring-invoices/{recurring_invoice}', [RecurringInvoiceController::class, 'destroy'])->name('recurring.destroy');
+
+        // Expenses — the ledger behind P&L and GSTR-3B ITC.
+        Route::get('expenses', [ExpenseController::class, 'index'])->name('expenses.index');
+        Route::get('expenses/create', [ExpenseController::class, 'create'])->name('expenses.create');
+        Route::post('expenses', [ExpenseController::class, 'store'])->name('expenses.store');
+        Route::get('expenses/{expense}/edit', [ExpenseController::class, 'edit'])->name('expenses.edit');
+        Route::put('expenses/{expense}', [ExpenseController::class, 'update'])->name('expenses.update');
+        Route::delete('expenses/{expense}', [ExpenseController::class, 'destroy'])->name('expenses.destroy');
 
           // Payments Received
         Route::get('payments', [PaymentController::class, 'index'])->name('payments.index');
@@ -153,6 +176,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('settings/nic/test', [SettingsController::class, 'testNic'])->name('settings.nic.test');
     Route::put('settings/whatsapp', [SettingsController::class, 'whatsapp'])->name('settings.whatsapp');
     Route::post('settings/whatsapp/test', [SettingsController::class, 'testWhatsApp'])->name('settings.whatsapp.test');
+
+    // Team: invite members, change roles, activate/deactivate
+    Route::post('settings/team', [SettingsController::class, 'inviteMember'])->name('settings.team.invite');
+    Route::put('settings/team/{member}/role', [SettingsController::class, 'updateMemberRole'])->name('settings.team.role');
+    Route::put('settings/team/{member}/toggle', [SettingsController::class, 'toggleMember'])->name('settings.team.toggle');
 
     Route::view('billing/plans', 'billing.plans')->name('billing.plans');
 

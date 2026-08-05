@@ -21,6 +21,10 @@ Built on **PHP 8.3+ / Laravel 12 / Livewire 3 / Tailwind 4**, API version **Shop
 | **Inventory** | Warehouses, stock movements ledger, real-time stock-on-hand, reorder alerts, stock valuation |
 | **e-Invoice** | **Live NIC IRP** or offline sandbox, selectable per tenant; per-tenant encrypted NIC/GSP credentials, sandbox↔production toggle, cached auth tokens, INV-01 v1.1 payload, signed QR on the PDF, 24-hour cancellation guard, 30-day reporting-window check |
 | **e-Way Bill** | Generate from IRN (preferred) or standalone; validity, transporter and vehicle tracking |
+| **Recurring invoices** | Schedules (daily → yearly, every N) that auto-generate invoices each morning — catch-up runs, pause/resume, run-now, max counts & end dates, drafts or auto-finalised, "Make recurring" from any invoice |
+| **Edit history** | Every create/edit/payment on a document is logged via `spatie/laravel-activitylog` and shown as a change-history timeline (who, when, field old → new) |
+| **Expenses** | Record business expenses with categories, vendor link and ITC-eligible GST — flows into Profit & Loss and GSTR-3B ITC |
+| **Bulk payments** | Payments-received import (invoice number + amount + date, balance recalculated, duplicate-safe) plus one-click Excel export alongside parties/items/invoices |
 | **Returns** | GSTR-1 JSON (b2b / b2cl / b2cs / cdnr / exp / hsn) and GSTR-3B summary |
 | **Shopify** | OAuth install, HMAC-verified webhooks, queued order → invoice import, refund → credit note, product/variant sync, GSTIN capture from checkout attributes |
 | **Billing** | Plans, subscriptions, feature gating middleware (`subscribed:einvoice`, `subscribed:shopify`), Cashier + Razorpay ready |
@@ -405,6 +409,11 @@ enumerate accounts.
 
 Roles are **team-scoped per tenant** via `spatie/laravel-permission`, so the same person
 can hold different roles in different businesses without leaking access between them.
+
+**Team management** lives in Settings → Team &amp; roles. Owners and admins can invite a
+member (creates their login immediately; leave the password blank to auto-generate one
+that's shown exactly once), change roles, and deactivate/reactivate access without
+deleting anyone's history. The subscription plan's `user_limit` caps seats.
 
 | Role | Can do |
 |---|---|

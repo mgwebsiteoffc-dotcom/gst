@@ -16,6 +16,7 @@
             ['GST Tax Invoice', 'HSN/SAC, place of supply and an automatic CGST+SGST or IGST split.'],
             ['Non-GST Invoice', 'A plain bill with no tax columns — for unregistered businesses and exempt supplies.'],
             ['Bill of Supply', 'For composition-scheme dealers. We switch the format automatically.'],
+            ['Recurring invoices', 'Set a schedule once — invoices for retainers, rent and AMCs generate themselves every period.'],
             ['Quotations &amp; Proforma', 'Send an estimate, then convert it to an invoice in one click.'],
             ['Delivery Challan', 'Move goods without a tax invoice, with full challan formatting.'],
             ['Credit &amp; Debit Notes', 'Handle returns and corrections against the original invoice.'],
@@ -47,6 +48,7 @@
         'Business operations' => [
             ['Inventory tracking', 'Live stock, reorder alerts, stock ledger and valuation.'],
             ['Purchase orders &amp; bills', 'Track what you owe suppliers and claim the right input credit.'],
+            ['Expense tracking', 'Record rent, salaries and other costs, with ITC-eligible GST feeding GSTR-3B.'],
             ['Multi-user with roles', 'Owner, admin, accountant, operator and read-only viewer.'],
             ['Custom branding', 'Your logo, signature, accent colour, bank details and terms on every PDF.'],
             ['Shopify integration', 'Orders become GST invoices automatically; refunds become credit notes.'],

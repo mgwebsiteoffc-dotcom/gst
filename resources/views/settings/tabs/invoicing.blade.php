@@ -24,6 +24,8 @@
             </div>
 
             <label class="mt-4 flex items-center gap-2 text-sm text-slate-600">
+                {{-- Sentinel so unticking the box actually saves "off". --}}
+                <input type="hidden" name="allow_both_modes" value="0">
                 <input type="checkbox" name="allow_both_modes" value="1" @checked($tenant->allow_both_modes)
                        class="rounded border-slate-300 text-indigo-600">
                 Let my team choose the mode on each invoice

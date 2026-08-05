@@ -4,16 +4,20 @@
 @section('content')
     <h1 class="text-2xl font-semibold mb-6">Dashboard</h1>
 
-    <div class="grid gap-4 md:grid-cols-4 mb-6">
+    <div class="grid gap-4 md:grid-cols-5 mb-6">
         @foreach ([
             ['Sales (MTD)', '₹ '.number_format($mtdSales, 2)],
             ['GST Collected (MTD)', '₹ '.number_format($mtdTax, 2)],
             ['Outstanding', '₹ '.number_format($outstanding, 2)],
             ['Overdue', '₹ '.number_format($overdue, 2)],
+            ['Recurring due', $recurringDue],
         ] as [$label, $value])
             <div class="rounded-xl bg-white p-4 shadow-sm border border-slate-200">
                 <div class="text-xs uppercase text-slate-500">{{ $label }}</div>
                 <div class="text-xl font-semibold mt-1">{{ $value }}</div>
+                @if ($label === 'Recurring due')
+                    <a href="{{ route('recurring.index') }}" class="text-xs text-indigo-600 hover:underline">View schedules →</a>
+                @endif
             </div>
         @endforeach
     </div>

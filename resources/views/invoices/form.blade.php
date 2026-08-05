@@ -47,10 +47,15 @@
 
     <x-page :title="$isEdit ? 'Edit '.$document->number : 'New '.$label"
             :subtitle="$isEdit ? null : 'Numbering is assigned automatically when you save.'"
-            :back="route('documents.index', $type)">
-        <x-btn variant="secondary" :href="route('documents.index', $type)">Cancel</x-btn>
-        <x-btn variant="secondary" type="submit" name="status" value="draft">Save draft</x-btn>
-        <x-btn variant="primary" type="submit" name="status" value="sent">Save and finalise</x-btn>
+            :back="$isEdit ? route('documents.show', $document) : route('documents.index', $type)">
+        <x-btn variant="secondary" :href="$isEdit ? route('documents.show', $document) : route('documents.index', $type)">Cancel</x-btn>
+        @if ($isEdit)
+            {{-- No status field posted: the document keeps its current status. --}}
+            <x-btn variant="primary" type="submit">Save changes</x-btn>
+        @else
+            <x-btn variant="secondary" type="submit" name="status" value="draft">Save draft</x-btn>
+            <x-btn variant="primary" type="submit" name="status" value="sent">Save and finalise</x-btn>
+        @endif
     </x-page>
 
     {{-- Mode switch --}}

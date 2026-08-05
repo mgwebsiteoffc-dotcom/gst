@@ -25,11 +25,13 @@
             ['documents.index', 'Invoices', ['type' => 'invoice']],
             ['documents.index', 'Quotations', ['type' => 'quotation']],
             ['documents.index', 'Credit Notes', ['type' => 'credit_note']],
+            ['recurring.index', 'Recurring Invoices', []],
             ['payments.index', 'Payments Received', []],
         ],
         'Purchases' => [
             ['documents.index', 'Purchase Orders', ['type' => 'purchase_order']],
             ['documents.index', 'Purchase Bills', ['type' => 'purchase_bill']],
+            ['expenses.index', 'Expenses', []],
         ],
         'Records' => [
             ['parties.index', 'Clients & Vendors', []],

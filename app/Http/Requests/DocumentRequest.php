@@ -16,6 +16,9 @@ class DocumentRequest extends FormRequest
         return [
             'doc_type' => ['required', Rule::in(array_keys(Document::TYPES))],
             'tax_mode' => ['nullable', Rule::in(['gst', 'non_gst'])],
+            // Posted by the form's Save-draft / Save-and-finalise buttons. Without
+            // this rule validated() strips it and everything stays a draft.
+            'status' => ['nullable', Rule::in(['draft', 'sent'])],
             'party_id' => ['nullable', 'exists:parties,id'],
             'issue_date' => ['required', 'date'],
             'due_date' => ['nullable', 'date', 'after_or_equal:issue_date'],

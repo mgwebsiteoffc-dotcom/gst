@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use App\Models\Item;
 use App\Models\Party;
+use App\Models\RecurringInvoice;
 use Illuminate\Support\Carbon;
 
 class DashboardController extends Controller
@@ -28,6 +29,7 @@ class DashboardController extends Controller
             'overdue' => Document::sales()->whereNotIn('status', ['draft', 'cancelled', 'paid'])
                 ->whereDate('due_date', '<', now())->sum('balance_due'),
             'customers' => Party::customers()->count(),
+            'recurringDue' => RecurringInvoice::active()->due()->count(),
             'lowStock' => Item::where('track_inventory', true)->get()->filter->isLowStock()->take(10),
             'recent' => Document::with('party')->sales()->latest('id')->take(8)->get(),
             'monthly' => $monthly,
