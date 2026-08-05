@@ -11,3 +11,10 @@ Schedule::call(function () {
         ->whereDate('due_date', '<', now())
         ->update(['status' => 'overdue']);
 })->dailyAt('06:00')->name('flag-overdue')->onOneServer();
+
+// Generate invoices for every recurring schedule that is due.
+Schedule::command(\App\Console\Commands\GenerateRecurringInvoices::class)
+    ->dailyAt('05:30')
+    ->name('recurring-generate')
+    ->withoutOverlapping()
+    ->onOneServer();

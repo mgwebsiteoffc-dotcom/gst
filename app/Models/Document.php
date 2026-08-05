@@ -7,10 +7,12 @@ use App\Support\Money;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Document extends Model
 {
-    use HasFactory, BelongsToTenant, SoftDeletes;
+    use HasFactory, BelongsToTenant, SoftDeletes, LogsActivity;
 
     public const TYPES = [
         'invoice' => 'Tax Invoice',
@@ -54,9 +56,38 @@ class Document extends Model
     public function payments() { return $this->hasMany(Payment::class); }
     public function einvoice() { return $this->hasOne(Einvoice::class); }
     public function ewayBill() { return $this->hasOne(EwayBill::class); }
+    public function recurringInvoice() { return $this->belongsTo(RecurringInvoice::class); }
     public function parent() { return $this->belongsTo(Document::class, 'parent_id'); }
     public function children() { return $this->hasMany(Document::class, 'parent_id'); }
     public function creator() { return $this->belongsTo(User::class, 'created_by'); }
+
+    /**
+     * Edit history (spatie/laravel-activitylog): who changed what, and from what
+     * value. Shown on the document page as the "Change history" card.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->useLogName('documents')
+            ->logOnly([
+                'number', 'doc_type', 'status', 'issue_date', 'due_date', 'party_id',
+                'tax_mode', 'place_of_supply_code', 'supply_type',
+                'subtotal', 'discount_total', 'taxable_value',
+                'cgst_total', 'sgst_total', 'igst_total', 'cess_total',
+                'shipping_charge', 'grand_total', 'amount_paid', 'balance_due',
+            ])
+            ->logOnlyDirty()
+            ->dontSubmitEmptyLogs();
+    }
+
+    public function getDescriptionForEvent(string $eventName): string
+    {
+        return match ($eventName) {
+            'created' => 'Created '.$this->title.' '.$this->number,
+            'deleted' => 'Deleted '.$this->title.' '.$this->number,
+            default => 'Edited '.$this->title.' '.$this->number,
+        };
+    }
 
     public function scopeSales($q) { return $q->whereIn('doc_type', ['invoice', 'bill_of_supply', 'credit_note', 'debit_note']); }
     public function scopeGst($q) { return $q->where('tax_mode', 'gst'); }

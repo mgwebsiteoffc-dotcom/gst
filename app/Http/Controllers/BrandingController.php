@@ -20,13 +20,17 @@ class BrandingController extends Controller
     {
         $tenant = TenantContext::get();
 
+        // Three different tabs post to this endpoint (business details, logo &
+        // signature, and terms). Each form only contains its own fields, so the
+        // golden rule here is: only touch the keys that were actually submitted.
+        // Everything absent from the request keeps its existing value.
         $data = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:255'],
             'legal_name' => ['nullable', 'string', 'max:255'],
             'gstin' => ['nullable', 'string', 'size:15'],
             'pan' => ['nullable', 'string', 'size:10'],
             'state_code' => ['nullable', Rule::in(array_keys(Gstin::STATES))],
-            'registration_type' => ['required', Rule::in(['regular', 'composition', 'unregistered', 'sez'])],
+            'registration_type' => ['sometimes', 'required', Rule::in(['regular', 'composition', 'unregistered', 'sez'])],
             'address_line1' => ['nullable', 'string', 'max:255'],
             'address_city' => ['nullable', 'string', 'max:100'],
             'address_pincode' => ['nullable', 'digits:6'],
@@ -34,8 +38,8 @@ class BrandingController extends Controller
             'email' => ['nullable', 'email'],
             'website' => ['nullable', 'string', 'max:255'],
             'accent_color' => ['nullable', 'string', 'max:9'],
-            'pdf_template' => ['required', Rule::in(['classic', 'modern', 'compact'])],
-             'show_ship_to' => ['nullable', 'boolean'],
+            'pdf_template' => ['sometimes', 'required', Rule::in(['classic', 'modern', 'compact'])],
+            'show_ship_to' => ['nullable', 'boolean'],
             'default_terms' => ['nullable', 'string', 'max:2000'],
             'invoice_footer' => ['nullable', 'string', 'max:500'],
             'bank_name' => ['nullable', 'string', 'max:100'],
@@ -46,7 +50,7 @@ class BrandingController extends Controller
             'signature' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:512'],
         ]);
 
-        if (! empty($data['gstin'])) {
+        if ($request->filled('gstin')) {
             $data['gstin'] = strtoupper($data['gstin']);
             if (! Gstin::isValid($data['gstin'])) {
                 return back()->withInput()->with('error', 'That GSTIN failed the checksum test.');
@@ -55,6 +59,17 @@ class BrandingController extends Controller
             $data['pan'] ??= Gstin::pan($data['gstin']);
         }
 
+        // --- Tenant columns: update only what this form posted ---------------
+        $columns = [];
+        foreach (['name', 'legal_name', 'gstin', 'pan', 'state_code', 'registration_type'] as $col) {
+            if ($request->has($col)) {
+                $columns[$col] = $col === 'legal_name'
+                    ? ($data['legal_name'] ?? $data['name'] ?? $tenant->legal_name)
+                    : ($data[$col] ?? null);
+            }
+        }
+
+        // --- Branding (logo, signature, accent colour) ------------------------
         $branding = $tenant->branding ?? [];
 
         foreach (['logo', 'signature'] as $file) {
@@ -66,39 +81,44 @@ class BrandingController extends Controller
             }
         }
 
-        $branding['accent_color'] = $data['accent_color'] ?? '#4f46e5';
+        if ($request->has('accent_color')) {
+            $branding['accent_color'] = $data['accent_color'] ?: ($branding['accent_color'] ?? '#4f46e5');
+        }
 
-        $tenant->update([
-            'name' => $data['name'],
-            'legal_name' => $data['legal_name'] ?? $data['name'],
-            'gstin' => $data['gstin'] ?? null,
-            'pan' => $data['pan'] ?? null,
-            'state_code' => $data['state_code'] ?? null,
-            'registration_type' => $data['registration_type'],
-            'branding' => $branding,
-            'settings' => array_replace_recursive($tenant->settings ?? [], [
-                'address' => [
-                    'line1' => $data['address_line1'] ?? null,
-                    'city' => $data['address_city'] ?? null,
-                    'pincode' => $data['address_pincode'] ?? null,
-                ],
-                'contact' => [
-                    'phone' => $data['phone'] ?? null,
-                    'email' => $data['email'] ?? null,
-                    'website' => $data['website'] ?? null,
-                ],
-                'bank' => [
-                    'name' => $data['bank_name'] ?? null,
-                    'account' => $data['bank_account'] ?? null,
-                    'ifsc' => $data['bank_ifsc'] ?? null,
-                    'upi' => $data['bank_upi'] ?? null,
-                ],
-                'pdf_template' => $data['pdf_template'],
-                'show_ship_to' => (bool) ($data['show_ship_to'] ?? false),
-                'default_terms' => $data['default_terms'] ?? null,
-                'invoice_footer' => $data['invoice_footer'] ?? null,
-            ]),
-        ]);
+        $columns['branding'] = $branding;
+
+        // --- Settings: merge per-key, never rewrite untouched groups ---------
+        $settings = $tenant->settings ?? [];
+
+        $grouped = [
+            'address' => ['line1' => 'address_line1', 'city' => 'address_city', 'pincode' => 'address_pincode'],
+            'contact' => ['phone' => 'phone', 'email' => 'email', 'website' => 'website'],
+            'bank' => ['name' => 'bank_name', 'account' => 'bank_account', 'ifsc' => 'bank_ifsc', 'upi' => 'bank_upi'],
+        ];
+
+        foreach ($grouped as $group => $fields) {
+            foreach ($fields as $key => $input) {
+                if ($request->has($input)) {
+                    $settings[$group][$key] = $data[$input] ?? null;
+                }
+            }
+        }
+
+        foreach (['pdf_template', 'default_terms', 'invoice_footer'] as $key) {
+            if ($request->has($key)) {
+                $settings[$key] = $data[$key] ?? null;
+            }
+        }
+
+        // Checkbox tab posts a hidden 0 sentinel so "unchecked" is distinguishable
+        // from "field not part of this form at all".
+        if ($request->has('show_ship_to')) {
+            $settings['show_ship_to'] = (bool) ($data['show_ship_to'] ?? false);
+        }
+
+        $columns['settings'] = $settings;
+
+        $tenant->update($columns);
 
         return redirect()->route('settings.index', ['tab' => 'business'])
             ->with('success', 'Business profile updated.');
@@ -172,6 +192,7 @@ class BrandingController extends Controller
 
         $view = match ($template) {
             'modern' => 'invoices.pdf-modern',
+            'compact' => 'invoices.pdf-compact',
             default => 'invoices.pdf',
         };
 

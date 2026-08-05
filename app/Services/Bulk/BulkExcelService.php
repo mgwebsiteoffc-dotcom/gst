@@ -5,6 +5,8 @@ namespace App\Services\Bulk;
 use App\Models\Document;
 use App\Models\Item;
 use App\Models\Party;
+use App\Models\Payment;
+use App\Services\Gst\DocumentService;
 use App\Support\TenantContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -100,6 +102,21 @@ class BulkExcelService
                     'terms'                => ['label' => 'Terms', 'required' => false, 'example' => 'Payment in 30 days'],
                 ],
             ],
+
+            'payments' => [
+                'label' => 'Payments Received',
+                'route' => 'payments.index',
+                'icon' => '💰',
+                'columns' => [
+                    'document_number' => ['label' => 'Invoice Number *', 'required' => true, 'example' => 'INV/2026-27/0001'],
+                    'amount'          => ['label' => 'Amount *', 'required' => true, 'example' => '5000'],
+                    'paid_on'         => ['label' => 'Payment Date *', 'required' => true, 'example' => '2026-07-20'],
+                    'method'          => ['label' => 'Method', 'required' => false, 'example' => 'upi'],
+                    'reference'       => ['label' => 'Reference', 'required' => false, 'example' => 'UTR123456789'],
+                    'note'            => ['label' => 'Note', 'required' => false, 'example' => 'Part payment'],
+                    'party_name'      => ['label' => 'Party Name', 'required' => false, 'example' => 'Acme Corporation'],
+                ],
+            ],
         ];
     }
 
@@ -129,6 +146,7 @@ class BulkExcelService
             'parties' => ['Tech Supplies Ltd', 'vendor', 'Jane Smith', 'jane@tech.com', '+91 87654 32109', '29AADCT1234F1Z5', 'AADCT1234F', 'regular', '456 Industrial Area', 'Bangalore', 'Karnataka', '29', '560001', 'IN', '0', '45'],
             'items' => ['Laptop Dell XPS 15', 'goods', 'LAPTOP-XPS15', '9876543210', 'High-performance laptop', '8471', 'NOS', '150000', '120000', '18', '0', 'No', 'Yes', '5', '2'],
             'documents' => ['quotation', 'QT-2026-001', '2026-07-20', '2026-08-20', 'Tech Supplies Ltd', '29AADCT1234F1Z5', 'draft', 'B2B', '29', 'No', 'INR', '50000', '5000', '45000', '0', '0', '8100', '0', '500', '53600', 'Valid for 30 days', ''],
+            'payments' => ['INV/2026-27/0002', '2500', '2026-07-22', 'bank', 'NEFT998877', 'Advance received', 'Tech Supplies Ltd'],
         ];
         $sampleRow2 = $examples2[$entity] ?? array_fill(0, count($headings), '');
 
@@ -193,6 +211,9 @@ class BulkExcelService
             'documents' => Document::where('tenant_id', $tenant->id)
                 ->whereIn('doc_type', ['invoice', 'quotation', 'credit_note', 'debit_note', 'purchase_order', 'purchase_bill', 'proforma', 'delivery_challan', 'bill_of_supply'])
                 ->with('party')->get(),
+            'payments' => Payment::where('tenant_id', $tenant->id)
+                ->whereNotNull('document_id')
+                ->with('document', 'party')->latest('paid_on')->get(),
             default => collect(),
         };
 
@@ -203,6 +224,10 @@ class BulkExcelService
                     $line[] = $row->party?->name ?? '';
                 } elseif ($key === 'party_gstin') {
                     $line[] = $row->party?->gstin ?? '';
+                } elseif ($key === 'document_number') {
+                    $line[] = $row->document?->number ?? '';
+                } elseif ($key === 'paid_on') {
+                    $line[] = $row->paid_on?->format('Y-m-d') ?? '';
                 } elseif ($key === 'price_inclusive_tax' || $key === 'track_inventory' || $key === 'reverse_charge') {
                     $line[] = $row->$key ? 'Yes' : 'No';
                 } else {
@@ -345,6 +370,7 @@ class BulkExcelService
                         'parties' => $this->importPartyRow($row['data'], $tenant, $mode),
                         'items' => $this->importItemRow($row['data'], $tenant, $mode),
                         'documents' => $this->importDocumentRow($row['data'], $tenant, $mode),
+                        'payments' => $this->importPaymentRow($row['data'], $tenant, $mode),
                         default => 'skipped',
                     };
                     $stats[$result]++;
@@ -468,5 +494,77 @@ class BulkExcelService
 
         Document::create($clean);
         return 'imported';
+    }
+
+    /**
+     * Import one payment row. New payments go through DocumentService::recordPayment
+     * so the invoice's amount paid, balance and status recalculate exactly as if
+     * the payment had been recorded from the UI.
+     */
+    protected function importPaymentRow(array $data, $tenant, string $mode): string
+    {
+        $document = Document::where('tenant_id', $tenant->id)
+            ->where('number', trim((string) $data['document_number']))
+            ->first();
+
+        if (! $document) {
+            throw new \RuntimeException("Invoice '{$data['document_number']}' not found — import invoices first.");
+        }
+
+        $amount = (float) $data['amount'];
+        if ($amount <= 0) {
+            throw new \RuntimeException('Amount must be greater than zero.');
+        }
+
+        $paidOn = $this->parseImportDate($data['paid_on']);
+        $method = strtolower(trim((string) ($data['method'] ?? 'cash'))) ?: 'cash';
+        if (! in_array($method, ['cash', 'bank', 'upi', 'card', 'cheque', 'gateway'], true)) {
+            $method = 'cash';
+        }
+
+        // A payment is "the same" when it hits the same invoice for the same
+        // amount on the same day — importing the same file twice stays safe.
+        $existing = Payment::where('tenant_id', $tenant->id)
+            ->where('document_id', $document->id)
+            ->where('amount', $amount)
+            ->whereDate('paid_on', $paidOn)
+            ->first();
+
+        if ($existing) {
+            if ($mode === 'merge') {
+                $existing->update(array_filter([
+                    'method' => $method,
+                    'reference' => $data['reference'] ?? null,
+                    'note' => $data['note'] ?? null,
+                ], fn ($v) => $v !== null && $v !== ''));
+                return 'updated';
+            }
+            return 'skipped';
+        }
+
+        app(DocumentService::class)->recordPayment($document, $amount, [
+            'paid_on' => $paidOn,
+            'method' => $method,
+            'reference' => $data['reference'] ?? null,
+            'note' => $data['note'] ?? null,
+        ]);
+
+        return 'imported';
+    }
+
+    /** Excel gives dates either as text or as serial numbers (e.g. 45872). */
+    protected function parseImportDate(mixed $value): \Illuminate\Support\Carbon
+    {
+        if ($value instanceof \DateTimeInterface) {
+            return \Illuminate\Support\Carbon::instance($value);
+        }
+
+        if (is_numeric($value) && $value > 20000) {
+            return \Illuminate\Support\Carbon::instance(
+                \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($value)
+            );
+        }
+
+        return \Illuminate\Support\Carbon::parse((string) $value);
     }
 }

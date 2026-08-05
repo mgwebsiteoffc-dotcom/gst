@@ -48,6 +48,9 @@
             <div class="mt-4 border-t border-slate-100 pt-4">
                 <p class="mb-3 text-sm font-medium text-slate-700">Invoice Options</p>
                 <label class="flex items-center gap-3 cursor-pointer">
+                    {{-- Sentinel: posts 0 when the box is unticked, so the controller can
+                         tell "unticked" apart from "this form doesn't own the setting". --}}
+                    <input type="hidden" name="show_ship_to" value="0">
                     <input type="checkbox" name="show_ship_to" value="1"
                            @checked($tenant->setting('show_ship_to', false))
                            class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
@@ -68,6 +71,7 @@
                     @foreach ([
                         'classic' => ['Classic', 'Bordered, traditional GST format'],
                         'modern' => ['Modern', 'Clean header bar, minimal borders'],
+                        'compact' => ['Compact', 'Dense layout for many line items'],
                     ] as $tpl => [$label, $desc])
                         <a href="{{ route('branding.preview', ['template' => $tpl]) }}" target="_blank"
                            class="flex items-center gap-3 rounded-lg border px-3 py-2 transition

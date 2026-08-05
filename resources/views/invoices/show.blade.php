@@ -81,6 +81,10 @@
                 </a>
             @endif
 
+            @if (! $document->einvoice?->isGenerated() && $document->status !== 'cancelled')
+                <a class="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 font-medium text-amber-700 hover:bg-amber-100"
+                   href="{{ route('documents.edit', $document) }}">Edit</a>
+            @endif
             <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ $share['email'] }}">Email</a>
             <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ route('documents.pdf', $document) }}" target="_blank">PDF</a>
             <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ route('documents.pdf', [$document, 'download' => 1]) }}">Download</a>
@@ -90,6 +94,24 @@
             @if ($document->doc_type === 'quotation')
                 <form method="post" action="{{ route('documents.convert', [$document, 'invoice']) }}">@csrf
                     <button class="rounded bg-indigo-600 px-3 py-2 text-white">Convert to Invoice</button>
+                </form>
+            @endif
+
+            @if (in_array($document->doc_type, ['invoice', 'bill_of_supply'], true) && ! $document->recurring_invoice_id)
+                <a class="rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 font-medium text-indigo-700 hover:bg-indigo-100"
+                   href="{{ route('recurring.create', ['from' => $document->id]) }}">Repeat monthly… Make recurring</a>
+            @endif
+
+            @if ($document->recurring_invoice_id)
+                <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50"
+                   href="{{ route('recurring.show', $document->recurring_invoice_id) }}">From recurring schedule</a>
+            @endif
+
+            @if ($document->status === 'draft')
+                <form method="post" action="{{ route('documents.destroy', $document) }}"
+                      onsubmit="return confirm('Delete this draft? This cannot be undone.')">
+                    @csrf @method('DELETE')
+                    <button class="rounded-lg border border-rose-200 bg-white px-3 py-2 text-rose-600 hover:bg-rose-50">Delete draft</button>
                 </form>
             @endif
 
@@ -172,4 +194,41 @@
             </select></div>
         <button class="rounded bg-emerald-600 px-4 py-2 text-white">Record payment</button>
     </form>
+
+    {{-- Change history: every create/edit/payment is logged via laravel-activitylog. --}}
+    <div class="mt-4 rounded-xl bg-white border p-4">
+        <div class="mb-2 flex items-center justify-between">
+            <h2 class="font-semibold text-sm">Change history</h2>
+            <span class="text-xs text-slate-400">Last {{ count($activities) }} entries</span>
+        </div>
+
+        <ol class="relative space-y-3 border-l border-slate-200 pl-4 text-sm">
+            @forelse ($activities as $activity)
+                <li class="relative">
+                    <span class="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full {{ $activity->event === 'updated' ? 'bg-amber-400' : ($activity->event === 'deleted' ? 'bg-rose-400' : 'bg-emerald-400') }}"></span>
+                    <div class="flex flex-wrap items-baseline justify-between gap-2">
+                        <p class="text-slate-700">
+                            {{ $activity->description }}
+                            <span class="text-slate-400">by {{ $activity->causer?->name ?? 'Scheduler / system' }}</span>
+                        </p>
+                        <p class="text-xs text-slate-400">{{ $activity->created_at->format('d M Y, h:i A') }}</p>
+                    </div>
+
+                    @if ($activity->event === 'updated' && ! empty($activity->changes['attributes']))
+                        <ul class="mt-1 space-y-0.5 text-xs text-slate-500">
+                            @foreach ($activity->changes['attributes'] as $field => $new)
+                                <li>
+                                    <span class="font-medium text-slate-600">{{ ucfirst(str_replace('_', ' ', $field)) }}:</span>
+                                    <span class="line-through decoration-rose-300">{{ $activity->changes['old'][$field] ?? '—' }}</span>
+                                    → <span class="text-slate-700">{{ is_scalar($new) ? $new : json_encode($new) }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </li>
+            @empty
+                <li class="text-slate-400">No changes recorded yet.</li>
+            @endforelse
+        </ol>
+    </div>
 @endsection

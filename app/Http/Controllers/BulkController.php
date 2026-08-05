@@ -25,6 +25,7 @@ class BulkController extends Controller
             'documents' => \App\Models\Document::where('tenant_id', $tenant->id)
                 ->whereIn('doc_type', ['invoice', 'quotation', 'credit_note', 'debit_note', 'purchase_order', 'purchase_bill', 'proforma', 'delivery_challan', 'bill_of_supply'])
                 ->count(),
+            'payments' => \App\Models\Payment::where('tenant_id', $tenant->id)->count(),
         ];
 
         return view('bulk.index', [

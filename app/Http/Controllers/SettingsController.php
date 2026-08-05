@@ -125,4 +125,116 @@ class SettingsController extends Controller
 
         return back()->with($result['success'] ? 'success' : 'error', $result['message']);
     }
+
+    // =====================================================================
+    // Team management
+    // =====================================================================
+
+    /** Owners and admins manage the team; everyone else just sees the list. */
+    protected function canManageTeam(Request $request): bool
+    {
+        return $request->user()->hasRole(['owner', 'admin']);
+    }
+
+    /**
+     * Invite = create the account here and hand the password over (in person or
+     * over any chat). If a password isn't typed in, one is generated and shown
+     * once in the flash message.
+     */
+    public function inviteMember(Request $request)
+    {
+        abort_unless($this->canManageTeam($request), 403, 'Only owners and admins can invite members.');
+
+        $tenant = TenantContext::get();
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
+            'role' => ['required', Rule::in(['admin', 'accountant', 'operator', 'viewer'])],
+            'password' => ['nullable', 'string', 'min:8', 'max:100'],
+        ]);
+
+        // Honour the plan's seat limit.
+        $plan = $tenant->subscription?->plan;
+        if ($plan?->user_limit !== null && $tenant->users()->count() >= $plan->user_limit) {
+            return back()->withInput()
+                ->with('error', "Your {$plan->name} plan allows {$plan->user_limit} user(s). Ask the platform team to upgrade, or remove a member first.");
+        }
+
+        $generated = null;
+        if (empty($data['password'])) {
+            $generated = \Illuminate\Support\Str::password(12);
+        }
+
+        $user = \App\Models\User::create([
+            'tenant_id' => $tenant->id,
+            'name' => $data['name'],
+            'email' => strtolower(trim($data['email'])),
+            'password' => $data['password'] ?? $generated,
+            'is_active' => true,
+            'email_verified_at' => now(),
+        ]);
+
+        // Roles are team-scoped — make sure this tenant's set exists, then assign.
+        \Database\Seeders\RolesAndPermissionsSeeder::syncRolesFor($tenant);
+        setPermissionsTeamId($tenant->id);
+        $user->assignRole($data['role']);
+
+        $message = "Account created for {$user->name} ({$user->email}).";
+        if ($generated) {
+            $message .= " Temporary password: {$generated} — shown only once, share it securely.";
+        }
+
+        return redirect()->route('settings.index', ['tab' => 'team'])->with('success', $message);
+    }
+
+    /** Change a member's role (admin/accountant/operator/viewer — not owner). */
+    public function updateMemberRole(Request $request, string $member)
+    {
+        abort_unless($this->canManageTeam($request), 403, 'Only owners and admins can change roles.');
+
+        $tenant = TenantContext::get();
+        $user = $tenant->users()->findOrFail($member);
+
+        if ($user->hasRole('owner')) {
+            return back()->with('error', 'The owner role cannot be changed.');
+        }
+        if ($user->id === $request->user()->id) {
+            return back()->with('error', 'You cannot change your own role.');
+        }
+
+        $data = $request->validate([
+            'role' => ['required', Rule::in(['admin', 'accountant', 'operator', 'viewer'])],
+        ]);
+
+        setPermissionsTeamId($tenant->id);
+        $user->syncRoles([$data['role']]);
+
+        return back()->with('success', "{$user->name} is now ".ucfirst($data['role']).'.');
+    }
+
+    /** Activate / deactivate a member without deleting their history. */
+    public function toggleMember(Request $request, string $member)
+    {
+        abort_unless($this->canManageTeam($request), 403, 'Only owners and admins can manage members.');
+
+        $tenant = TenantContext::get();
+        $user = $tenant->users()->findOrFail($member);
+
+        if ($user->id === $request->user()->id) {
+            return back()->with('error', 'You cannot deactivate your own account.');
+        }
+
+        if ($user->is_active && $user->hasRole('owner')
+            && $tenant->users()->role('owner')->where('is_active', true)->count() <= 1) {
+            return back()->with('error', 'This is the only active owner — make someone else owner first.');
+        }
+
+        $user->is_active = ! $user->is_active;
+        $user->save();
+
+        return back()->with('success', $user->is_active
+            ? "{$user->name}'s access restored."
+            : "{$user->name} can no longer sign in. Their data and history are kept.");
+    }
 }
