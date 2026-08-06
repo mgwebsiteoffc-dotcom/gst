@@ -128,7 +128,7 @@
 
             @foreach (['logo', 'signature'] as $key)
                 @if (!empty($tenant->branding[$key]))
-                    <button type="submit" formaction="{{ route('branding.remove', $key) }}" formmethod="POST"
+                    <button type="submit" formaction="{{ route('branding.remove', $key) }}?_method=DELETE" formmethod="POST"
                             onclick="return confirm('Remove the {{ $key }}?')"
                             class="mt-3 mr-3 text-xs text-rose-600 hover:underline">Remove {{ $key }}</button>
                 @endif

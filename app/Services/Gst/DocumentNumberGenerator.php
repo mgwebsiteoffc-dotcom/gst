@@ -25,14 +25,19 @@ class DocumentNumberGenerator
         $date ??= now();
         $fy = self::financialYear($date);
         $tenantId = TenantContext::id();
-        $prefix = self::defaultPrefix($docType, $taxMode).'/'.$fy.'/';
 
-        return DB::transaction(function () use ($docType, $fy, $tenantId, $prefix) {
+        // 'invoice' is the only doc type issued under both tax modes (INV vs BILL),
+        // so it's the only one that needs a separate series per mode.
+        $seriesTaxMode = $docType === 'invoice' ? $taxMode : null;
+
+        return DB::transaction(function () use ($docType, $taxMode, $seriesTaxMode, $fy, $tenantId) {
+            // Looked up by tenant+doc_type+mode+FY only (not prefix), so a tenant who has
+            // customized the prefix/next_number in Settings still hits the same row.
             $series = DocumentSeries::query()
                 ->where('tenant_id', $tenantId)
                 ->where('doc_type', $docType)
                 ->where('financial_year', $fy)
-                ->where('prefix', $prefix)
+                ->where('tax_mode', $seriesTaxMode)
                 ->lockForUpdate()
                 ->first();
 
@@ -40,7 +45,8 @@ class DocumentNumberGenerator
                 $series = DocumentSeries::create([
                     'tenant_id' => $tenantId,
                     'doc_type' => $docType,
-                    'prefix' => $prefix,
+                    'tax_mode' => $seriesTaxMode,
+                    'prefix' => self::defaultPrefix($docType, $taxMode).'/'.$fy.'/',
                     'financial_year' => $fy,
                     'next_number' => 1,
                 ]);

@@ -16,14 +16,91 @@ class SettingsController extends Controller
     public function index(\Illuminate\Http\Request $request)
     {
         $tenant = TenantContext::get();
+        $tab = $request->get('tab', 'business');
 
         return view('settings.index', [
-            'tab' => $request->get('tab', 'business'),
+            'tab' => $tab,
             'tenant' => $tenant,
             'gateway' => $this->resolver->describe(),
             'states' => \App\Support\Gstin::STATES,
             'team' => \App\Models\User::where('tenant_id', $tenant?->id)->orderBy('name')->get(),
+            'currentFy' => \App\Services\Gst\DocumentNumberGenerator::financialYear(now()),
+            'numberingRows' => $tab === 'numbering' ? $this->numberingRows() : [],
         ]);
+    }
+
+    /**
+     * One row per doc type, expanded into GST/Non-GST pairs only for 'invoice' —
+     * the only doc type whose default prefix actually differs by tax mode.
+     */
+    protected function numberingRows(): array
+    {
+        $fy = \App\Services\Gst\DocumentNumberGenerator::financialYear(now());
+        $existing = \App\Models\DocumentSeries::where('financial_year', $fy)->get();
+
+        $rows = [];
+        foreach (\App\Models\Document::TYPES as $docType => $label) {
+            // 'invoice' is the only doc type issued under both tax modes (INV vs BILL).
+            $modes = $docType === 'invoice' ? ['gst', 'non_gst'] : [null];
+
+            foreach ($modes as $mode) {
+                $row = $existing->first(fn ($s) => $s->doc_type === $docType && $s->tax_mode === $mode);
+
+                $rows[] = [
+                    'doc_type' => $docType,
+                    'tax_mode' => $mode,
+                    'label' => $label.match ($mode) { 'gst' => ' (GST)', 'non_gst' => ' (Non-GST)', default => '' },
+                    'prefix' => $row->prefix ?? \App\Services\Gst\DocumentNumberGenerator::defaultPrefix($docType, $mode ?? 'gst').'/'.$fy.'/',
+                    'suffix' => $row->suffix ?? '',
+                    'next_number' => $row->next_number ?? 1,
+                    'padding' => $row->padding ?? 4,
+                ];
+            }
+        }
+
+        return $rows;
+    }
+
+    /** Set the prefix, next number, padding and suffix used for each document type this financial year. */
+    public function numbering(Request $request)
+    {
+        $tenant = TenantContext::get();
+
+        $data = $request->validate([
+            'series' => ['required', 'array'],
+            'series.*.doc_type' => ['required', 'string'],
+            'series.*.tax_mode' => ['nullable', Rule::in(['gst', 'non_gst'])],
+            'series.*.prefix' => ['nullable', 'string', 'max:30'],
+            'series.*.suffix' => ['nullable', 'string', 'max:20'],
+            'series.*.next_number' => ['required', 'integer', 'min:1'],
+            'series.*.padding' => ['required', 'integer', 'min:1', 'max:10'],
+        ]);
+
+        $fy = \App\Services\Gst\DocumentNumberGenerator::financialYear(now());
+
+        foreach ($data['series'] as $row) {
+            if (! array_key_exists($row['doc_type'], \App\Models\Document::TYPES)) {
+                continue;
+            }
+
+            \App\Models\DocumentSeries::updateOrCreate(
+                [
+                    'tenant_id' => $tenant->id,
+                    'doc_type' => $row['doc_type'],
+                    'tax_mode' => $row['tax_mode'] ?: null,
+                    'financial_year' => $fy,
+                ],
+                [
+                    'prefix' => $row['prefix'] ?? '',
+                    'suffix' => ($row['suffix'] ?? '') !== '' ? $row['suffix'] : null,
+                    'next_number' => (int) $row['next_number'],
+                    'padding' => (int) $row['padding'],
+                    'is_default' => true,
+                ]
+            );
+        }
+
+        return redirect()->route('settings.index', ['tab' => 'numbering'])->with('success', 'Numbering updated.');
     }
 
     /** Choose GST vs non-GST invoicing (and whether both are offered). */

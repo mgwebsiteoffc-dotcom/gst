@@ -7,16 +7,30 @@
         <a href="{{ route('documents.create', $type) }}" class="rounded bg-indigo-600 px-4 py-2 text-white text-sm">New</a>
     </div>
 
+    <div class="flex flex-wrap gap-1 border-b border-slate-200 mb-4">
+        @foreach (['active' => 'Active', 'discarded' => 'Discarded'] as $key => $label)
+            <a href="{{ route('documents.index', array_merge(['type' => $type], request()->except(['view', 'status', 'page']), ['view' => $key])) }}"
+               class="-mb-px border-b-2 px-4 py-2.5 text-sm transition {{ $view === $key
+                   ? 'border-indigo-600 font-medium text-indigo-700'
+                   : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-slate-800' }}">
+                {{ $label }}
+            </a>
+        @endforeach
+    </div>
+
     <form class="mb-4 flex gap-2 text-sm">
+        <input type="hidden" name="view" value="{{ $view }}">
         <input name="q" value="{{ request('q') }}" placeholder="Search number or party" class="rounded border-slate-300 px-3 py-2">
         <input type="date" name="from" value="{{ request('from') }}" class="rounded border-slate-300 px-3 py-2">
         <input type="date" name="to" value="{{ request('to') }}" class="rounded border-slate-300 px-3 py-2">
-        <select name="status" class="rounded border-slate-300 px-3 py-2">
-            <option value="">All statuses</option>
-            @foreach (['draft','sent','partially_paid','paid','overdue','cancelled'] as $s)
-                <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
-            @endforeach
-        </select>
+        @if ($view === 'active')
+            <select name="status" class="rounded border-slate-300 px-3 py-2">
+                <option value="">All statuses</option>
+                @foreach (['draft','sent','partially_paid','paid','overdue'] as $s)
+                    <option value="{{ $s }}" @selected(request('status') === $s)>{{ ucfirst(str_replace('_',' ',$s)) }}</option>
+                @endforeach
+            </select>
+        @endif
         <button class="rounded bg-slate-800 px-4 py-2 text-white">Filter</button>
     </form>
 

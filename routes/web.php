@@ -178,6 +178,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::put('settings/nic', [SettingsController::class, 'nic'])->name('settings.nic');
     Route::post('settings/nic/test', [SettingsController::class, 'testNic'])->name('settings.nic.test');
     Route::put('settings/whatsapp', [SettingsController::class, 'whatsapp'])->name('settings.whatsapp');
+    Route::put('settings/numbering', [SettingsController::class, 'numbering'])->name('settings.numbering');
     Route::post('settings/whatsapp/test', [SettingsController::class, 'testWhatsApp'])->name('settings.whatsapp.test');
 
     // Team: invite members, change roles, activate/deactivate

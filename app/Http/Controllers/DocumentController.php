@@ -22,11 +22,18 @@ class DocumentController extends Controller
 
     public function index(Request $request, string $type = 'invoice')
     {
+        $view = $request->get('view') === 'discarded' ? 'discarded' : 'active';
+
         $documents = Document::with('party', 'einvoice')
             ->ofType($type)
+            ->when(
+                $view === 'discarded',
+                fn ($q) => $q->where('status', 'cancelled'),
+                fn ($q) => $q->where('status', '!=', 'cancelled'),
+            )
             ->when($request->q, fn ($q, $s) => $q->where('number', 'like', "%$s%")
                 ->orWhereHas('party', fn ($p) => $p->where('name', 'like', "%$s%")))
-            ->when($request->status, fn ($q, $s) => $q->where('status', $s))
+            ->when($view === 'active' && $request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->from && $request->to, fn ($q) => $q->between($request->from, $request->to))
             ->latest('issue_date')->latest('id')
             ->paginate(25)->withQueryString();
@@ -36,7 +43,7 @@ class DocumentController extends Controller
             'outstanding' => Document::ofType($type)->whereNotIn('status', ['draft', 'cancelled', 'paid'])->sum('balance_due'),
         ];
 
-        return view('invoices.index', compact('documents', 'type', 'summary'));
+        return view('invoices.index', compact('documents', 'type', 'summary', 'view'));
     }
 
     public function create(Request $request, string $type = 'invoice')

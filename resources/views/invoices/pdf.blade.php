@@ -3,6 +3,9 @@
     $einvoice = $document->einvoice;
     $isGst = $document->isGst();
     $hsn = $isGst ? $document->hsnSummary() : [];
+    $gstRates = $document->lines->pluck('gst_rate')->unique();
+    $uniformGstRate = $gstRates->count() === 1 ? (float) $gstRates->first() : null;
+    $fmtRate = fn ($r) => rtrim(rtrim(number_format($r, 2), '0'), '.');
     $brand = $tenant->branding ?? [];
     $bank = $tenant->setting('bank', []);
     $logoPath = !empty($brand['logo']) ? storage_path('app/public/'.$brand['logo']) : null;
@@ -96,10 +99,10 @@
             @if ($isGst)
                 <th style="width:11%">Taxable</th>
                 @if ($document->is_interstate)
-                    <th style="width:13%">IGST</th>
+                    <th style="width:13%">IGST @if ($uniformGstRate !== null)({{ $fmtRate($uniformGstRate) }}%)@endif</th>
                 @else
-                    <th style="width:11%">CGST</th>
-                    <th style="width:11%">SGST</th>
+                    <th style="width:11%">CGST @if ($uniformGstRate !== null)({{ $fmtRate($uniformGstRate / 2) }}%)@endif</th>
+                    <th style="width:11%">SGST @if ($uniformGstRate !== null)({{ $fmtRate($uniformGstRate / 2) }}%)@endif</th>
                 @endif
             @endif
             <th style="width:12%">Amount</th>
@@ -117,10 +120,10 @@
                 @if ($isGst)
                     <td class="right">{{ number_format($line->taxable_value, 2) }}</td>
                     @if ($document->is_interstate)
-                        <td class="right">{{ number_format($line->igst_amount, 2) }} <span class="muted">({{ (float) $line->gst_rate }}%)</span></td>
+                        <td class="right">{{ number_format($line->igst_amount, 2) }}@if ($uniformGstRate === null) <span class="muted">({{ $fmtRate($line->gst_rate) }}%)</span>@endif</td>
                     @else
-                        <td class="right">{{ number_format($line->cgst_amount, 2) }} <span class="muted">({{ (float) $line->gst_rate / 2 }}%)</span></td>
-                        <td class="right">{{ number_format($line->sgst_amount, 2) }} <span class="muted">({{ (float) $line->gst_rate / 2 }}%)</span></td>
+                        <td class="right">{{ number_format($line->cgst_amount, 2) }}@if ($uniformGstRate === null) <span class="muted">({{ $fmtRate($line->gst_rate / 2) }}%)</span>@endif</td>
+                        <td class="right">{{ number_format($line->sgst_amount, 2) }}@if ($uniformGstRate === null) <span class="muted">({{ $fmtRate($line->gst_rate / 2) }}%)</span>@endif</td>
                     @endif
                 @endif
                 <td class="right">{{ number_format($line->line_total, 2) }}</td>

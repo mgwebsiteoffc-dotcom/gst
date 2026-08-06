@@ -63,7 +63,7 @@
                         <input type="file" name="{{ $key }}" accept="image/*"
                                class="mt-2 w-full text-xs file:mr-2 file:rounded-md file:border-0 file:bg-slate-100 file:px-3 file:py-1.5 file:text-xs file:font-medium hover:file:bg-slate-200">
                         @if (!empty($tenant->branding[$key]))
-                            <button type="submit" formaction="{{ route('branding.remove', $key) }}" formmethod="POST"
+                            <button type="submit" formaction="{{ route('branding.remove', $key) }}?_method=DELETE" formmethod="POST"
                                     onclick="return confirm('Remove this {{ strtolower($label) }}?')"
                                     class="mt-1 text-xs text-rose-600 hover:underline">Remove</button>
                         @endif

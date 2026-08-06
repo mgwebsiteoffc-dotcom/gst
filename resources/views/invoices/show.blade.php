@@ -113,6 +113,13 @@
                     @csrf @method('DELETE')
                     <button class="rounded-lg border border-rose-200 bg-white px-3 py-2 text-rose-600 hover:bg-rose-50">Delete draft</button>
                 </form>
+            @elseif (! in_array($document->status, ['cancelled'], true) && (float) $document->amount_paid <= 0)
+                <form method="post" action="{{ route('documents.cancel', $document) }}"
+                      onsubmit="const reason = prompt('Reason for discarding this {{ strtolower($document->title) }} (optional):'); if (reason === null) return false; this.querySelector('[name=reason]').value = reason; return confirm('Discard {{ $document->number }}? It will be marked cancelled and removed from outstanding totals. This cannot be undone.');">
+                    @csrf
+                    <input type="hidden" name="reason">
+                    <button class="rounded-lg border border-rose-200 bg-white px-3 py-2 text-rose-600 hover:bg-rose-50">Discard {{ strtolower($document->title) }}</button>
+                </form>
             @endif
 
             @if ($document->isEinvoiceApplicable() && ! $document->einvoice?->isGenerated())
