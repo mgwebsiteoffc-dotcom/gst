@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Document;
+use App\Models\HsnCode;
 use App\Models\Item;
 use App\Models\Party;
 use App\Services\Gst\GstrReportService;
@@ -31,9 +32,16 @@ class ReportController extends Controller
         [$from, $to] = $this->range($request);
         $data = $this->gstr->gstr1($from, $to);
 
-        return $request->wantsJson() || $request->boolean('json')
-            ? response()->json($data)
-            : view('reports.gstr1', compact('data', 'from', 'to'));
+        // ?json=1 hands the payload to the GST offline utility.
+        if ($request->wantsJson() || $request->boolean('json')) {
+            return response()->json($data);
+        }
+
+        // HSN descriptions straight from the master, so Table 12 is readable.
+        $codes = collect($data['hsn']['data'] ?? [])->pluck('hsn_sc')->filter()->unique()->values()->all();
+        $hsnLookup = $codes ? HsnCode::whereIn('code', $codes)->pluck('description', 'code')->all() : [];
+
+        return view('reports.gstr1', compact('data', 'from', 'to', 'hsnLookup'));
     }
 
     public function gstr3b(Request $request)
@@ -111,6 +119,25 @@ class ReportController extends Controller
                 collect($this->biz->partyWiseSales($from, $to))
                     ->map(fn ($r) => [$r['name'], $r['invoices'], $r['taxable'], $r['total'], $r['outstanding']]),
             ],
+            'stock' => [
+                ['Item', 'SKU', 'HSN/SAC', 'Unit', 'On hand', 'Reorder level', 'Purchase price', 'Stock value', 'Status'],
+                Item::where('track_inventory', true)->orderBy('name')->get()->map(fn ($i) => [
+                    $i->name, $i->sku, $i->hsn_sac, $i->uqc,
+                    $i->stockOnHand(), $i->reorder_level, (float) $i->purchase_price,
+                    $i->stockOnHand() * (float) $i->purchase_price,
+                    $i->stockOnHand() <= 0 ? 'Out of stock' : ($i->isLowStock() ? 'Low' : 'OK'),
+                ]),
+            ],
+            'sales' => [
+                ['Number', 'Title', 'Date', 'Party', 'GSTIN', 'Taxable', 'CGST', 'SGST', 'IGST', 'Total', 'Balance', 'Status'],
+                Document::with('party')->sales()->whereNotIn('status', ['draft', 'cancelled'])
+                    ->between($from->toDateString(), $to->toDateString())->get()
+                    ->map(fn ($d) => [
+                        $d->number, $d->title, $d->issue_date->format('Y-m-d'), $d->party?->name, $d->party?->gstin,
+                        (float) $d->taxable_value, (float) $d->cgst_total, (float) $d->sgst_total, (float) $d->igst_total,
+                        (float) $d->grand_total, (float) $d->balance_due, $d->status,
+                    ]),
+            ],
             'daily' => [
                 ['Date', 'Invoices', 'Taxable', 'Tax', 'Total'],
                 collect($this->biz->dailySales($from, $to))
@@ -140,15 +167,22 @@ class ReportController extends Controller
         }, $filename, ['Content-Type' => 'text/csv']);
     }
 
-    public function stock()
+    public function stock(Request $request)
     {
-        $items = Item::where('track_inventory', true)->orderBy('name')->get()
+        $items = Item::where('track_inventory', true)
+            ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w
+                ->where('name', 'like', "%$s%")
+                ->orWhere('sku', 'like', "%$s%")
+                ->orWhere('hsn_sac', 'like', "%$s%")))
+            ->orderBy('name')->get()
             ->map(fn ($i) => [
                 'item' => $i,
                 'on_hand' => $i->stockOnHand(),
                 'value' => $i->stockOnHand() * (float) $i->purchase_price,
                 'low' => $i->isLowStock(),
-            ]);
+            ])
+            ->when($request->boolean('low'), fn ($c) => $c->where('low', true))
+            ->values();
 
         return view('reports.stock', compact('items'));
     }
