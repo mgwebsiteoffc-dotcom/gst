@@ -16,8 +16,10 @@ class EnsureSubscriptionActive
             return $next($request);
         }
 
-        $subscription = $tenant->subscription;
-        $onTrial = $tenant->trial_ends_at && $tenant->trial_ends_at->isFuture();
+        // Branches ride on the main business's subscription and trial.
+        $billing = $tenant->billingTenant();
+        $subscription = $billing->subscription;
+        $onTrial = $billing->trial_ends_at && $billing->trial_ends_at->isFuture();
 
         if (! $onTrial && ! $subscription?->isActive()) {
             return redirect()->route('billing.plans')->with('error', 'Your subscription has expired. Please choose a plan.');

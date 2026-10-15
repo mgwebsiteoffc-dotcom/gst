@@ -61,6 +61,15 @@
         ],
     ]);
 
+    // Main-business owners/admins get the branch manager (visible from any branch).
+    if (! $isPlatform && ! $partnerProfile && $tenant) {
+        $home = $tenant->parent_tenant_id ? ($tenant->parent ?: $tenant) : $tenant;
+
+        if (! $home->parent_tenant_id && auth()->user()->hasAnyRole(['owner', 'admin'])) {
+            $groups[__('Setup')][] = ['business.branches', __('Business & Branches'), []];
+        }
+    }
+
     if ($isPlatform) {
         $groups[__('Platform')] = [
             ['admin.dashboard', __('Overview'), []],
@@ -133,6 +142,7 @@
 
             <div class="flex items-center gap-2">
                 @include('partials.locale-switcher')
+                @include('partials.branch-switcher')
                 @if (! $partnerProfile && ! $isPlatform && $tenant)
                     @include('partials.push-bell')
                     <a href="{{ route('offline.create') }}" data-offline-wrap title="{{ __('bills waiting to sync') }}"

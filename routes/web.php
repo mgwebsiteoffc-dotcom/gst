@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\PayoutController as AdminPayout;
 use App\Http\Controllers\Admin\PlanController as AdminPlan;
 use App\Http\Controllers\Admin\TenantController as AdminTenant;
 use App\Http\Controllers\Admin\UserController as AdminUser;
+use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\ImpersonationController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OfflineController;
@@ -156,6 +157,14 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('settings/whatsapp/test', [SettingsController::class, 'testWhatsApp'])->name('settings.whatsapp.test');
 
     Route::view('billing/plans', 'billing.plans')->name('billing.plans');
+
+    // Multi-branch / multi-store: switch, group overview, staff moves
+    Route::get('business/branches', [BusinessController::class, 'index'])->name('business.branches');
+    Route::post('business/switch', [BusinessController::class, 'switch'])->name('business.switch');
+    Route::post('business/branches', [BusinessController::class, 'store'])->name('business.branches.store');
+    Route::put('business/branches/{branch}', [BusinessController::class, 'update'])->name('business.branches.update');
+    Route::delete('business/branches/{branch}', [BusinessController::class, 'destroy'])->name('business.branches.destroy');
+    Route::put('business/users/{user}/branch', [BusinessController::class, 'moveUser'])->name('business.users.branch');
 
     // Migration / Import
     Route::get('migration', [MigrationController::class, 'index'])->name('migration.index');

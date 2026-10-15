@@ -92,6 +92,7 @@ class LoginController extends Controller
     public function destroy(Request $request)
     {
         Auth::logout();
+        $request->session()->forget('active_tenant_id');
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 

@@ -56,6 +56,45 @@
         </form>
     </x-card>
 
+    @if ($tenant->parent_tenant_id)
+        <x-card title="{{ __('Branch') }}" class="lg:col-span-2">
+            <p class="text-sm text-slate-600">
+                {{ __('Part of') }}
+                <a href="{{ route('admin.tenants.show', $tenant->parent) }}" class="font-medium text-indigo-600 hover:underline">{{ $tenant->parent?->name }}</a>
+                — {{ __('billing runs on the main business plan.') }}
+            </p>
+        </x-card>
+    @else
+        <x-card title="{{ __('Branches') }}" class="lg:col-span-2">
+            @php $branches = $tenant->branches()->withCount('users', 'documents')->get(); @endphp
+            @if ($branches->isEmpty())
+                <p class="text-sm text-slate-500">{{ __('No branches yet.') }}</p>
+            @else
+                <ul class="divide-y divide-slate-100 text-sm">
+                    @foreach ($branches as $branch)
+                        <li class="flex items-center justify-between gap-3 py-2">
+                            <div>
+                                <a href="{{ route('admin.tenants.show', $branch) }}" class="font-medium text-indigo-600 hover:underline">{{ $branch->name }}</a>
+                                <span class="ml-2 font-mono text-xs text-slate-500">{{ $branch->gstin ?: 'Non-GST' }}</span>
+                            </div>
+                            <span class="flex items-center gap-3">
+                                <span class="text-xs text-slate-500">{{ $branch->users_count }} {{ __('Users') }} · {{ $branch->documents_count }} {{ __('Documents') }}</span>
+                                @php $branchUser = $branch->users()->orderBy('id')->first(); @endphp
+                                @if ($branchUser)
+                                    <form method="POST" action="{{ route('admin.users.impersonate', $branchUser) }}"
+                                          onsubmit="return confirm('Log in as this user? This is recorded in the audit log.')">
+                                        @csrf
+                                        <button class="text-xs font-medium text-amber-600 hover:underline">{{ __('Login as') }}</button>
+                                    </form>
+                                @endif
+                            </span>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </x-card>
+    @endif
+
     @if ($referral)
         <x-card title="Referred by" class="lg:col-span-2">
             <p class="text-sm text-slate-600">

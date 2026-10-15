@@ -56,6 +56,46 @@ class Tenant extends Model
     public function shopifyStores() { return $this->hasMany(ShopifyStore::class); }
     public function subscription() { return $this->hasOne(Subscription::class)->latestOfMany(); }
 
+    // ---- Multi-branch / multi-store ------------------------------------
+
+    /** The parent business this is a branch of (null for a main business). */
+    public function parent() { return $this->belongsTo(Tenant::class, 'parent_tenant_id'); }
+
+    /** Branches / retail stores owned by this business. */
+    public function branches() { return $this->hasMany(Tenant::class, 'parent_tenant_id')->orderBy('name'); }
+
+    public function isBranch(): bool { return (bool) $this->parent_tenant_id; }
+
+    /** The tenant that holds the subscription: the root business. */
+    public function billingTenant(): self
+    {
+        return $this->parent_tenant_id ? ($this->parent ?? $this) : $this;
+    }
+
+    /** This tenant plus its branches, in display order (main business first). */
+    public function businessGroup()
+    {
+        return $this->parent_tenant_id
+            ? collect([$this->parent ?: $this])
+            : collect([$this])->merge($this->branches()->get());
+    }
+
+    /**
+     * Businesses this login may switch between: a staff member attached to a
+     * branch sees only that branch; users of the main business see all of it.
+     */
+    public function switchableFor(User $user)
+    {
+        if (! $user->tenant_id) {
+            return collect();
+        }
+
+        return $user->tenant_id === $this->id
+            ? $this->businessGroup()
+            : collect([$this]);
+    }
+
+
     public function isComposition(): bool { return $this->registration_type === 'composition'; }
 
     /** A tenant without a GSTIN can only raise plain invoices. */
