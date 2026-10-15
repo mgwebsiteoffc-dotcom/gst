@@ -13,10 +13,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Hash;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\Rules\Password as PasswordRule;
 
 /**
  * Platform-staff tools for a single client login:
@@ -94,7 +94,7 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
+            'password' => ['required', 'confirmed', PasswordRule::min(8)->letters()->numbers()],
             'role' => ['required', Rule::in(['owner', 'admin', 'accountant', 'operator', 'viewer'])],
             'branch_id' => ['nullable', 'integer'],
         ]);

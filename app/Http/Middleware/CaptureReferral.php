@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Services\Partner\ReferralService;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Cookie;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
 
