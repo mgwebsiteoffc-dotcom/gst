@@ -45,7 +45,7 @@ class SubscriptionInvoiceService
         return DB::transaction(function () use ($tenant, $plan, $interval, $parts, $gateway, $gatewayPaymentId, $subscription, $status, $months) {
             return SubscriptionPayment::withoutGlobalScope('tenant')->create([
                 'tenant_id' => $tenant->id,
-                'subscription_id' => $subscription?->id ?? $tenant->subscription?->id,
+                'subscription_id' => $subscription?->id ?? $tenant->subscriptionRecord()?->id,
                 'plan_id' => $plan->id,
                 'plan_name' => $plan->name,
                 'interval' => $interval,

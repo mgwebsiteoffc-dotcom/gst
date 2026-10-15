@@ -85,8 +85,14 @@
         </div>
 
         <div class="flex items-center gap-2">
-            <a href="{{ route('login') }}" class="hidden rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-100 sm:block">Sign in</a>
-            <a href="{{ route('register') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Start free</a>
+            @auth
+                {{-- Already signed in: send them straight back to the app. --}}
+                <a href="{{ auth()->user()->is_super_admin ? route('admin.dashboard') : route('dashboard') }}"
+                   class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">{{ __('Dashboard') }}</a>
+            @else
+                <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">{{ __('Sign in') }}</a>
+                <a href="{{ route('register') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Start free</a>
+            @endauth
             <button @click="open = !open" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden" aria-label="Menu">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
@@ -97,6 +103,15 @@
         @foreach (['features' => 'Features', 'pricing' => 'Pricing', 'tools' => 'Free Tools', 'blog.index' => 'Blog', 'about' => 'About', 'contact' => 'Contact'] as $r => $label)
             <a href="{{ route($r) }}" class="block border-b border-slate-100 px-5 py-3 text-sm text-slate-700">{{ $label }}</a>
         @endforeach
+
+        {{-- Auth links: phones previously had no way to reach the login page. --}}
+        @auth
+            <a href="{{ auth()->user()->is_super_admin ? route('admin.dashboard') : route('dashboard') }}"
+               class="block border-b border-slate-100 px-5 py-3 text-sm font-semibold text-indigo-700">{{ __('Dashboard') }}</a>
+        @else
+            <a href="{{ route('login') }}" class="block border-b border-slate-100 px-5 py-3 text-sm font-medium text-indigo-700">{{ __('Sign in') }}</a>
+            <a href="{{ route('register') }}" class="block border-b border-slate-100 px-5 py-3 text-sm font-semibold text-indigo-700">{{ __('Create an account') }}</a>
+        @endauth
     </div>
 </header>
 

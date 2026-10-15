@@ -415,5 +415,19 @@
   "All businesses": "Sabhi business",
   "Head offices only": "Sirf head office",
   "Branches / stores only": "Sirf branch / dukaan",
-  "Search name or GSTIN": "Naam ya GSTIN khojein"
+  "Search name or GSTIN": "Naam ya GSTIN khojein",
+  "Team & logins": "Team aur login",
+  "Last login": "Aakhri login",
+  "Last login IP": "Login IP",
+  "Device": "Device",
+  "Platform staff": "Platform staff",
+  "Disabled": "Band",
+  "Enable": "Chalu karein",
+  "Disable": "Band karein",
+  "Actions": "Kaam",
+  "Add user": "User jodein",
+  "Roles are scoped to the selected business or branch.": "Role chune gaye business/branch tak seemit rehte hain.",
+  "Login-as, reset links and sign-outs are written to the application log with your admin id. Roles and branches are managed on the business page.": "Login-as, reset link aur sign-out admin ID ke saath log mein darj hote hain. Role aur branch business page se sambhalein.",
+  "never": "kabhi nahi",
+  "Last activity": "Aakhri activity"
 }

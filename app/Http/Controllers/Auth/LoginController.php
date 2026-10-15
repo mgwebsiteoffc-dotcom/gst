@@ -68,7 +68,11 @@ class LoginController extends Controller
             ]);
         }
 
-        $user->forceFill(['last_login_at' => now()])->saveQuietly();
+        $user->forceFill([
+            'last_login_at' => now(),
+            'last_login_ip' => $request->ip(),
+            'last_login_user_agent' => Str::limit((string) $request->userAgent(), 250, ''),
+        ])->saveQuietly();
 
         // Partners who are not tenant users go to their own portal.
         if (! $user->tenant_id && ! $user->is_super_admin

@@ -245,6 +245,8 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::put('users/{user}/toggle', [AdminTenant::class, 'toggleUser'])->name('users.toggle');
 
     // Client logins: profile, support impersonation, reset link, sign-out
+    Route::post('tenants/{tenant}/users', [AdminUser::class, 'store'])->name('tenants.users.store');
+    Route::put('users/{user}/access', [AdminUser::class, 'updateAccess'])->name('users.access');
     Route::get('users/{user}', [AdminUser::class, 'show'])->name('users.show');
     Route::post('users/{user}/impersonate', [AdminUser::class, 'impersonate'])->name('users.impersonate');
     Route::post('users/{user}/reset-link', [AdminUser::class, 'sendResetLink'])->name('users.reset-link');

@@ -1,6 +1,6 @@
 @php
-    $home = $tenant->parent_tenant_id ? ($tenant->parent ?: $tenant) : $tenant;
-    $plan = $home->subscription?->plan;
+    $home = $tenant->parent_tenant_id ? ($tenant->parentTenant() ?: $tenant) : $tenant;
+    $plan = $home->plan();
     $branches = $home->branches()->orderBy('name')->get();
     $multiBranch = $plan?->includes('multi_branch');
     $userLimit = $plan?->user_limit ?? 1;

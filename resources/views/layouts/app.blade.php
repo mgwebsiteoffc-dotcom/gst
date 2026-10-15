@@ -63,7 +63,7 @@
 
     // Main-business owners/admins get the branch manager (visible from any branch).
     if (! $isPlatform && ! $partnerProfile && $tenant) {
-        $home = $tenant->parent_tenant_id ? ($tenant->parent ?: $tenant) : $tenant;
+        $home = $tenant->parent_tenant_id ? ($tenant->parentTenant() ?: $tenant) : $tenant;
 
         if (! $home->parent_tenant_id && auth()->user()->hasAnyRole(['owner', 'admin'])) {
             $groups[__('Setup')][] = ['business.branches', __('Business & Branches'), []];

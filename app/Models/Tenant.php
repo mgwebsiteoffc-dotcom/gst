@@ -75,6 +75,21 @@ class Tenant extends Model
     /** The parent business this is a branch of (null for a main business). */
     public function parent() { return $this->belongsTo(Tenant::class, 'parent_tenant_id'); }
 
+    /**
+     * Parent business without risking a lazy-load violation: uses the loaded
+     * relation when available, otherwise a single scoped query.
+     */
+    public function parentTenant(): ?self
+    {
+        if (! $this->parent_tenant_id) {
+            return null;
+        }
+
+        return $this->relationLoaded('parent')
+            ? $this->getRelation('parent')
+            : static::find($this->parent_tenant_id);
+    }
+
     /** Branches / retail stores owned by this business. */
     public function branches() { return $this->hasMany(Tenant::class, 'parent_tenant_id')->orderBy('name'); }
 
@@ -83,14 +98,28 @@ class Tenant extends Model
     /** The tenant that holds the subscription: the root business. */
     public function billingTenant(): self
     {
-        return $this->parent_tenant_id ? ($this->parent ?? $this) : $this;
+        return $this->parent_tenant_id ? ($this->parentTenant() ?: $this) : $this;
+    }
+
+    /** The subscription record without triggering a lazy-load violation. */
+    public function subscriptionRecord(): ?Subscription
+    {
+        return $this->relationLoaded('subscription')
+            ? $this->getRelation('subscription')
+            : Subscription::forTenant($this->id);
+    }
+
+    /** Active plan for this business (branches inherit the parent's plan). */
+    public function plan(): ?Plan
+    {
+        return $this->billingTenant()->subscriptionRecord()?->plan;
     }
 
     /** This tenant plus its branches, in display order (main business first). */
     public function businessGroup()
     {
         return $this->parent_tenant_id
-            ? collect([$this->parent ?: $this])
+            ? collect([$this->parentTenant() ?: $this])
             : collect([$this])->merge($this->branches()->get());
     }
 
@@ -150,7 +179,7 @@ class Tenant extends Model
             return (bool) $override;
         }
 
-        return (bool) $this->billingTenant()->subscription?->plan?->includes($feature);
+        return (bool) $this->plan()?->includes($feature);
     }
 
     /** Branches this business may create (extra allowance when granted). */

@@ -18,7 +18,8 @@ class EnsureSubscriptionActive
 
         // Branches ride on the main business's subscription and trial.
         $billing = $tenant->billingTenant();
-        $subscription = $billing->subscription;
+        // Branch-safe: never lazy load across businesses.
+        $subscription = $billing->subscriptionRecord();
         $onTrial = $billing->trial_ends_at && $billing->trial_ends_at->isFuture();
 
         if (! $onTrial && ! $subscription?->isActive()) {

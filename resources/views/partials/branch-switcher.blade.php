@@ -4,11 +4,12 @@
     $__active = \App\Support\TenantContext::get();
     $__options = collect();
 
-    if ($__active && $__user && ! $__user->is_super_admin && $__user->tenant) {
-        $__home = $__user->tenant;
-        $__options = $__home->parent_tenant_id
-            ? collect([$__home])
-            : collect([$__home])->merge($__home->branches()->get());
+    // TenantContext is already resolved by middleware — no relation access,
+    // so this can never trigger a lazy-load violation.
+    if ($__active && $__user && ! $__user->is_super_admin) {
+        $__options = $__active->parent_tenant_id
+            ? collect([$__active])
+            : collect([$__active])->merge($__active->branches()->get());
     }
 
     $__isRoot = $__active && ! $__active->parent_tenant_id;

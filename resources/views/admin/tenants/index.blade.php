@@ -68,7 +68,22 @@
                 <td class="px-3">
                     <x-badge tone="{{ ['active'=>'emerald','suspended'=>'rose','closed'=>'slate'][$t->account_status] }}">{{ ucfirst($t->account_status) }}</x-badge>
                 </td>
-                <td class="px-5 py-3 text-right"><x-btn variant="ghost" size="sm" :href="route('admin.tenants.show', $t)">Manage</x-btn></td>
+                <td class="px-5 py-3 text-right">
+                    <div class="flex items-center justify-end gap-3">
+                        @php $firstUser = $t->users->firstWhere('is_super_admin', false) ?? $t->users->first(); @endphp
+                        @if ($firstUser && ! $firstUser->is_super_admin)
+                            <form method="POST" action="{{ route('admin.users.impersonate', $firstUser) }}" class="inline"
+                                  onsubmit="return confirm('Log in as this user? This is recorded in the audit log.')">
+                                @csrf
+                                <button class="text-xs text-amber-600 hover:underline" title="{{ $firstUser->email }}">{{ __('Login as') }}</button>
+                            </form>
+                        @endif
+                        <span class="text-xs text-slate-400" title="{{ __('Last activity') }}">
+                            {{ $t->users->max('last_login_at')?->diffForHumans() ?? __('never') }}
+                        </span>
+                        <x-btn variant="ghost" size="sm" :href="route('admin.tenants.show', $t)">Manage</x-btn>
+                    </div>
+                </td>
             </tr>
         @endforeach
         </tbody>

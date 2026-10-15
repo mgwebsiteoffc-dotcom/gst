@@ -16,7 +16,7 @@ class TenantController extends Controller
     {
         return view('admin.tenants.index', [
             'tenants' => Tenant::withCount('users', 'documents')
-                ->with('subscription.plan', 'parent')
+                ->with('subscription.plan', 'parent', 'branches', 'users:id,tenant_id,name,email,is_super_admin,last_login_at')
                 ->withCount('branches')
                 ->when($request->status, fn ($q, $s) => $q->where('account_status', $s))
                 // scope=main lists only head offices, scope=branches only stores.
@@ -31,16 +31,18 @@ class TenantController extends Controller
     public function show(Tenant $tenant)
     {
         $tenant->loadCount('users', 'documents', 'parties', 'items');
+        $tenant->load('parent');
 
         return view('admin.tenants.show', [
             'tenant' => $tenant,
             'users' => User::where('tenant_id', $tenant->id)->get(),
             'plans' => Plan::where('active', true)->orderBy('price_paise')->get(),
-            'subscription' => $tenant->subscription,
+            'subscription' => $tenant->subscriptionRecord(),
             'referral' => \App\Models\Referral::with('partner')->where('tenant_id', $tenant->id)->first(),
             'branchCount' => $tenant->branches()->count(),
             'capabilities' => $tenant->setting('capabilities', []),
             'billingSettings' => $tenant->setting('billing', []),
+            'branches' => $tenant->branches()->orderBy('name')->get(),
             'payments' => \App\Models\SubscriptionPayment::withoutGlobalScope('tenant')
                 ->with('plan')->where('tenant_id', $tenant->id)->latest('id')->limit(24)->get(),
         ]);
@@ -109,7 +111,7 @@ class TenantController extends Controller
             ]);
         }
 
-        return back()->with('success', $tenant->name.' is now on '.optional($subscription->plan)->name.'.');
+        return back()->with('success', $tenant->name.' is now on '.(Plan::find($data['plan_id'])?->name ?? 'the new plan').'.');
     }
 
     /**

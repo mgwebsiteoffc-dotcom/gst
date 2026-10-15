@@ -415,5 +415,19 @@
   "All businesses": "सभी बिज़नेस",
   "Head offices only": "सिर्फ मुख्य कार्यालय",
   "Branches / stores only": "सिर्फ ब्रांच / दुकानें",
-  "Search name or GSTIN": "नाम या GSTIN खोजें"
+  "Search name or GSTIN": "नाम या GSTIN खोजें",
+  "Team & logins": "टीम और लॉगिन",
+  "Last login": "आखिरी लॉगिन",
+  "Last login IP": "लॉगिन IP",
+  "Device": "डिवाइस",
+  "Platform staff": "प्लेटफ़ॉर्म स्टाफ",
+  "Disabled": "बंद",
+  "Enable": "चालू करें",
+  "Disable": "बंद करें",
+  "Actions": "क्रियाएं",
+  "Add user": "यूज़र जोड़ें",
+  "Roles are scoped to the selected business or branch.": "रोल चुने गए बिज़नेस/ब्रांच तक सीमित रहते हैं।",
+  "Login-as, reset links and sign-outs are written to the application log with your admin id. Roles and branches are managed on the business page.": "लॉगिन-एज़, रीसेट लिंक और साइन-आउट एडमिन आईडी के साथ लॉग में दर्ज होते हैं। रोल और ब्रांच बिज़नेस पेज से संभालें।",
+  "never": "कभी नहीं",
+  "Last activity": "आखिरी गतिविधि"
 }

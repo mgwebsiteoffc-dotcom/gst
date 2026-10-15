@@ -200,39 +200,129 @@
         </x-card>
     @endif
 
-    <x-card title="Team" class="lg:col-span-2 !p-0">
-        <table class="w-full text-sm">
-            <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
-                <tr><th class="px-5 py-2.5 font-medium">Name</th><th class="px-3 font-medium">Email</th>
-                    <th class="px-3 font-medium">Last login</th><th class="px-3 font-medium">Status</th><th class="px-5"></th></tr>
+    <x-card title="{{ __('Team & logins') }}" class="lg:col-span-2 !p-0 overflow-x-auto">
+        <table class="w-full min-w-[960px] text-sm">
+            <thead class="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                    <th class="px-5 py-3 font-medium">{{ __('Name') }}</th>
+                    <th class="px-3 font-medium">{{ __('Email address') }}</th>
+                    <th class="px-3 font-medium">{{ __('Role') }}</th>
+                    <th class="px-3 font-medium">{{ __('Branch') }}</th>
+                    <th class="px-3 font-medium">{{ __('Last login') }}</th>
+                    <th class="px-3 font-medium">IP</th>
+                    <th class="px-5 py-3 text-right font-medium">{{ __('Actions') }}</th>
+                </tr>
             </thead>
             <tbody>
             @foreach ($users as $u)
+                @php
+                    setPermissionsTeamId($u->tenant_id);
+                    $uRoles = $u->getRoleNames();
+                    setPermissionsTeamId(null);
+                @endphp
                 <tr class="border-b border-slate-50 last:border-0">
-                    <td class="px-5 py-2.5 font-medium">{{ $u->name }}</td>
+                    <td class="px-5 py-3">
+                        <a href="{{ route('admin.users.show', $u) }}" class="font-medium text-indigo-600 hover:underline">{{ $u->name }}</a>
+                        @if (! $u->is_active)<x-badge tone="rose" class="ml-1">{{ __('Disabled') }}</x-badge>@endif
+                    </td>
                     <td class="px-3 text-slate-600">{{ $u->email }}</td>
-                    <td class="px-3 text-slate-500">{{ $u->last_login_at?->diffForHumans() ?? 'never' }}</td>
-                    <td class="px-3"><x-badge tone="{{ $u->is_active ? 'emerald' : 'rose' }}">{{ $u->is_active ? 'Enabled' : 'Disabled' }}</x-badge></td>
-                    <td class="px-5 py-2.5 text-right">
-                        <div class="flex items-center justify-end gap-3">
-                            <a href="{{ route('admin.users.show', $u) }}" class="text-xs text-indigo-600 hover:underline">View</a>
-                            <form method="POST" action="{{ route('admin.users.impersonate', $u) }}" class="inline"
-                                  onsubmit="return confirm('Log in as this user? This is recorded in the audit log.')">
-                                @csrf
-                                <button class="text-xs text-amber-600 hover:underline">Login as</button>
-                            </form>
-                            <form method="POST" action="{{ route('admin.users.toggle', $u) }}" class="inline">
+                    <td class="px-3">
+                        @if ($u->is_super_admin)
+                            <x-badge tone="indigo">{{ __('Platform staff') }}</x-badge>
+                        @else
+                            <form method="POST" action="{{ route('admin.users.access', $u) }}" class="flex items-center gap-1.5">
                                 @csrf @method('PUT')
-                                <button class="text-xs {{ $u->is_active ? 'text-rose-600' : 'text-emerald-600' }} hover:underline">
-                                    {{ $u->is_active ? 'Disable' : 'Enable' }}
-                                </button>
+                                <x-select name="role" class="!w-32 !py-1 text-xs">
+                                    @foreach (['owner','admin','accountant','operator','viewer'] as $role)
+                                        <option value="{{ $role }}" @selected($uRoles->contains($role))>{{ ucfirst($role) }}</option>
+                                    @endforeach
+                                </x-select>
+                                <input type="hidden" name="branch_id" value="{{ $u->tenant_id === $tenant->id ? '' : $u->tenant_id }}">
+                                <button class="text-xs font-medium text-indigo-600 hover:underline">{{ __('Save') }}</button>
                             </form>
-                        </div>
+                        @endif
+                    </td>
+                    <td class="px-3 text-slate-600">
+                        @php $uBranch = $branches->firstWhere('id', $u->tenant_id); @endphp
+                        {{ $uBranch?->name ?? $tenant->name }}
+                        @if ($uBranch)<x-badge tone="slate" class="ml-1">{{ __('Branch') }}</x-badge>@endif
+                    </td>
+                    <td class="px-3 text-slate-500">
+                        {{ $u->last_login_at?->diffForHumans() ?? __('never') }}
+                        @if ($u->last_login_user_agent)
+                            <div class="max-w-[16rem] truncate text-xs text-slate-400" title="{{ $u->last_login_user_agent }}">{{ $u->last_login_user_agent }}</div>
+                        @endif
+                    </td>
+                    <td class="px-3 font-mono text-xs text-slate-500">{{ $u->last_login_ip ?: '—' }}</td>
+                    <td class="px-5 py-3 text-right">
+                        @unless ($u->is_super_admin)
+                            <div class="flex items-center justify-end gap-3">
+                                <form method="POST" action="{{ route('admin.users.impersonate', $u) }}" class="inline"
+                                      onsubmit="return confirm('Log in as this user? This is recorded in the audit log.')">
+                                    @csrf
+                                    <button class="text-xs text-amber-600 hover:underline">{{ __('Login as') }}</button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.users.toggle', $u) }}" class="inline">
+                                    @csrf @method('PUT')
+                                    <button class="text-xs {{ $u->is_active ? 'text-rose-600' : 'text-emerald-600' }} hover:underline">
+                                        {{ $u->is_active ? __('Disable') : __('Enable') }}
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.users.sessions', $u) }}" class="inline"
+                                      onsubmit="return confirm('Sign this user out from all devices?')">
+                                    @csrf @method('DELETE')
+                                    <button class="text-xs text-slate-500 hover:underline">{{ __('Sign out') }}</button>
+                                </form>
+                            </div>
+                        @endunless
                     </td>
                 </tr>
             @endforeach
             </tbody>
         </table>
+    </x-card>
+
+    {{-- Create a login for this business (support-friendly) --}}
+    <x-card title="{{ __('Add user') }}" class="lg:col-span-2">
+        <form method="POST" action="{{ route('admin.tenants.users.store', $tenant) }}" class="grid gap-4 sm:grid-cols-3">
+            @csrf
+            <x-field label="{{ __('Name') }}" name="name" required>
+                <x-input name="name" required placeholder="{{ __('Full name') }}" />
+            </x-field>
+            <x-field label="{{ __('Email address') }}" name="email" required>
+                <x-input type="email" name="email" required />
+            </x-field>
+            <x-field label="{{ __('Phone') }}" name="phone">
+                <x-input name="phone" />
+            </x-field>
+            <x-field label="{{ __('Password') }}" name="password" required hint="{{ __('8+ characters, letters and numbers.') }}">
+                <x-input type="password" name="password" required autocomplete="new-password" />
+            </x-field>
+            <x-field label="{{ __('Confirm password') }}" name="password_confirmation" required>
+                <x-input type="password" name="password_confirmation" required autocomplete="new-password" />
+            </x-field>
+            <div class="grid grid-cols-2 gap-3">
+                <x-field label="{{ __('Role') }}" name="role" required>
+                    <x-select name="role">
+                        @foreach (['owner','admin','accountant','operator','viewer'] as $role)
+                            <option value="{{ $role }}" @selected($role === 'admin')>{{ ucfirst($role) }}</option>
+                        @endforeach
+                    </x-select>
+                </x-field>
+                <x-field label="{{ __('Branch') }}" name="branch_id">
+                    <x-select name="branch_id">
+                        <option value="">{{ $tenant->name }} ({{ __('Head office') }})</option>
+                        @foreach ($branches as $branch)
+                            <option value="{{ $branch->id }}">{{ $branch->name }}</option>
+                        @endforeach
+                    </x-select>
+                </x-field>
+            </div>
+            <div class="sm:col-span-3">
+                <x-btn variant="primary" type="submit">{{ __('Create user') }}</x-btn>
+                <span class="ml-2 text-xs text-slate-500">{{ __('Roles are scoped to the selected business or branch.') }}</span>
+            </div>
+        </form>
     </x-card>
 </div>
 @endsection

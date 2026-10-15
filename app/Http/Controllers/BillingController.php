@@ -24,7 +24,7 @@ class BillingController extends Controller
     public function plans(Request $request, GatewayResolver $gateways)
     {
         $tenant = TenantContext::get()->billingTenant();
-        $subscription = $tenant->subscription;
+        $subscription = $tenant->subscriptionRecord();
         $interval = $request->get('interval') === 'yearly' ? 'yearly' : 'monthly';
 
         return view('billing.plans-page', [
@@ -224,7 +224,7 @@ class BillingController extends Controller
     public function cancel(Request $request)
     {
         $tenant = TenantContext::get()->billingTenant();
-        $subscription = $tenant->subscription;
+        $subscription = $tenant->subscriptionRecord();
 
         if (! $subscription) {
             return back()->with('error', __('No subscription to cancel.'));
@@ -256,7 +256,7 @@ class BillingController extends Controller
         ]);
 
         $plan = Plan::where('active', true)->findOrFail($data['plan_id']);
-        $subscription = $tenant->subscription;
+        $subscription = $tenant->subscriptionRecord();
 
         if (! $subscription) {
             return back()->with('error', __('Choose a plan first.'));

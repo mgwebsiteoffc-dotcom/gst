@@ -91,7 +91,7 @@ class TeamController extends Controller
         $tenant = TenantContext::get();
         abort_unless($tenant, 403);
 
-        $home = $tenant->parent_tenant_id ? ($tenant->parent ?: $tenant) : $tenant;
+        $home = $tenant->parent_tenant_id ? ($tenant->parentTenant() ?: $tenant) : $tenant;
         $user = request()->user();
 
         // Only the main business manages the team, and only owner/admin may do it.
@@ -103,7 +103,7 @@ class TeamController extends Controller
         setPermissionsTeamId($activeTeam);
         abort_unless($ok, 403, __('Only owners and admins can manage the team.'));
 
-        return ['home' => $home, 'plan' => $home->subscription?->plan];
+        return ['home' => $home, 'plan' => $home->plan()];
     }
 
     protected function validated(Request $request, Tenant $home): array

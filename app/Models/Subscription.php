@@ -22,6 +22,26 @@ class Subscription extends Model
     }
 
     public function plan() { return $this->belongsTo(Plan::class); }
+
+    /**
+     * The live subscription for a business, plan eager loaded.
+     *
+     * Query-based on purpose: lazy loading is blocked outside production, and
+     * a branch must be able to read the MAIN business's subscription without
+     * tripping that guard.
+     */
+    public static function forTenant(?int $tenantId): ?self
+    {
+        if (! $tenantId) {
+            return null;
+        }
+
+        return static::withoutGlobalScope('tenant')
+            ->with('plan')
+            ->where('tenant_id', $tenantId)
+            ->latest('id')
+            ->first();
+    }
     public function isActive(): bool { return in_array($this->status, ['active', 'trialing'], true); }
 
     /**

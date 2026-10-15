@@ -21,7 +21,12 @@
             <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Role</dt><dd>{{ $roles->map(fn ($r) => str($r)->headline())->join(', ') ?: '—' }}</dd></div>
             <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Login status</dt>
                 <dd><x-badge tone="{{ $user->is_active ? 'emerald' : 'rose' }}">{{ $user->is_active ? 'Enabled' : 'Disabled' }}</x-badge></dd></div>
-            <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Last login</dt><dd>{{ $user->last_login_at?->diffForHumans() ?? 'never' }}</dd></div>
+            <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Last login</dt>
+                <dd>{{ $user->last_login_at?->format('d M Y, H:i') ?? __('never') }} <span class="text-slate-400">({{ $user->last_login_at?->diffForHumans() }})</span></dd></div>
+            <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Last login IP</dt>
+                <dd class="font-mono text-xs">{{ $user->last_login_ip ?: '—' }}</dd></div>
+            <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Device</dt>
+                <dd class="max-w-[22rem] truncate text-xs" title="{{ $user->last_login_user_agent }}">{{ $user->last_login_user_agent ?: '—' }}</dd></div>
             <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Member since</dt><dd>{{ $user->created_at->format('d M Y') }}</dd></div>
             <div class="flex justify-between gap-4 py-2"><dt class="text-slate-500">Active sessions</dt><dd>{{ $activeSessions }}</dd></div>
         </dl>
@@ -76,7 +81,9 @@
                             <x-btn variant="danger" type="submit" class="w-full">Sign out everywhere</x-btn>
                         </form>
                     </div>
-                    <p class="text-xs text-slate-500">Login-as, reset links and sign-outs are written to the application log with your admin id.</p>
+                    <p class="text-xs text-slate-500">
+                        {{ __('Login-as, reset links and sign-outs are written to the application log with your admin id. Roles and branches are managed on the business page.') }}
+                    </p>
                 </div>
             </x-card>
         @endunless

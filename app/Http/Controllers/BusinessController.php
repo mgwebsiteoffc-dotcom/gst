@@ -59,7 +59,7 @@ class BusinessController extends Controller
             'counts' => $counts,
             'team' => User::whereIn('tenant_id', $ids)->orderBy('name')->get(),
             'states' => Gstin::STATES,
-            'plan' => $home->subscription?->plan,
+            'plan' => $home->plan(),
             'canAddBranch' => $home->can('multi_branch') && $home->branches()->count() < max(1, $home->branchAllowance()),
         ]);
     }
@@ -70,7 +70,7 @@ class BusinessController extends Controller
         $data = $request->validate(['tenant_id' => ['required', 'integer']]);
 
         $user = $request->user();
-        $home = $user->tenant;
+        $home = Tenant::find($user->tenant_id);
         abort_unless($home, 403);
 
         $allowed = $home->switchableFor($user)->pluck('id')->map(fn ($id) => (int) $id)->all();
@@ -244,7 +244,7 @@ class BusinessController extends Controller
         $tenant = TenantContext::get();
         abort_unless($tenant, 403);
 
-        return $tenant->parent_tenant_id ? ($tenant->parent ?: $tenant) : $tenant;
+        return $tenant->parent_tenant_id ? ($tenant->parentTenant() ?: $tenant) : $tenant;
     }
 
     protected function authorizeManager(Tenant $home): void
@@ -269,7 +269,7 @@ class BusinessController extends Controller
     /** Multi-branch is a paid capability — send the vendor to the plans page. */
     protected function guardMultiBranch(Tenant $home): void
     {
-        $plan = $home->subscription?->plan;
+        $plan = $home->plan();
 
         if (! $home->can('multi_branch')) {
             abort(response()->redirect()->route('billing.plans')
