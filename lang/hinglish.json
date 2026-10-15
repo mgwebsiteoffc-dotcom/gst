@@ -403,5 +403,17 @@
   "Invoices, payments, expenses and GST filings. Cannot change company setup.": "Bill, payment, kharch aur GST filing. Setup nahi badal sakte.",
   "Raises invoices and records payments at the counter. Nothing else.": "Counter par bill banayein aur payment darj karein. Bas itna.",
   "Read-only access — ideal for an external CA or auditor.": "Sirf dekhne ka access — bahari CA ya auditor ke liye.",
-  "current": "current"
+  "current": "current",
+  "Payments & invoices": "Payment aur bill",
+  "Every subscription payment with its GST invoice.": "Har subscription payment aur uska GST bill.",
+  "No payments yet": "Abhi koi payment nahi",
+  "Your subscription bills will appear here with a GST invoice you can download.": "Aapke subscription bill yahan dikhenge, GST invoice download kar sakte hain.",
+  "Invoice": "Bill",
+  "Invoice download": "Bill download",
+  "Subscription payments": "Subscription payment",
+  "No subscription payments recorded yet.": "Abhi koi subscription payment darj nahi.",
+  "All businesses": "Sabhi business",
+  "Head offices only": "Sirf head office",
+  "Branches / stores only": "Sirf branch / dukaan",
+  "Search name or GSTIN": "Naam ya GSTIN khojein"
 }

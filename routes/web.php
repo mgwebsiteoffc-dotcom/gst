@@ -164,6 +164,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::post('billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
     Route::post('billing/payment', [BillingController::class, 'payment'])->name('billing.payment');
     Route::post('billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+    Route::get('billing/invoices/{payment}/pdf', [BillingController::class, 'invoicePdf'])->name('billing.invoices.pdf');
     Route::post('billing/downgrade', [BillingController::class, 'downgrade'])->name('billing.downgrade');
 
     // Team: create logins and assign them to a branch
@@ -240,6 +241,7 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::put('tenants/{tenant}', [AdminTenant::class, 'update'])->name('tenants.update');
     Route::put('tenants/{tenant}/subscription', [AdminTenant::class, 'subscription'])->name('tenants.subscription');
     Route::put('tenants/{tenant}/capability', [AdminTenant::class, 'capability'])->name('tenants.capability');
+    Route::get('tenants/{tenant}/payments/{payment}/pdf', [AdminTenant::class, 'paymentInvoice'])->name('tenants.payment');
     Route::put('users/{user}/toggle', [AdminTenant::class, 'toggleUser'])->name('users.toggle');
 
     // Client logins: profile, support impersonation, reset link, sign-out

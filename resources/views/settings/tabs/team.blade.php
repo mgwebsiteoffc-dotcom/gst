@@ -50,7 +50,10 @@
                     </x-field>
                     <x-field :label="__('Branch')" name="branch_id"
                              :hint="$multiBranch ? null : __('Multi-branch is not in your plan.')">
-                        <x-select name="branch_id" @disabled(! $multiBranch || $branches->isEmpty())>
+                        {{-- :disabled, not @disabled — a Blade directive inside a
+                             component tag compiles to raw PHP inside the attribute
+                             array and breaks the view. --}}
+                        <x-select name="branch_id" :disabled="! $multiBranch || $branches->isEmpty()">
                             <option value="">{{ $home->name }} ({{ __('Head office') }})</option>
                             @foreach ($branches as $branch)
                                 <option value="{{ $branch->id }}" @selected((int) old('branch_id') === (int) $branch->id)>{{ $branch->name }}</option>

@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Plan;
 use App\Models\Subscription;
+use App\Models\SubscriptionPayment;
+use App\Services\Billing\SubscriptionInvoiceService;
 use App\Services\Billing\GatewayResolver;
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -27,6 +30,10 @@ class BillingController extends Controller
         return view('billing.plans-page', [
             'tenant' => $tenant,
             'subscription' => $subscription,
+            // Subscription rows belong to the MAIN business, so bypass the
+            // tenant scope — otherwise a branch sees an empty history.
+            'payments' => SubscriptionPayment::withoutGlobalScope('tenant')
+                ->where('tenant_id', $tenant->id)->latest('id')->limit(24)->get(),
             'plans' => Plan::where('active', true)->orderBy('price_paise')->get(),
             'interval' => $interval,
             'gstin' => $tenant->gstin,
@@ -130,6 +137,21 @@ class BillingController extends Controller
             'canceled_at' => null,
         ]))->save();
 
+        // Raise the GST invoice and add it to the payment history.
+        $amount = $data['interval'] === 'yearly'
+            ? (int) ($plan->yearly_price_paise ?: $plan->price_paise * 12)
+            : (int) $plan->price_paise;
+
+        app(SubscriptionInvoiceService::class)->record(
+            tenant: $tenant,
+            plan: $plan,
+            interval: $data['interval'],
+            amountPaise: $amount,
+            gateway: ! empty($data['razorpay_payment_id']) ? 'razorpay' : 'manual',
+            gatewayPaymentId: $data['razorpay_payment_id'] ?? null,
+            subscription: $subscription,
+        );
+
         // Keep the vendor-side reference for support and refunds.
         $tenant->update([
             'settings' => array_replace_recursive($tenant->settings ?? [], [
@@ -178,6 +200,24 @@ class BillingController extends Controller
         }
 
         return $body;
+    }
+
+    /** One invoice from the payment history (PDF). */
+    public function invoicePdf(Request $request, int $payment)
+    {
+        $tenant = TenantContext::get()->billingTenant();
+
+        // Resolved manually: implicit binding applies the tenant global scope,
+        // which points at the active branch while these rows belong to the
+        // main business.
+        $payment = SubscriptionPayment::withoutGlobalScope('tenant')
+            ->where('tenant_id', $tenant->id)
+            ->findOrFail($payment);
+
+        $payment->load('tenant');
+        $pdf = Pdf::loadView('billing.invoice-pdf', ['payment' => $payment, 'tenant' => $tenant]);
+
+        return $pdf->download('invoice-'.str_replace('/', '-', $payment->invoice_number).'.pdf');
     }
 
     /** Stop the subscription at the end of the paid period. */

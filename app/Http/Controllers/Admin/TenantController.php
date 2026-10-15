@@ -16,8 +16,12 @@ class TenantController extends Controller
     {
         return view('admin.tenants.index', [
             'tenants' => Tenant::withCount('users', 'documents')
-                ->with('subscription.plan')
+                ->with('subscription.plan', 'parent')
+                ->withCount('branches')
                 ->when($request->status, fn ($q, $s) => $q->where('account_status', $s))
+                // scope=main lists only head offices, scope=branches only stores.
+                ->when($request->scope === 'main', fn ($q) => $q->whereNull('parent_tenant_id'))
+                ->when($request->scope === 'branches', fn ($q) => $q->whereNotNull('parent_tenant_id'))
                 ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w
                     ->where('name', 'like', "%$s%")->orWhere('gstin', 'like', "%$s%")))
                 ->latest('id')->paginate(20)->withQueryString(),
@@ -37,6 +41,8 @@ class TenantController extends Controller
             'branchCount' => $tenant->branches()->count(),
             'capabilities' => $tenant->setting('capabilities', []),
             'billingSettings' => $tenant->setting('billing', []),
+            'payments' => \App\Models\SubscriptionPayment::withoutGlobalScope('tenant')
+                ->with('plan')->where('tenant_id', $tenant->id)->latest('id')->limit(24)->get(),
         ]);
     }
 
@@ -130,6 +136,20 @@ class TenantController extends Controller
         $tenant->update(['settings' => $settings]);
 
         return back()->with('success', 'Capabilities updated for '.$tenant->name.'.');
+    }
+
+    /** Download the GST invoice for a subscription payment (platform staff). */
+    public function paymentInvoice(Tenant $tenant, \App\Models\SubscriptionPayment $payment)
+    {
+        abort_unless((int) $payment->tenant_id === (int) $tenant->id, 404);
+
+        $payment->load('tenant');
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('billing.invoice-pdf', [
+            'payment' => $payment,
+            'tenant' => $tenant,
+        ]);
+
+        return $pdf->download('invoice-'.str_replace('/', '-', $payment->invoice_number).'.pdf');
     }
 
     /** Enable or disable an individual user login. */

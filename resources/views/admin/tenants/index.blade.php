@@ -5,7 +5,12 @@
 <x-page title="Businesses" subtitle="Every account on this installation." />
 
 <form class="mb-4 flex flex-wrap gap-2">
-    <x-input name="q" value="{{ request('q') }}" placeholder="Search name or GSTIN" class="!w-64" />
+    <x-input name="q" value="{{ request('q') }}" placeholder="{{ __('Search name or GSTIN') }}" class="!w-64" />
+    <x-select name="scope" class="!w-48" onchange="this.form.submit()">
+        @foreach (['' => __('All businesses'), 'main' => __('Head offices only'), 'branches' => __('Branches / stores only')] as $value => $label)
+            <option value="{{ $value }}" @selected(request('scope') === $value)>{{ $label }}</option>
+        @endforeach
+    </x-select>
     <x-select name="status" class="!w-44" onchange="this.form.submit()">
         <option value="">All statuses</option>
         @foreach (['active','suspended','closed'] as $s)
@@ -31,8 +36,28 @@
         @foreach ($tenants as $t)
             <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
                 <td class="px-5 py-3">
-                    <a href="{{ route('admin.tenants.show', $t) }}" class="font-medium text-slate-900 hover:text-indigo-600">{{ $t->name }}</a>
+                    <div class="flex items-center gap-2">
+                        @if ($t->parent_tenant_id)<span class="text-slate-300">↳</span>@endif
+                        <a href="{{ route('admin.tenants.show', $t) }}" class="font-medium text-slate-900 hover:text-indigo-600">{{ $t->name }}</a>
+                        <x-badge tone="{{ $t->parent_tenant_id ? 'slate' : 'indigo' }}">
+                            {{ $t->parent_tenant_id ? __('Branch') : __('Head office') }}
+                        </x-badge>
+                    </div>
                     <div class="font-mono text-xs text-slate-400">{{ $t->gstin ?: 'No GSTIN' }}</div>
+                    @if ($t->parent)
+                        <div class="text-xs text-slate-400">
+                            {{ __('Part of') }}
+                            <a href="{{ route('admin.tenants.show', $t->parent) }}" class="text-indigo-600 hover:underline">{{ $t->parent->name }}</a>
+                        </div>
+                    @endif
+                    @if ($t->branches_count)
+                        <div class="mt-1 text-xs text-slate-500">
+                            {{ __('Branches') }}:
+                            @foreach ($t->branches as $branch)
+                                <a href="{{ route('admin.tenants.show', $branch) }}" class="text-indigo-600 hover:underline">{{ $branch->name }}</a>@if (! $loop->last),@endif
+                            @endforeach
+                        </div>
+                    @endif
                 </td>
                 <td class="px-3">
                     {{ $t->subscription?->plan?->name ?? '—' }}

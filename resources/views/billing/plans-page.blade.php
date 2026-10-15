@@ -138,6 +138,50 @@
     @endforeach
 </div>
 
+{{-- What the business has paid, with downloadable GST invoices --}}
+<x-card :title="__('Payments & invoices')" class="mt-6 !p-0 overflow-x-auto"
+        :subtitle="__('Every subscription payment with its GST invoice.')">
+    @if ($payments->isEmpty())
+        <div class="p-5">
+            <x-empty :title="__('No payments yet')"
+                     :message="__('Your subscription bills will appear here with a GST invoice you can download.')" />
+        </div>
+    @else
+        <table class="w-full min-w-[720px] text-sm">
+            <thead class="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                    <th class="px-5 py-3 font-medium">{{ __('Invoice') }}</th>
+                    <th class="px-3 font-medium">{{ __('Date') }}</th>
+                    <th class="px-3 font-medium">{{ __('Plan') }}</th>
+                    <th class="px-3 font-medium">{{ __('Period') }}</th>
+                    <th class="px-3 text-right font-medium">{{ __('Total') }}</th>
+                    <th class="px-3 font-medium">{{ __('Status') }}</th>
+                    <th class="px-5"></th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach ($payments as $payment)
+                <tr class="border-b border-slate-50 last:border-0">
+                    <td class="px-5 py-3 font-mono text-xs">{{ $payment->invoice_number }}</td>
+                    <td class="px-3 text-slate-600">{{ ($payment->paid_at ?? $payment->created_at)->format('d M Y') }}</td>
+                    <td class="px-3">{{ $payment->plan_name }} <span class="text-xs text-slate-400">· {{ $payment->interval }}</span></td>
+                    <td class="px-3 text-xs text-slate-500">
+                        {{ $payment->period_start?->format('d M Y') }} → {{ $payment->period_end?->format('d M Y') }}
+                    </td>
+                    <td class="px-3 text-right tabular-nums">{{ $payment->amountLabel() }}</td>
+                    <td class="px-3">
+                        <x-badge tone="{{ $payment->status === 'paid' ? 'emerald' : 'amber' }}">{{ ucfirst($payment->status) }}</x-badge>
+                    </td>
+                    <td class="px-5 py-3 text-right">
+                        <a href="{{ route('billing.invoices.pdf', $payment) }}" class="text-xs font-medium text-indigo-600 hover:underline">{{ __('Invoice') }}</a>
+                    </td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    @endif
+</x-card>
+
 <p class="mt-5 text-xs text-slate-500">
     {{ __('GST at 18% applies on subscriptions and is added at checkout. Renewals are not automatic — you will be reminded before the period ends.') }}
     @if (! $gatewayLive)

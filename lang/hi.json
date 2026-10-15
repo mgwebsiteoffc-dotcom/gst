@@ -403,5 +403,17 @@
   "Invoices, payments, expenses and GST filings. Cannot change company setup.": "बिल, पेमेंट, खर्च और GST फाइलिंग। सेटअप नहीं बदल सकते।",
   "Raises invoices and records payments at the counter. Nothing else.": "काउंटर पर बिल बनाएं और पेमेंट दर्ज करें। बस इतना।",
   "Read-only access — ideal for an external CA or auditor.": "सिर्फ देखने का एक्सेस — बाहरी CA या ऑडिटर के लिए।",
-  "current": "वर्तमान"
+  "current": "वर्तमान",
+  "Payments & invoices": "पेमेंट और बिल",
+  "Every subscription payment with its GST invoice.": "हर सब्सक्रिप्शन पेमेंट और उसका GST बिल।",
+  "No payments yet": "अभी कोई पेमेंट नहीं",
+  "Your subscription bills will appear here with a GST invoice you can download.": "आपके सब्सक्रिप्शन बिल यहां दिखेंगे, GST इनवॉइस डाउनलोड कर सकते हैं।",
+  "Invoice": "बिल",
+  "Invoice download": "बिल डाउनलोड",
+  "Subscription payments": "सब्सक्रिप्शन पेमेंट",
+  "No subscription payments recorded yet.": "अभी कोई सब्सक्रिप्शन पेमेंट दर्ज नहीं।",
+  "All businesses": "सभी बिज़नेस",
+  "Head offices only": "सिर्फ मुख्य कार्यालय",
+  "Branches / stores only": "सिर्फ ब्रांच / दुकानें",
+  "Search name or GSTIN": "नाम या GSTIN खोजें"
 }

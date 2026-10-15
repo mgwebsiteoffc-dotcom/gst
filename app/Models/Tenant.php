@@ -54,7 +54,21 @@ class Tenant extends Model
     public function parties() { return $this->hasMany(Party::class); }
     public function items() { return $this->hasMany(Item::class); }
     public function shopifyStores() { return $this->hasMany(ShopifyStore::class); }
-    public function subscription() { return $this->hasOne(Subscription::class)->latestOfMany(); }
+    /**
+     * The business's subscription.
+     *
+     * Deliberately NOT latestOfMany(): the aggregate subquery it generates
+     * combined with Subscription's global tenant scope produced
+     * "Column 'tenant_id' in WHERE is ambiguous" (SQLSTATE 23000) whenever a
+     * branch looked up its parent's subscription. Scoping by tenant_id
+     * explicitly is both correct across branches and cheaper.
+     */
+    public function subscription()
+    {
+        return $this->hasOne(Subscription::class, 'tenant_id')
+            ->withoutGlobalScope('tenant')
+            ->latest('subscriptions.id');
+    }
 
     // ---- Multi-branch / multi-store ------------------------------------
 

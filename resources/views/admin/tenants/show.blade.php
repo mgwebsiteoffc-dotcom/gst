@@ -155,6 +155,41 @@
         </x-card>
     @endif
 
+    <x-card title="{{ __('Subscription payments') }}" class="lg:col-span-2 !p-0 overflow-x-auto">
+        @if ($payments->isEmpty())
+            <div class="p-5"><p class="text-sm text-slate-500">{{ __('No subscription payments recorded yet.') }}</p></div>
+        @else
+            <table class="w-full min-w-[680px] text-sm">
+                <thead class="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="px-5 py-3 font-medium">{{ __('Invoice') }}</th>
+                        <th class="px-3 font-medium">{{ __('Date') }}</th>
+                        <th class="px-3 font-medium">{{ __('Plan') }}</th>
+                        <th class="px-3 font-medium">Period</th>
+                        <th class="px-3 text-right font-medium">{{ __('Total') }}</th>
+                        <th class="px-3 font-medium">{{ __('Status') }}</th>
+                        <th class="px-5"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                @foreach ($payments as $payment)
+                    <tr class="border-b border-slate-50 last:border-0">
+                        <td class="px-5 py-3 font-mono text-xs">{{ $payment->invoice_number }}</td>
+                        <td class="px-3 text-slate-600">{{ ($payment->paid_at ?? $payment->created_at)->format('d M Y') }}</td>
+                        <td class="px-3">{{ $payment->plan_name }} <span class="text-xs text-slate-400">· {{ $payment->interval }}</span></td>
+                        <td class="px-3 text-xs text-slate-500">{{ $payment->period_start?->format('d M Y') }} → {{ $payment->period_end?->format('d M Y') }}</td>
+                        <td class="px-3 text-right tabular-nums">{{ $payment->amountLabel() }}</td>
+                        <td class="px-3"><x-badge tone="{{ $payment->status === 'paid' ? 'emerald' : 'amber' }}">{{ ucfirst($payment->status) }}</x-badge></td>
+                        <td class="px-5 py-3 text-right">
+                            <a href="{{ route('admin.tenants.payment', [$tenant, $payment]) }}" class="text-xs font-medium text-indigo-600 hover:underline">{{ __('Invoice') }}</a>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+        @endif
+    </x-card>
+
     @if ($referral)
         <x-card title="Referred by" class="lg:col-span-2">
             <p class="text-sm text-slate-600">
