@@ -70,6 +70,18 @@
         }
     }
 
+    // Strings handed to the offline/PWA JavaScript. Built here as a variable
+    // because Blade directives cannot take a multi-line array literal.
+    $bbI18n = [
+        'offline_saved' => __('Saved offline — will sync automatically.'),
+        'all_synced' => __('All caught up!'),
+        'back_online' => __('Back online — syncing…'),
+        'still_offline' => __('You are offline'),
+        'bills_synced' => __('Bills synced: :count'),
+        'you_online' => __('You are online'),
+        'you_offline' => __('You are offline'),
+    ];
+
     if ($isPlatform) {
         $groups[__('Platform')] = [
             ['admin.dashboard', __('Overview'), []],
@@ -250,15 +262,7 @@
 
 @include('partials.pwa-install')
 <script>
-window.BB_I18N = @json([
-    'offline_saved' => __('Saved offline — will sync automatically.'),
-    'all_synced' => __('All caught up!'),
-    'back_online' => __('Back online — syncing…'),
-    'still_offline' => __('You are offline'),
-    'bills_synced' => __('Bills synced: :count'),
-    'you_online' => __('You are online'),
-    'you_offline' => __('You are offline'),
-]);
+window.BB_I18N = @json($bbI18n);
 </script>
 <script src="/js/offline.js" defer></script>
 <div id="bb-toasts" class="pointer-events-none fixed inset-x-3 top-16 z-50 flex flex-col items-center gap-2"></div>
