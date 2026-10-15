@@ -26,8 +26,17 @@
     $b2cs = collect($data['b2cs'] ?? []);
     $hsnRows = collect($data['hsn']['data'] ?? []);
 
-    $b2bTotals = $b2bInvoices->reduce(fn ($c, $inv) => array_map(fn ($a, $b) => $a + $b, $c, $itemTotals($inv)),
-        ['txval' => 0.0, 'iamt' => 0.0, 'camt' => 0.0, 'samt' => 0.0, 'csamt' => 0.0]);
+    // Plain keyed loop: array_map() re-indexes keys numerically, which would
+    // strip the named totals and break the summary card below.
+    $b2bTotals = [
+        'txval' => 0.0, 'iamt' => 0.0, 'camt' => 0.0, 'samt' => 0.0, 'csamt' => 0.0,
+    ];
+
+    foreach ($b2bInvoices as $inv) {
+        foreach ($itemTotals($inv) as $key => $amount) {
+            $b2bTotals[$key] = ($b2bTotals[$key] ?? 0) + $amount;
+        }
+    }
     $b2cSmallTotals = [
         'txval' => $b2cs->sum('txval'),
         'iamt' => $b2cs->sum('iamt'),
@@ -56,7 +65,7 @@
         ['GSTIN', $data['gstin'] ?: '—'],
         [__('Period'), $from->format('M Y')],
         [__('B2B invoices'), number_format($b2bInvoices->count())],
-        [__('Taxable value (B2B)'), '₹'.$money($b2bTotals['txval'])],
+        [__('Taxable value (B2B)'), '₹'.$money($b2bTotals['txval'] ?? 0)],
     ] as [$label, $value])
         <x-card>
             <div class="text-xs uppercase tracking-wide text-slate-500">{{ $label }}</div>
