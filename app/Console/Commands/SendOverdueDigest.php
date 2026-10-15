@@ -43,7 +43,7 @@ class SendOverdueDigest extends Command
             $payload = [
                 'title' => config('app.name'),
                 'body' => "{$count} overdue bills (₹".number_format($total, 2).') — tap to remind customers',
-                'url' => '/documents/invoice?status=overdue',
+                'url' => url('/documents/invoice', ['status' => 'overdue']),
                 'tag' => 'overdue-digest',
             ];
 

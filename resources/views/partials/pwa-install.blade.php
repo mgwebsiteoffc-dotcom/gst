@@ -2,7 +2,7 @@
 <div x-data="pwaInstall()" x-show="visible" x-cloak x-transition
      class="fixed inset-x-3 bottom-20 z-40 lg:inset-x-auto lg:bottom-6 lg:right-6 lg:w-96">
     <div class="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-xl">
-        <img src="/icons/icon-192.png" alt="BikriBook" class="h-11 w-11 rounded-xl">
+        <img src="{{ asset('icons/icon-192.png') }}" alt="BikriBook" class="h-11 w-11 rounded-xl">
         <div class="min-w-0 flex-1 text-sm">
             <p class="font-semibold text-slate-900">{{ __('Install BikriBook app') }}</p>
             <p class="truncate text-xs text-slate-500" x-text='isiOS ? @js(__('Tap Share, then “Add to Home Screen”.')) : @js(__('Billing from your home screen, works like an app.'))'></p>

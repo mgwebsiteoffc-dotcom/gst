@@ -1,0 +1,50 @@
+# BikriBook — project-root .htaccess
+#
+# WHEN THIS FILE IS USED
+# Your hosting document root is the PROJECT folder (public_html contains
+# app/, config/, public/, vendor/, …). This file serves the app from public/
+# with an INTERNAL rewrite, so the site opens at https://example.com/
+# and URLs never contain /public.
+#
+# It never issues a redirect, so it cannot cause ERR_TOO_MANY_REDIRECTS.
+#
+# PREFERRED SETUP (do this instead if you can): point the domain's document
+# root at <project>/public — then this file is outside the web root and unused.
+# Steps are in DEPLOY.md.
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Requests that already target /public are served as-is.
+    # This guard is what prevents redirect loops on the /public path.
+    RewriteCond %{REQUEST_URI} !^/public/
+
+    # Everything else is served from public/ WITHOUT changing the browser URL.
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# ---------------------------------------------------------------------------
+# Safety net: when the project root is web-exposed, the application internals
+# must never be downloadable. Ignored on hosts without mod_alias.
+# ---------------------------------------------------------------------------
+<IfModule mod_alias.c>
+    # Source code, config, database dumps, storage, tests, vendor
+    RedirectMatch 404 ^/(app|bootstrap|config|database|lang|resources|routes|tests|vendor)(/|$)
+
+    # Private storage (logs, framework cache, app files) — public files are
+    # reached through public/storage instead.
+    RedirectMatch 404 ^/storage/(app|framework|logs)(/|$)
+
+    # Environment files, CLI tooling and dependency manifests
+    RedirectMatch 404 ^/(\.env.*|artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|vite\.config\.js|README\.md|MIGRATION_MODULE_README\.md)$
+</IfModule>
+
+# Keep directory listings off.
+Options -Indexes
+
+# Sensible defaults for asset delivery.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$">
+        Header set Cache-Control "public, max-age=604800"
+    </FilesMatch>
+</IfModule>

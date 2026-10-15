@@ -2,25 +2,25 @@
   "name": "BikriBook — GST Billing & Invoicing",
   "short_name": "BikriBook",
   "description": "GST invoices in 30 seconds. Billing, inventory, e-invoices and payments for Indian small businesses.",
-  "start_url": "/dashboard",
-  "scope": "/",
+  "start_url": "./dashboard",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#4f46e5",
   "theme_color": "#4f46e5",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/icons/maskable-512.png",
+      "src": "./icons/maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
@@ -31,15 +31,25 @@
       "name": "New Invoice",
       "short_name": "Invoice",
       "description": "Create a GST invoice in 30 seconds",
-      "url": "/documents/invoice/create",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "url": "./documents/invoice/create",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
       "name": "Products",
       "short_name": "Products",
       "description": "Your product and service catalog",
-      "url": "/items",
-      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+      "url": "./items",
+      "icons": [
+        {
+          "src": "./icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
