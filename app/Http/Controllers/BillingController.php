@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Plan;
+use App\Models\Subscription;
 use App\Services\Billing\GatewayResolver;
 use App\Support\TenantContext;
 use Illuminate\Http\Request;
@@ -61,7 +62,7 @@ class BillingController extends Controller
         return DB::transaction(function () use ($tenant, $plan, $interval, $months, $amountPaise, $key, $secret, $live) {
             $subscription = $tenant->subscription()->firstOrNew(['tenant_id' => $tenant->id]);
 
-            $subscription->fill([
+            $subscription->fill(Subscription::existingAttributes([
                 'plan_id' => $plan->id,
                 'interval' => $interval,
                 'gateway' => 'razorpay',
@@ -69,7 +70,7 @@ class BillingController extends Controller
                 'current_period_end' => now()->addMonths($months),
                 'started_at' => $subscription->started_at ?: now(),
                 'canceled_at' => null,
-            ]);
+            ]));
             $subscription->save();
 
             // A paykit order so the browser can open Razorpay Checkout.
@@ -120,14 +121,14 @@ class BillingController extends Controller
         }
 
         $subscription = $tenant->subscription()->firstOrNew(['tenant_id' => $tenant->id]);
-        $subscription->fill([
+        $subscription->fill(Subscription::existingAttributes([
             'plan_id' => $plan->id,
             'interval' => $data['interval'],
             'status' => 'active',
             'current_period_end' => now()->addMonths($months),
             'started_at' => $subscription->started_at ?: now(),
             'canceled_at' => null,
-        ])->save();
+        ]))->save();
 
         // Keep the vendor-side reference for support and refunds.
         $tenant->update([
@@ -194,7 +195,10 @@ class BillingController extends Controller
             return back()->with('error', __('Remove your branches before cancelling — they all run on this business’s plan.'));
         }
 
-        $subscription->update(['status' => 'canceled', 'canceled_at' => now()]);
+        $subscription->update(Subscription::existingAttributes([
+            'status' => 'canceled',
+            'canceled_at' => now(),
+        ]));
 
         return back()->with('success', __('Subscription cancelled. Access continues until :date.', [
             'date' => $subscription->current_period_end?->format('d M Y') ?? now()->format('d M Y'),

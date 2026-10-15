@@ -75,14 +75,14 @@ class TenantController extends Controller
 
         $subscription = Subscription::updateOrCreate(
             ['tenant_id' => $tenant->id],
-            [
+            Subscription::existingAttributes([
                 'plan_id' => $data['plan_id'],
                 'status' => $data['status'],
                 'interval' => $data['interval'] ?? 'monthly',
                 'current_period_end' => now()->addDays($data['period_days'] ?? 30),
                 'canceled_at' => $data['status'] === 'canceled' ? now() : null,
                 'started_at' => now(),
-            ]
+            ])
         );
 
         // Extend the tenant trial when the platform wants the trial status kept.
