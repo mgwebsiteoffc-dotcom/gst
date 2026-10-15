@@ -19,7 +19,7 @@
            class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Download PDF</a>
     </div>
 
-    <div class="overflow-hidden rounded-xl bg-white shadow-sm">
+    <div class="overflow-x-auto rounded-xl bg-white shadow-sm">
         <div class="border-b border-slate-100 p-5">
             <div class="flex flex-wrap justify-between gap-4 text-sm">
                 <div>
@@ -40,7 +40,7 @@
             </div>
         </div>
 
-        <table class="w-full text-sm">
+        <table class="w-full min-w-[480px] text-sm">
             <thead class="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase text-slate-500">
                 <tr>
                     <th class="px-5 py-2.5 font-medium">Item</th>

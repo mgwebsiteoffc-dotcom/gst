@@ -73,7 +73,14 @@ class MigrationController extends Controller
         } catch (\InvalidArgumentException $e) {
             return back()->with('error', $e->getMessage());
         } catch (\Throwable $e) {
-            return back()->with('error', 'Failed to parse backup file: ' . $e->getMessage());
+            report($e);
+
+            // Raw exception messages can contain server paths — hide them on live.
+            $message = app()->isProduction()
+                ? 'Failed to parse backup file. Please check the file and try again.'
+                : 'Failed to parse backup file: '.$e->getMessage();
+
+            return back()->with('error', $message);
         }
     }
 

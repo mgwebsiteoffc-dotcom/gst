@@ -27,6 +27,14 @@ class DatabaseSeeder extends Seeder
              'invoice_limit' => null, 'user_limit' => 25, 'einvoice' => true, 'shopify' => true],
         ])->map(fn ($p) => Plan::updateOrCreate(['slug' => $p['slug']], $p));
 
+        // Live server: plans + master data only. Demo businesses, sample
+        // documents and demo logins are never created in production.
+        if (app()->isProduction()) {
+            $this->call([HsnCodeSeeder::class, RolesAndPermissionsSeeder::class, UsersSeeder::class, ContentSeeder::class, PartnerSeeder::class]);
+
+            return;
+        }
+
         $tenant = Tenant::updateOrCreate(['slug' => 'demo'], [
             'name' => 'Demo Traders',
             'legal_name' => 'Demo Traders Private Limited',
@@ -89,8 +97,8 @@ class DatabaseSeeder extends Seeder
             }
         });
 
-        // Roles first, then the demo accounts that reference them.
-        $this->call([RolesAndPermissionsSeeder::class, UsersSeeder::class, ContentSeeder::class, PartnerSeeder::class]);
+        // HSN/SAC master (global, no tenant needed) first, then roles + demo data.
+        $this->call([HsnCodeSeeder::class, RolesAndPermissionsSeeder::class, UsersSeeder::class, ContentSeeder::class, PartnerSeeder::class]);
 
         TenantContext::run($tenant, function () use ($tenant) {
             $customerUp = Party::firstOrCreate(['name' => 'Sharma Enterprises'], [

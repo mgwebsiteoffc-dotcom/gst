@@ -80,12 +80,20 @@
                     <td class="px-3 text-slate-500">{{ $u->last_login_at?->diffForHumans() ?? 'never' }}</td>
                     <td class="px-3"><x-badge tone="{{ $u->is_active ? 'emerald' : 'rose' }}">{{ $u->is_active ? 'Enabled' : 'Disabled' }}</x-badge></td>
                     <td class="px-5 py-2.5 text-right">
-                        <form method="POST" action="{{ route('admin.users.toggle', $u) }}">
-                            @csrf @method('PUT')
-                            <button class="text-xs {{ $u->is_active ? 'text-rose-600' : 'text-emerald-600' }} hover:underline">
-                                {{ $u->is_active ? 'Disable' : 'Enable' }}
-                            </button>
-                        </form>
+                        <div class="flex items-center justify-end gap-3">
+                            <a href="{{ route('admin.users.show', $u) }}" class="text-xs text-indigo-600 hover:underline">View</a>
+                            <form method="POST" action="{{ route('admin.users.impersonate', $u) }}" class="inline"
+                                  onsubmit="return confirm('Log in as this user? This is recorded in the audit log.')">
+                                @csrf
+                                <button class="text-xs text-amber-600 hover:underline">Login as</button>
+                            </form>
+                            <form method="POST" action="{{ route('admin.users.toggle', $u) }}" class="inline">
+                                @csrf @method('PUT')
+                                <button class="text-xs {{ $u->is_active ? 'text-rose-600' : 'text-emerald-600' }} hover:underline">
+                                    {{ $u->is_active ? 'Disable' : 'Enable' }}
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             @endforeach

@@ -14,4 +14,12 @@ return [
         'secret' => env('AWS_SECRET_ACCESS_KEY'),
         'region' => env('AWS_DEFAULT_REGION', 'ap-south-1'),
     ],
+
+    'gtm' => [
+        'id' => env('GTM_ID'),
+    ],
+
+    'facebook' => [
+        'pixel_id' => env('FACEBOOK_PIXEL_ID'),
+    ],
 ];

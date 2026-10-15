@@ -4,6 +4,8 @@ use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\CaptureReferral;
 use App\Http\Middleware\EnsureSuperAdmin;
 use App\Http\Middleware\RequireTenant;
+use App\Http\Middleware\SecurityHeaders;
+use App\Http\Middleware\SetLocale;
 use App\Http\Middleware\IdentifyTenant;
 use App\Http\Middleware\VerifyShopifyWebhook;
 use Illuminate\Foundation\Application;
@@ -18,7 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->web(append: [IdentifyTenant::class, CaptureReferral::class]);
+        $middleware->web(append: [SetLocale::class, IdentifyTenant::class, CaptureReferral::class, SecurityHeaders::class]);
 
         // The referral cookie carries a public partner code, never anything secret.
         // Leaving it unencrypted lets edge caches and analytics read it too.

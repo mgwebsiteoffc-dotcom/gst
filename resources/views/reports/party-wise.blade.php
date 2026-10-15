@@ -18,11 +18,11 @@
     @endforeach
 </div>
 
-<x-card class="!p-0">
+<x-card class="!p-0 overflow-x-auto">
     @if (! count($rows))
         <x-empty title="No sales in this period" />
     @else
-        <table class="w-full text-sm">
+        <table class="w-full min-w-[600px] text-sm">
             <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
                 <tr><th class="px-5 py-3 font-medium">Party</th><th class="px-3 text-right font-medium">Invoices</th>
                     <th class="px-3 text-right font-medium">Taxable</th><th class="px-3 text-right font-medium">Total</th>

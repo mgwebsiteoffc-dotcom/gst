@@ -117,6 +117,21 @@ class PostController extends Controller
 
         unset($data['cover']);
 
+        // The body is rendered as raw HTML on the blog, so strip anything
+        // executable at save time (stored-XSS defence in depth).
+        if (! empty($data['body'])) {
+            $data['body'] = $this->sanitizeHtml($data['body']);
+        }
+
         return $data;
+    }
+
+    protected function sanitizeHtml(string $html): string
+    {
+        $html = preg_replace('#<script\b[^>]*>.*?</script>#is', '', $html);                       // no scripts
+        $html = preg_replace('#\s+on\w+\s*=\s*("[^"]*"|\'[^\']*\'|[^\s>]+)#i', '', $html);        // no event handlers
+        $html = preg_replace('#(href|src)\s*=\s*(["\']?)\s*javascript:[^"\'>\s]*\2#i', '$1=$2#$2', $html); // no javascript: urls
+
+        return $html;
     }
 }

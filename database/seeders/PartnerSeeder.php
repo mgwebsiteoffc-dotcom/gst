@@ -46,6 +46,13 @@ class PartnerSeeder extends Seeder
             'hold_days' => 30,
         ]);
 
+        // Demo partners stay on dev machines only; plans are needed everywhere.
+        if (app()->isProduction()) {
+            $this->command?->info('Seeded 3 commission plans (demo partners skipped in production).');
+
+            return;
+        }
+
         // A demo influencer with a login for the partner portal.
         $user = User::updateOrCreate(['email' => 'partner@demo.test'], [
             'name' => 'Neha Creates',

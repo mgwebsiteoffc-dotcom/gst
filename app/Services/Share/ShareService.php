@@ -47,6 +47,37 @@ class ShareService
     }
 
     /**
+     * Polite payment reminder via wa.me — works without the Business API.
+     * Returns null when the party has no phone number stored.
+     */
+    public function reminderWhatsappUrl(Document $document): ?string
+    {
+        $phone = preg_replace('/\D/', '', (string) $document->party?->phone);
+
+        if (! $phone) {
+            return null;
+        }
+
+        if (strlen($phone) === 10) {
+            $phone = '91'.$phone;
+        }
+
+        $lines = [
+            'Namaste '.($document->party?->name ?: 'ji').',',
+            '',
+            'Gentle reminder: '.$this->money($document->balance_due).' is pending for '.
+            $document->title.' '.$document->number.' dated '.$document->issue_date->format('d M Y').'.',
+            '',
+            'View or pay: '.$this->publicUrl($document),
+            '',
+            'Thank you,',
+            $document->tenant?->name,
+        ];
+
+        return 'https://wa.me/'.$phone.'?text='.rawurlencode(implode("\n", $lines));
+    }
+
+    /**
      * UPI intent URI (NPCI spec). Scanning this opens any UPI app with the
      * amount and reference pre-filled.
      */

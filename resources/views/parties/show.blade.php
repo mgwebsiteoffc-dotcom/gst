@@ -3,30 +3,30 @@
 
 @section('content')
 <x-page :title="$party->name" :subtitle="$party->gstin ? 'GSTIN '.$party->gstin : ucfirst($party->gst_treatment)" :back="route('parties.index')">
-    <x-btn variant="secondary" :href="route('reports.ledger', $party)">View ledger</x-btn>
-    <x-btn variant="secondary" :href="route('parties.edit', $party)">Edit</x-btn>
-    <x-btn variant="primary" :href="route('documents.create', ['type' => 'invoice'])">+ New invoice</x-btn>
+    <x-btn variant="secondary" :href="route('reports.ledger', $party)">{{ __('View ledger') }}</x-btn>
+    <x-btn variant="secondary" :href="route('parties.edit', $party)">{{ __('Edit') }}</x-btn>
+    <x-btn variant="primary" :href="route('documents.create', ['type' => 'invoice'])">+ {{ __('New invoice') }}</x-btn>
 </x-page>
 
 <div class="mb-5 grid gap-4 sm:grid-cols-3">
     @foreach ([
-        ['Outstanding', '₹'.number_format($party->outstanding(), 2)],
-        ['Documents', $party->documents->count()],
-        ['Credit period', $party->credit_days.' days'],
+        [__('Outstanding'), '₹'.number_format($party->outstanding(), 2)],
+        [__('Documents'), $party->documents->count()],
+        [__('Credit period'), $party->credit_days.' '.__('days')],
     ] as [$k, $v])
         <x-card><div class="text-xs uppercase tracking-wide text-slate-500">{{ $k }}</div>
             <div class="mt-1 text-lg font-semibold">{{ $v }}</div></x-card>
     @endforeach
 </div>
 
-<x-card title="Recent documents" class="!p-0">
+<x-card :title="__('Recent documents')" class="!p-0 overflow-x-auto">
     @if ($party->documents->isEmpty())
-        <x-empty title="No documents yet" message="Invoices for this contact will appear here."/>
+        <x-empty :title="__('No documents yet.')" :message="__('Invoices for this contact will appear here.')"/>
     @else
-        <table class="w-full text-sm">
+        <table class="w-full min-w-[560px] text-sm">
             <thead class="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
-                <tr><th class="px-5 py-3 font-medium">Number</th><th class="px-3 font-medium">Date</th>
-                    <th class="px-3 text-right font-medium">Total</th><th class="px-3 text-right font-medium">Due</th><th class="px-5 font-medium">Status</th></tr>
+                <tr><th class="px-5 py-3 font-medium">{{ __('Number') }}</th><th class="px-3 font-medium">{{ __('Date') }}</th>
+                    <th class="px-3 text-right font-medium">{{ __('Total') }}</th><th class="px-3 text-right font-medium">{{ __('Due') }}</th><th class="px-5 font-medium">{{ __('Status') }}</th></tr>
             </thead>
             <tbody>
             @foreach ($party->documents as $d)

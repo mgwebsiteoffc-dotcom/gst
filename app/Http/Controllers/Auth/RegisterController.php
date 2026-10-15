@@ -103,7 +103,7 @@ class RegisterController extends Controller
         $request->session()->regenerate();
 
         return redirect()->route('dashboard')
-            ->with('success', 'Welcome to '.config('app.name').'! Your 14-day trial has started.');
+            ->with('success', __('Welcome to :app! Your 14-day trial has started.', ['app' => config('app.name')]));
     }
 
     protected function uniqueSlug(string $name): string

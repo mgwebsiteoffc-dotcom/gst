@@ -11,3 +11,6 @@ Schedule::call(function () {
         ->whereDate('due_date', '<', now())
         ->update(['status' => 'overdue']);
 })->dailyAt('06:00')->name('flag-overdue')->onOneServer();
+
+// Push overdue-bill reminders to vendors (runs after the 06:00 flagging).
+Schedule::command('push:overdue-digest')->dailyAt('09:00')->name('push-overdue-digest')->onOneServer();

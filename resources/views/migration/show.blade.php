@@ -213,8 +213,8 @@
     {{-- Error Details --}}
     @if ($job->errors && count($job->errors) > 0)
         <x-card title="Error Details" class="mt-6">
-            <div class="max-h-64 overflow-y-auto">
-                <table class="w-full text-sm">
+            <div class="max-h-64 overflow-auto">
+                <table class="w-full min-w-[560px] text-sm">
                     <thead>
                         <tr class="border-b border-slate-200 text-left text-xs font-medium uppercase tracking-wider text-slate-500">
                             <th class="pb-2 pr-4">Section</th>

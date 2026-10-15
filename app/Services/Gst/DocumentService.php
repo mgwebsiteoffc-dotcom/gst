@@ -73,6 +73,7 @@ class DocumentService
                 'meta' => $data['meta'] ?? null,
                 'source' => $data['source'] ?? 'manual',
                 'external_id' => $data['external_id'] ?? null,
+                'client_uuid' => $data['client_uuid'] ?? null,
                 'created_by' => auth()->id(),
                 'balance_due' => $computed['totals']['grand_total'],
             ]));

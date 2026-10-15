@@ -19,6 +19,15 @@
                 WhatsApp
             </a>
 
+            {{-- One-tap payment reminder over personal WhatsApp (no API needed). --}}
+            @if ($share['remind'] && $document->balance_due > 0)
+                <a class="inline-flex items-center gap-1.5 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 font-medium text-amber-700 hover:bg-amber-100"
+                   href="{{ $share['remind'] }}" target="_blank" rel="noopener" title="Send a payment reminder on WhatsApp">
+                    <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/></svg>
+                    {{ __('Remind') }}
+                </a>
+            @endif
+
             {{-- WhatsApp Business API Send --}}
             @if ($whatsappConfigured)
                 <div x-data="{ open: false }" class="relative">
@@ -81,21 +90,21 @@
                 </a>
             @endif
 
-            <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ $share['email'] }}">Email</a>
+            <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ $share['email'] }}">{{ __('Email') }}</a>
             <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ route('documents.pdf', $document) }}" target="_blank">PDF</a>
-            <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ route('documents.pdf', [$document, 'download' => 1]) }}">Download</a>
-            <button type="button" onclick="navigator.clipboard.writeText('{{ $share['public'] }}');this.textContent='Link copied'"
-                    class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50">Copy link</button>
+            <a class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50" href="{{ route('documents.pdf', [$document, 'download' => 1]) }}">{{ __('Download') }}</a>
+            <button type="button" onclick="navigator.clipboard.writeText('{{ $share['public'] }}');this.textContent='{{ __('Link copied') }}'"
+                    class="rounded-lg border border-slate-300 bg-white px-3 py-2 hover:bg-slate-50">{{ __('Copy link') }}</button>
 
             @if ($document->doc_type === 'quotation')
                 <form method="post" action="{{ route('documents.convert', [$document, 'invoice']) }}">@csrf
-                    <button class="rounded bg-indigo-600 px-3 py-2 text-white">Convert to Invoice</button>
+                    <button class="rounded bg-indigo-600 px-3 py-2 text-white">{{ __('Convert to Invoice') }}</button>
                 </form>
             @endif
 
             @if ($document->isEinvoiceApplicable() && ! $document->einvoice?->isGenerated())
                 <form method="post" action="{{ route('einvoice.generate', $document) }}">@csrf
-                    <button class="rounded bg-emerald-600 px-3 py-2 text-white">Generate IRN</button>
+                    <button class="rounded bg-emerald-600 px-3 py-2 text-white">{{ __('Generate IRN') }}</button>
                 </form>
             @endif
         </div>
@@ -114,11 +123,11 @@
         </form>
     @endif
 
-    <div class="rounded-xl bg-white border p-4">
-        <table class="w-full text-sm">
+    <div class="rounded-xl bg-white border p-4 overflow-x-auto">
+        <table class="w-full min-w-[640px] text-sm">
             <thead class="text-left text-slate-500"><tr>
-                <th class="py-2">Item</th><th>HSN</th><th class="text-right">Qty</th><th class="text-right">Rate</th>
-                <th class="text-right">Taxable</th><th class="text-right">GST</th><th class="text-right">Total</th>
+                <th class="py-2">{{ __('Item') }}</th><th>HSN</th><th class="text-right">{{ __('Qty') }}</th><th class="text-right">{{ __('Rate') }}</th>
+                <th class="text-right">{{ __('Taxable') }}</th><th class="text-right">GST</th><th class="text-right">{{ __('Total') }}</th>
             </tr></thead>
             <tbody>
             @foreach ($document->lines as $line)
@@ -136,10 +145,10 @@
         </table>
 
         <div class="mt-4 text-right text-sm space-y-1">
-            <div>Taxable: ₹ {{ number_format($document->taxable_value, 2) }}</div>
-            <div>Tax: ₹ {{ number_format($document->tax_total, 2) }}</div>
-            <div class="text-lg font-semibold">Total: ₹ {{ number_format($document->grand_total, 2) }}</div>
-            <div>Balance due: ₹ {{ number_format($document->balance_due, 2) }}</div>
+            <div>{{ __('Taxable') }}: ₹ {{ number_format($document->taxable_value, 2) }}</div>
+            <div>{{ __('Tax') }}: ₹ {{ number_format($document->tax_total, 2) }}</div>
+            <div class="text-lg font-semibold">{{ __('Total') }}: ₹ {{ number_format($document->grand_total, 2) }}</div>
+            <div>{{ __('Balance due') }}: ₹ {{ number_format($document->balance_due, 2) }}</div>
         </div>
     </div>
 
@@ -148,15 +157,15 @@
             <img src="data:image/svg+xml;base64,{{ base64_encode(QrCode::format('svg')->size(120)->margin(0)->generate($share['upi'])) }}"
                  alt="UPI QR" width="120" height="120" class="rounded-lg bg-white p-1.5">
             <div>
-                <p class="font-medium text-emerald-900">Collect ₹{{ number_format($document->balance_due, 2) }} by UPI</p>
-                <p class="mt-0.5 text-sm text-emerald-700">Show this QR to your customer, or share the invoice link.</p>
+                <p class="font-medium text-emerald-900">{{ __('Collect :amount by UPI', ['amount' => '₹'.number_format($document->balance_due, 2)]) }}</p>
+                <p class="mt-0.5 text-sm text-emerald-700">{{ __('Show this QR to your customer, or share the invoice link.') }}</p>
             </div>
         </div>
     @endif
 
     @if ($document->einvoice?->irn)
         <div class="mt-4 rounded-xl bg-white border p-4 text-sm">
-            <div class="font-semibold mb-1">e-Invoice</div>
+            <div class="font-semibold mb-1">{{ __('e-Invoice') }}</div>
             <div class="font-mono break-all">IRN: {{ $document->einvoice->irn }}</div>
             <div>Ack: {{ $document->einvoice->ack_no }} · {{ $document->einvoice->ack_date?->format('d M Y H:i') }}</div>
         </div>
@@ -164,12 +173,12 @@
 
     <form method="post" action="{{ route('documents.payment', $document) }}" class="mt-4 rounded-xl bg-white border p-4 flex gap-2 items-end text-sm">
         @csrf
-        <div><label class="block text-xs text-slate-500">Amount</label><input name="amount" type="number" step="0.01" value="{{ $document->balance_due }}" class="rounded border-slate-300"></div>
-        <div><label class="block text-xs text-slate-500">Date</label><input name="paid_on" type="date" value="{{ now()->toDateString() }}" class="rounded border-slate-300"></div>
-        <div><label class="block text-xs text-slate-500">Method</label>
+        <div><label class="block text-xs text-slate-500">{{ __('Amount') }}</label><input name="amount" type="number" step="0.01" value="{{ $document->balance_due }}" class="rounded border-slate-300"></div>
+        <div><label class="block text-xs text-slate-500">{{ __('Date') }}</label><input name="paid_on" type="date" value="{{ now()->toDateString() }}" class="rounded border-slate-300"></div>
+        <div><label class="block text-xs text-slate-500">{{ __('Method') }}</label>
             <select name="method" class="rounded border-slate-300">
                 @foreach (['cash','bank','upi','card','cheque'] as $m)<option>{{ $m }}</option>@endforeach
             </select></div>
-        <button class="rounded bg-emerald-600 px-4 py-2 text-white">Record payment</button>
+        <button class="rounded bg-emerald-600 px-4 py-2 text-white">{{ __('Record payment') }}</button>
     </form>
 @endsection

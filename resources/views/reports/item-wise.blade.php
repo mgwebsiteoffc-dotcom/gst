@@ -5,11 +5,11 @@
 <x-page title="Item-wise Sales" subtitle="Which products are actually selling." />
 @include('reports._filter', ['export' => 'item-wise'])
 
-<x-card class="!p-0">
+<x-card class="!p-0 overflow-x-auto">
     @if (! count($rows))
         <x-empty title="No sales in this period" message="Try widening the date range." />
     @else
-        <table class="w-full text-sm">
+        <table class="w-full min-w-[600px] text-sm">
             <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
                 <tr><th class="px-5 py-3 font-medium">Item</th><th class="px-3 font-medium">HSN/SAC</th>
                     <th class="px-3 text-right font-medium">Qty sold</th><th class="px-3 text-right font-medium">Taxable</th>

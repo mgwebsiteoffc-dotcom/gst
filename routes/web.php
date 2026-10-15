@@ -9,6 +9,11 @@ use App\Http\Controllers\Admin\PartnerController as AdminPartner;
 use App\Http\Controllers\Admin\PayoutController as AdminPayout;
 use App\Http\Controllers\Admin\PlanController as AdminPlan;
 use App\Http\Controllers\Admin\TenantController as AdminTenant;
+use App\Http\Controllers\Admin\UserController as AdminUser;
+use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\LocaleController;
+use App\Http\Controllers\OfflineController;
+use App\Http\Controllers\PushController;
 use App\Http\Controllers\Marketing\BlogController;
 use App\Http\Controllers\Marketing\PartnerApplicationController;
 use App\Http\Controllers\Partner\PortalController;
@@ -113,6 +118,11 @@ Route::middleware(['auth', 'tenant'])->group(function () {
             Route::post('document/{document}/eway-bill', [EinvoiceController::class, 'ewayBill'])->name('ewaybill.generate');
         });
 
+        // Offline billing (PWA): cached page + catalog + outbox sync
+        Route::get('billing/offline', [OfflineController::class, 'create'])->name('offline.create');
+        Route::get('offline/catalog', [OfflineController::class, 'catalog'])->name('offline.catalog');
+        Route::post('offline/sync', [OfflineController::class, 'sync'])->name('offline.sync');
+
         // Reports
         Route::get('reports/gstr1', [ReportController::class, 'gstr1'])->name('reports.gstr1');
         Route::get('reports/profit-loss', [ReportController::class, 'profitLoss'])->name('reports.pl');
@@ -159,6 +169,18 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     });
 });
 
+// Exit a support impersonation. Auth-only on purpose: while impersonating,
+// the current user is the client, so the session stamp is the credential.
+Route::post('impersonate/leave', [ImpersonationController::class, 'destroy'])
+    ->middleware('auth')->name('impersonate.leave');
+
+// Web Push subscriptions (PWA payment reminders).
+Route::post('push/subscribe', [PushController::class, 'subscribe'])->middleware('auth')->name('push.subscribe');
+Route::post('push/unsubscribe', [PushController::class, 'unsubscribe'])->middleware('auth')->name('push.unsubscribe');
+
+// Vendor language: English / Hindi / Hinglish (session-based, works for guests too).
+Route::get('locale/{locale}', LocaleController::class)->name('locale');
+
 // Partner portal — for approved partners, not tenant users.
 Route::middleware('auth')->prefix('partner')->name('partner.')->group(function () {
     Route::get('/', [PortalController::class, 'dashboard'])->name('dashboard');
@@ -196,6 +218,12 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::put('tenants/{tenant}', [AdminTenant::class, 'update'])->name('tenants.update');
     Route::put('tenants/{tenant}/subscription', [AdminTenant::class, 'subscription'])->name('tenants.subscription');
     Route::put('users/{user}/toggle', [AdminTenant::class, 'toggleUser'])->name('users.toggle');
+
+    // Client logins: profile, support impersonation, reset link, sign-out
+    Route::get('users/{user}', [AdminUser::class, 'show'])->name('users.show');
+    Route::post('users/{user}/impersonate', [AdminUser::class, 'impersonate'])->name('users.impersonate');
+    Route::post('users/{user}/reset-link', [AdminUser::class, 'sendResetLink'])->name('users.reset-link');
+    Route::delete('users/{user}/sessions', [AdminUser::class, 'terminateSessions'])->name('users.sessions');
 
     // Blog CMS
     Route::get('posts', [AdminPost::class, 'index'])->name('posts.index');

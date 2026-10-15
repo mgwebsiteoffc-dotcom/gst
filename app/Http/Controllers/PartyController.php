@@ -38,7 +38,7 @@ class PartyController extends Controller
             return response()->json($party);
         }
 
-        return redirect()->route('parties.index')->with('success', $party->name.' saved.');
+        return redirect()->route('parties.index')->with('success', __(':name saved.', ['name' => $party->name]));
     }
 
     public function edit(Party $party)
@@ -50,18 +50,18 @@ class PartyController extends Controller
     {
         $party->update($this->prepare($request->validated()));
 
-        return redirect()->route('parties.index')->with('success', $party->name.' updated.');
+        return redirect()->route('parties.index')->with('success', __(':name updated.', ['name' => $party->name]));
     }
 
     public function destroy(Party $party)
     {
         if ($party->documents()->exists()) {
-            return back()->with('error', 'Cannot delete a contact that has documents. Archive it instead.');
+            return back()->with('error', __('Cannot delete a contact that has documents. Archive it instead.'));
         }
 
         $party->delete();
 
-        return back()->with('success', 'Contact deleted.');
+        return back()->with('success', __('Contact deleted.'));
     }
 
     public function show(Party $party)

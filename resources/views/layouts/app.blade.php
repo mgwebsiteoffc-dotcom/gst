@@ -1,13 +1,25 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="{{ app()->getLocale() === 'hinglish' ? 'hi-Latn' : app()->getLocale() }}" class="h-full bg-slate-50">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Dashboard') · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.gtm-head')
+    @include('partials.pwa-head')
 </head>
 <body class="h-full text-slate-800 antialiased">
+    @include('partials.gtm-body')
+    @if (session('impersonator_id') && auth()->check())
+        <div class="bg-amber-500 px-4 py-2 text-center text-sm font-medium text-white">
+            Support mode — you are signed in as {{ auth()->user()->name }} ({{ auth()->user()->email }}).
+            <form method="POST" action="{{ route('impersonate.leave') }}" class="ml-2 inline">
+                @csrf
+                <button class="rounded bg-white/20 px-2.5 py-0.5 text-xs font-semibold hover:bg-white/30">Exit &amp; back to admin</button>
+            </form>
+        </div>
+    @endif
 @php
     $tenant = \App\Support\TenantContext::get();
     $partnerProfile = auth()->check() && ! auth()->user()->tenant_id && ! auth()->user()->is_super_admin
@@ -17,53 +29,53 @@
     $isPlatform = auth()->check() && auth()->user()->is_super_admin;
 
     $groups = $partnerProfile ? [
-        'Partner' => [
-            ['partner.dashboard', 'Dashboard', []],
+        __('Partner') => [
+            ['partner.dashboard', __('Dashboard'), []],
         ],
     ] : ($isPlatform ? [] : [
-        'Sales' => [
-            ['documents.index', 'Invoices', ['type' => 'invoice']],
-            ['documents.index', 'Quotations', ['type' => 'quotation']],
-            ['documents.index', 'Credit Notes', ['type' => 'credit_note']],
+        __('Sales') => [
+            ['documents.index', __('Invoices'), ['type' => 'invoice']],
+            ['documents.index', __('Quotations'), ['type' => 'quotation']],
+            ['documents.index', __('Credit Notes'), ['type' => 'credit_note']],
         ],
-        'Purchases' => [
-            ['documents.index', 'Purchase Orders', ['type' => 'purchase_order']],
-            ['documents.index', 'Purchase Bills', ['type' => 'purchase_bill']],
+        __('Purchases') => [
+            ['documents.index', __('Purchase Orders'), ['type' => 'purchase_order']],
+            ['documents.index', __('Purchase Bills'), ['type' => 'purchase_bill']],
         ],
-        'Records' => [
-            ['parties.index', 'Clients & Vendors', []],
-            ['items.index', 'Products & Services', []],
+        __('Records') => [
+            ['parties.index', __('Clients & Vendors'), []],
+            ['items.index', __('Products & Services'), []],
         ],
-        'Reports' => [
-            ['reports.pl', 'Profit & Loss', []],
-            ['reports.item', 'Item-wise Sales', []],
-            ['reports.party', 'Party & Outstanding', []],
-            ['reports.stock', 'Stock', []],
+        __('Reports') => [
+            ['reports.pl', __('Profit & Loss'), []],
+            ['reports.item', __('Item-wise Sales'), []],
+            ['reports.party', __('Party & Outstanding'), []],
+            ['reports.stock', __('Stock'), []],
             ['reports.gstr1', 'GSTR-1', []],
             ['reports.gstr3b', 'GSTR-3B', []],
         ],
-        'Setup' => [
-            ['settings.index', 'Settings', []],
-            ['migration.index', 'Data Migration', []],
+        __('Setup') => [
+            ['settings.index', __('Settings'), []],
+            ['migration.index', __('Data Migration'), []],
             ['shopify.index', 'Shopify', []],
         ],
     ]);
 
     if ($isPlatform) {
-        $groups['Platform'] = [
-            ['admin.dashboard', 'Overview', []],
-            ['admin.tenants.index', 'Businesses', []],
-            ['admin.plans.index', 'Subscription Plans', []],
+        $groups[__('Platform')] = [
+            ['admin.dashboard', __('Overview'), []],
+            ['admin.tenants.index', __('Businesses'), []],
+            ['admin.plans.index', __('Subscription Plans'), []],
         ];
-        $groups['Partners'] = [
-            ['admin.partners.index', 'Partners', []],
-            ['admin.payouts.index', 'Payouts', []],
-            ['admin.commission-plans.index', 'Commission Plans', []],
+        $groups[__('Partners')] = [
+            ['admin.partners.index', __('Partners'), []],
+            ['admin.payouts.index', __('Payouts'), []],
+            ['admin.commission-plans.index', __('Commission Plans'), []],
         ];
-        $groups['Content'] = [
-            ['admin.posts.index', 'Blog Posts', []],
-            ['admin.faqs.index', 'Marketing FAQs', []],
-            ['admin.leads.index', 'Enquiries', []],
+        $groups[__('Content')] = [
+            ['admin.posts.index', __('Blog Posts'), []],
+            ['admin.faqs.index', __('Marketing FAQs'), []],
+            ['admin.leads.index', __('Enquiries'), []],
         ];
     }
 @endphp
@@ -114,14 +126,22 @@
                         <x-badge tone="amber">Non-GST</x-badge>
                     @endif
                     @if ($tenant->trial_ends_at?->isFuture())
-                        <x-badge tone="indigo">Trial · {{ (int) ceil(now()->floatDiffInDays($tenant->trial_ends_at, false)) }}d left</x-badge>
+                        <x-badge tone="indigo">{{ __('Trial') }} · {{ (int) ceil(now()->floatDiffInDays($tenant->trial_ends_at, false)) }}{{ __('d left') }}</x-badge>
                     @endif
                 @endif
             </div>
 
             <div class="flex items-center gap-2">
+                @include('partials.locale-switcher')
                 @if (! $partnerProfile && ! $isPlatform && $tenant)
-                    <x-btn variant="primary" size="sm" :href="route('documents.create', 'invoice')">+ New Invoice</x-btn>
+                    @include('partials.push-bell')
+                    <a href="{{ route('offline.create') }}" data-offline-wrap title="{{ __('bills waiting to sync') }}"
+                       class="hidden items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-700">
+                        ⏳ <span data-offline-count>0</span>
+                    </a>
+                @endif
+                @if (! $partnerProfile && ! $isPlatform && $tenant)
+                    <x-btn variant="primary" size="sm" :href="route('documents.create', 'invoice')" onclick="if(!navigator.onLine){window.location.href='{{ route('offline.create') }}';return false;}">+ {{ __('New Invoice') }}</x-btn>
                 @endif
 
                 @auth
@@ -145,18 +165,18 @@
                             </div>
 
                             @if ($partnerProfile)
-                                <a href="{{ route('partner.dashboard') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Partner dashboard</a>
+                                <a href="{{ route('partner.dashboard') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">{{ __('Partner dashboard') }}</a>
                             @elseif ($tenant)
-                                <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Settings</a>
+                                <a href="{{ route('settings.index') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">{{ __('Settings') }}</a>
                             @endif
 
                             @if (auth()->user()->is_super_admin)
-                                <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">Platform Admin</a>
+                                <a href="{{ route('admin.dashboard') }}" class="block px-4 py-2 text-sm text-slate-600 hover:bg-slate-50">{{ __('Platform Admin') }}</a>
                             @endif
 
                             <form method="POST" action="{{ route('logout') }}" class="border-t border-slate-100">
                                 @csrf
-                                <button type="submit" class="w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">Sign out</button>
+                                <button type="submit" class="w-full px-4 py-2 text-left text-sm text-rose-600 hover:bg-rose-50">{{ __('Sign out') }}</button>
                             </form>
                         </div>
                     </div>
@@ -164,7 +184,7 @@
             </div>
         </header>
 
-        <main class="flex-1 px-4 py-6 lg:px-8">
+        <main class="flex-1 px-4 pb-28 pt-6 lg:px-8 lg:pb-6">
             @if (session('success') || session('error'))
                 <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)"
                      class="mb-5 flex items-start justify-between gap-3 rounded-lg border px-4 py-3 text-sm {{ session('error') ? 'border-rose-200 bg-rose-50 text-rose-800' : 'border-emerald-200 bg-emerald-50 text-emerald-800' }}">
@@ -185,6 +205,52 @@
             @yield('content')
         </main>
     </div>
+
+    {{-- Mobile bottom tab bar: thumb-friendly nav for vendors on phones. --}}
+    @if (! $partnerProfile && ! $isPlatform && $tenant)
+        <nav class="fixed inset-x-0 bottom-0 z-30 border-t border-slate-200 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden">
+            <div class="grid grid-cols-5 items-end px-2 pb-1 pt-1.5">
+                <a href="{{ route('dashboard') }}"
+                   class="flex flex-col items-center gap-0.5 rounded-lg py-1 text-[11px] {{ request()->routeIs('dashboard') ? 'font-semibold text-indigo-600' : 'text-slate-500' }}">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1V10Z"/></svg>
+                    {{ __('Home') }}
+                </a>
+                <a href="{{ route('documents.index', 'invoice') }}"
+                   class="flex flex-col items-center gap-0.5 rounded-lg py-1 text-[11px] {{ request()->routeIs('documents.index') ? 'font-semibold text-indigo-600' : 'text-slate-500' }}">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14h6M9 17.5h6M7 3h10l4 4v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/></svg>
+                    {{ __('Bills') }}
+                </a>
+                <a href="{{ route('documents.create', 'invoice') }}" aria-label="{{ __('New invoice') }}"
+                   onclick="if(!navigator.onLine){window.location.href='{{ route('offline.create') }}';return false;}"
+                   class="mx-auto -mt-7 grid h-14 w-14 place-items-center rounded-full bg-indigo-600 text-3xl leading-none text-white shadow-lg shadow-indigo-600/30 active:scale-95">+</a>
+                <a href="{{ route('items.index') }}"
+                   class="flex flex-col items-center gap-0.5 rounded-lg py-1 text-[11px] {{ request()->routeIs('items.*') ? 'font-semibold text-indigo-600' : 'text-slate-500' }}">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="m12 3 9 5-9 5-9-5 9-5Zm-9 9 9 5 9-5M3 17l9 5 9-5"/></svg>
+                    {{ __('Items') }}
+                </a>
+                <button @click="nav = true"
+                        class="flex flex-col items-center gap-0.5 rounded-lg py-1 text-[11px] text-slate-500">
+                    <svg class="h-6 w-6" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    {{ __('Menu') }}
+                </button>
+            </div>
+        </nav>
+    @endif
 </div>
+
+@include('partials.pwa-install')
+<script>
+window.BB_I18N = @json([
+    'offline_saved' => __('Saved offline — will sync automatically.'),
+    'all_synced' => __('All caught up!'),
+    'back_online' => __('Back online — syncing…'),
+    'still_offline' => __('You are offline'),
+    'bills_synced' => __('Bills synced: :count'),
+    'you_online' => __('You are online'),
+    'you_offline' => __('You are offline'),
+]);
+</script>
+<script src="/js/offline.js" defer></script>
+<div id="bb-toasts" class="pointer-events-none fixed inset-x-3 top-16 z-50 flex flex-col items-center gap-2"></div>
 </body>
 </html>

@@ -1,17 +1,21 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="{{ app()->getLocale() === 'hinglish' ? 'hi-Latn' : app()->getLocale() }}" class="h-full bg-slate-50">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Sign in') · {{ config('app.name') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('partials.gtm-head')
+    @include('partials.pwa-head')
 </head>
 <body class="h-full text-slate-800 antialiased">
+    @include('partials.gtm-body')
 <div class="flex min-h-full">
     {{-- Form side --}}
     <div class="flex w-full flex-col justify-center px-6 py-12 lg:w-1/2 lg:px-16">
         <div class="mx-auto w-full max-w-md">
+            <div class="mb-4 flex justify-end">@include('partials.locale-switcher')</div>
             <a href="{{ url('/') }}" class="mb-8 inline-flex items-center gap-2">
                 <span class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
                 <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
@@ -44,14 +48,14 @@
     <div class="hidden bg-slate-900 lg:flex lg:w-1/2 lg:flex-col lg:justify-center lg:px-16">
         <blockquote class="max-w-md">
             <p class="text-2xl font-medium leading-snug text-white">
-                GST invoicing, e-Way Bills and IRN generation — without the spreadsheet gymnastics.
+                {{ __('GST invoicing, e-Way Bills and IRN generation — without the spreadsheet gymnastics.') }}
             </p>
             <footer class="mt-8 space-y-3 text-sm text-slate-300">
                 @foreach ([
-                    'GST and non-GST invoices from one place',
-                    'e-Invoice (IRN) and e-Way Bill via NIC',
-                    'GSTR-1 and GSTR-3B ready for filing',
-                    'Shopify orders billed automatically',
+                    __('GST and non-GST invoices from one place'),
+                    __('e-Invoice (IRN) and e-Way Bill via NIC'),
+                    __('GSTR-1 and GSTR-3B ready for filing'),
+                    __('Shopify orders billed automatically'),
                 ] as $point)
                     <div class="flex items-start gap-2.5">
                         <svg class="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
@@ -64,5 +68,6 @@
         </blockquote>
     </div>
 </div>
+@include('partials.pwa-install')
 </body>
 </html>

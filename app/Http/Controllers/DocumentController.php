@@ -78,7 +78,7 @@ class DocumentController extends Controller
     {
         $document = $this->service->create($request->validated());
 
-        return redirect()->route('documents.show', $document)->with('success', $document->title.' '.$document->number.' created.');
+        return redirect()->route('documents.show', $document)->with('success', __(':title :number created.', ['title' => $document->title, 'number' => $document->number]));
     }
 
     public function show(Document $document)
@@ -89,6 +89,7 @@ class DocumentController extends Controller
             'document' => $document,
             'share' => [
                 'whatsapp' => $this->share->whatsappUrl($document),
+                'remind' => $this->share->reminderWhatsappUrl($document),
                 'email' => $this->share->mailtoUrl($document),
                 'upi' => $this->share->upiUri($document),
                 'public' => $this->share->publicUrl($document),
@@ -112,7 +113,7 @@ class DocumentController extends Controller
         abort_if($document->einvoice?->isGenerated(), 422, 'Cannot edit a document with a generated IRN. Issue a credit note.');
         $this->service->update($document, $request->validated());
 
-        return redirect()->route('documents.show', $document)->with('success', 'Document updated.');
+        return redirect()->route('documents.show', $document)->with('success', __('Document updated.'));
     }
 
     public function pdf(Document $document, Request $request)
@@ -132,7 +133,7 @@ class DocumentController extends Controller
     {
         $new = $this->service->convert($document, $target);
 
-        return redirect()->route('documents.show', $new)->with('success', 'Converted to '.$new->title.' '.$new->number);
+        return redirect()->route('documents.show', $new)->with('success', __('Converted to :title :number', ['title' => $new->title, 'number' => $new->number]));
     }
 
     public function payment(Request $request, Document $document)
@@ -146,14 +147,14 @@ class DocumentController extends Controller
 
         $this->service->recordPayment($document, (float) $data['amount'], $data);
 
-        return back()->with('success', 'Payment recorded.');
+        return back()->with('success', __('Payment recorded.'));
     }
 
     public function cancel(Request $request, Document $document)
     {
         $this->service->cancel($document, $request->get('reason'));
 
-        return back()->with('success', 'Document cancelled.');
+        return back()->with('success', __('Document cancelled.'));
     }
 
     /**
@@ -199,7 +200,7 @@ class DocumentController extends Controller
         }
 
         if ($document->balance_due <= 0) {
-            return back()->with('error', 'No balance due on this document.');
+            return back()->with('error', __('No balance due on this document.'));
         }
 
         try {

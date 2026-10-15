@@ -35,7 +35,7 @@ class ItemController extends Controller
             return response()->json($item);
         }
 
-        return redirect()->route('items.index')->with('success', $item->name.' saved.');
+        return redirect()->route('items.index')->with('success', __(':name saved.', ['name' => $item->name]));
     }
 
     public function edit(Item $item)
@@ -47,14 +47,14 @@ class ItemController extends Controller
     {
         $item->update($this->validated($request, $item));
 
-        return redirect()->route('items.index')->with('success', $item->name.' updated.');
+        return redirect()->route('items.index')->with('success', __(':name updated.', ['name' => $item->name]));
     }
 
     public function destroy(Item $item)
     {
         $item->delete();
 
-        return back()->with('success', 'Item deleted.');
+        return back()->with('success', __('Item deleted.'));
     }
 
     protected function validated(Request $request, ?Item $item = null): array

@@ -39,8 +39,12 @@
     @endforeach
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @include('partials.gtm-head')
+    @include('partials.pwa-head')
 </head>
 <body class="flex min-h-full flex-col text-slate-800 antialiased">
+    @include('partials.gtm-body')
 
 <header x-data="{ open: false }" class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
     <nav class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6" aria-label="Main">

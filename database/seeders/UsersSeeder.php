@@ -30,6 +30,13 @@ class UsersSeeder extends Seeder
 
     public function run(): void
     {
+        // Demo logins (all password "password") must never exist on a live server.
+        if (app()->isProduction()) {
+            $this->command?->warn('UsersSeeder skipped: demo accounts are not created in production.');
+
+            return;
+        }
+
         foreach (self::ACCOUNTS as $account) {
             $tenant = $account['tenant'] ? Tenant::where('slug', $account['tenant'])->first() : null;
 

@@ -6,8 +6,8 @@
         :subtitle="'Statement of account'" :back="route('parties.show', $ledger['party'])" />
 @include('reports._filter')
 
-<x-card class="!p-0">
-    <table class="w-full text-sm">
+<x-card class="!p-0 overflow-x-auto">
+    <table class="w-full min-w-[600px] text-sm">
         <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
             <tr><th class="px-5 py-3 font-medium">Date</th><th class="px-3 font-medium">Particulars</th>
                 <th class="px-3 text-right font-medium">Debit</th><th class="px-3 text-right font-medium">Credit</th>

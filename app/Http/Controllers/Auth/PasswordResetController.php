@@ -23,7 +23,7 @@ class PasswordResetController extends Controller
         $status = Password::sendResetLink($request->only('email'));
 
         // Always report success so the form can't be used to enumerate accounts.
-        return back()->with('success', 'If that email is registered, a reset link is on its way.');
+        return back()->with('success', __('If that email is registered, a reset link is on its way.'));
     }
 
     public function reset(Request $request, string $token)
@@ -48,7 +48,7 @@ class PasswordResetController extends Controller
         );
 
         return $status === Password::PASSWORD_RESET
-            ? redirect()->route('login')->with('success', 'Password updated. You can sign in now.')
+            ? redirect()->route('login')->with('success', __('Password updated. You can sign in now.'))
             : back()->withErrors(['email' => __($status)]);
     }
 }
