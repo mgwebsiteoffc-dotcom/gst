@@ -19,12 +19,14 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $plans = collect([
+            ['name' => 'Free', 'slug' => 'free', 'price_paise' => 0, 'yearly_price_paise' => 0,
+             'invoice_limit' => 20, 'user_limit' => 1, 'einvoice' => false, 'shopify' => false, 'multi_branch' => false],
             ['name' => 'Starter', 'slug' => 'starter', 'price_paise' => 49900, 'yearly_price_paise' => 499000,
-             'invoice_limit' => 100, 'user_limit' => 1, 'einvoice' => false, 'shopify' => false],
+             'invoice_limit' => 100, 'user_limit' => 1, 'einvoice' => false, 'shopify' => false, 'multi_branch' => false],
             ['name' => 'Growth', 'slug' => 'growth', 'price_paise' => 99900, 'yearly_price_paise' => 999000,
-             'invoice_limit' => null, 'user_limit' => 5, 'einvoice' => true, 'shopify' => true],
+             'invoice_limit' => null, 'user_limit' => 5, 'einvoice' => true, 'shopify' => true, 'multi_branch' => false],
             ['name' => 'Enterprise', 'slug' => 'enterprise', 'price_paise' => 249900, 'yearly_price_paise' => 2499000,
-             'invoice_limit' => null, 'user_limit' => 25, 'einvoice' => true, 'shopify' => true],
+             'invoice_limit' => null, 'user_limit' => 25, 'einvoice' => true, 'shopify' => true, 'multi_branch' => true],
         ])->map(fn ($p) => Plan::updateOrCreate(['slug' => $p['slug']], $p));
 
         // Live server: plans + master data only. Demo businesses, sample

@@ -34,6 +34,9 @@ class TenantController extends Controller
             'plans' => Plan::where('active', true)->orderBy('price_paise')->get(),
             'subscription' => $tenant->subscription,
             'referral' => \App\Models\Referral::with('partner')->where('tenant_id', $tenant->id)->first(),
+            'branchCount' => $tenant->branches()->count(),
+            'capabilities' => $tenant->setting('capabilities', []),
+            'billingSettings' => $tenant->setting('billing', []),
         ]);
     }
 
@@ -56,29 +59,77 @@ class TenantController extends Controller
         return back()->with('success', $tenant->name.' is now '.$data['account_status'].'.');
     }
 
-    /** Move a business onto a different plan, or extend its trial. */
+    /** Move a business onto a different plan, extend its trial, or mark it paid. */
     public function subscription(Request $request, Tenant $tenant)
     {
         $data = $request->validate([
             'plan_id' => ['required', 'exists:plans,id'],
             'status' => ['required', Rule::in(['trialing', 'active', 'past_due', 'canceled'])],
-            'trial_days' => ['nullable', 'integer', 'min:0', 'max:365'],
+            'interval' => ['nullable', Rule::in(['monthly', 'yearly'])],
+            'period_days' => ['nullable', 'integer', 'min:0', 'max:730'],
+            // Set these to collect subscription payments for this business.
+            'razorpay_key' => ['nullable', 'string', 'max:100'],
+            'razorpay_secret' => ['nullable', 'string', 'max:200'],
+            'razorpay_sandbox' => ['boolean'],
         ]);
 
-        Subscription::updateOrCreate(
+        $subscription = Subscription::updateOrCreate(
             ['tenant_id' => $tenant->id],
             [
                 'plan_id' => $data['plan_id'],
                 'status' => $data['status'],
-                'current_period_end' => now()->addDays($data['trial_days'] ?? 30),
+                'interval' => $data['interval'] ?? 'monthly',
+                'current_period_end' => now()->addDays($data['period_days'] ?? 30),
+                'canceled_at' => $data['status'] === 'canceled' ? now() : null,
+                'started_at' => now(),
             ]
         );
 
-        if (! empty($data['trial_days'])) {
-            $tenant->update(['trial_ends_at' => now()->addDays($data['trial_days'])]);
+        // Extend the tenant trial when the platform wants the trial status kept.
+        if ($data['status'] === 'trialing') {
+            $tenant->update(['trial_ends_at' => now()->addDays($data['period_days'] ?? 30)]);
         }
 
-        return back()->with('success', 'Subscription updated.');
+        // Per-business payment gateway credentials (optional).
+        if ($request->filled('razorpay_key') || $request->filled('razorpay_secret')) {
+            $tenant->update([
+                'settings' => array_replace_recursive($tenant->settings ?? [], [
+                    'billing' => [
+                        'razorpay_key' => $data['razorpay_key'] ?? $tenant->setting('billing.razorpay_key'),
+                        'razorpay_secret' => $data['razorpay_secret'] ?? $tenant->setting('billing.razorpay_secret'),
+                        'razorpay_sandbox' => $request->boolean('razorpay_sandbox'),
+                    ],
+                ]),
+            ]);
+        }
+
+        return back()->with('success', $tenant->name.' is now on '.optional($subscription->plan)->name.'.');
+    }
+
+    /**
+     * Toggle paid capabilities per business. Useful to hand a demo or a
+     * promotional customer multi-branch without changing the global plan.
+     */
+    public function capability(Request $request, Tenant $tenant)
+    {
+        $data = $request->validate([
+            'capability' => ['required', Rule::in(['multi_branch', 'einvoice', 'shopify'])],
+            'enabled' => ['required', 'boolean'],
+            'extra_branches' => ['nullable', 'integer', 'min:0', 'max:200'],
+        ]);
+
+        $settings = $tenant->settings ?? [];
+        $capabilities = $settings['capabilities'] ?? [];
+        $capabilities[$data['capability']] = $request->boolean('enabled');
+
+        if ($data['capability'] === 'multi_branch' && $request->filled('extra_branches')) {
+            $capabilities['extra_branches'] = (int) $data['extra_branches'];
+        }
+
+        $settings['capabilities'] = $capabilities;
+        $tenant->update(['settings' => $settings]);
+
+        return back()->with('success', 'Capabilities updated for '.$tenant->name.'.');
     }
 
     /** Enable or disable an individual user login. */

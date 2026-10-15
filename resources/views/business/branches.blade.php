@@ -4,6 +4,13 @@
 @section('content')
 <x-page :title="__('Business & Branches')" :subtitle="__('Run every shop from one login — switch any time from the header.')" />
 
+@if (! $canAddBranch)
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        <span>{{ __('Multiple branches are not part of your :plan plan. Upgrade to add retail stores.', ['plan' => $plan?->name ?? __('current')]) }}</span>
+        <a href="{{ route('billing.plans') }}" class="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-amber-700">{{ __('Upgrade plan') }}</a>
+    </div>
+@endif
+
 {{-- Group overview: each business with its own numbers --}}
 <x-card :title="__('Group overview')" class="mb-5 !p-0 overflow-x-auto">
     <table class="w-full min-w-[720px] text-sm">

@@ -25,7 +25,7 @@
                     </div>
 
                     <div class="mt-3 flex flex-wrap items-center gap-4">
-                        @foreach (['einvoice' => 'e-Invoice', 'shopify' => 'Shopify', 'active' => 'Active'] as $flag => $label)
+                        @foreach (['einvoice' => 'e-Invoice', 'shopify' => 'Shopify', 'multi_branch' => 'Multi-branch', 'active' => 'Active'] as $flag => $label)
                             <label class="flex items-center gap-2 text-sm text-slate-600">
                                 <input type="checkbox" name="{{ $flag }}" value="1" @checked($plan->$flag) class="rounded border-slate-300 text-indigo-600"> {{ $label }}
                             </label>
@@ -53,7 +53,7 @@
                 <x-field label="Invoice limit" name="invoice_limit"><x-input type="number" name="invoice_limit" placeholder="Unlimited" /></x-field>
             </div>
             <div class="flex flex-wrap gap-4">
-                @foreach (['einvoice' => 'e-Invoice', 'shopify' => 'Shopify', 'active' => 'Active'] as $flag => $label)
+                @foreach (['einvoice' => 'e-Invoice', 'shopify' => 'Shopify', 'multi_branch' => 'Multi-branch', 'active' => 'Active'] as $flag => $label)
                     <label class="flex items-center gap-2 text-sm text-slate-600">
                         <input type="checkbox" name="{{ $flag }}" value="1" @checked($flag === 'active') class="rounded border-slate-300 text-indigo-600"> {{ $label }}
                     </label>

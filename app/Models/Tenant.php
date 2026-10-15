@@ -122,4 +122,30 @@ class Tenant extends Model
         ];
     }
     public function setting(string $key, $default = null) { return data_get($this->settings, $key, $default); }
+
+    /**
+     * Feature access: a per-business override wins over the plan, so the
+     * platform can enable multi-branch for a single customer without changing
+     * the global plans.
+     */
+    public function can(string $feature): bool
+    {
+        $override = data_get($this->settings, 'capabilities.'.$feature);
+
+        if ($override !== null) {
+            return (bool) $override;
+        }
+
+        return (bool) $this->billingTenant()->subscription?->plan?->includes($feature);
+    }
+
+    /** Branches this business may create (extra allowance when granted). */
+    public function branchAllowance(): int
+    {
+        if (! $this->can('multi_branch')) {
+            return 0;
+        }
+
+        return 1 + (int) ($this->setting('capabilities.extra_branches') ?? 0);
+    }
 }

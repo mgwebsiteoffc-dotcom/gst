@@ -52,6 +52,7 @@ class PlanController extends Controller
             'user_limit' => ['required', 'integer', 'min:1', 'max:500'],
             'einvoice' => ['boolean'],
             'shopify' => ['boolean'],
+            'multi_branch' => ['boolean'],
             'active' => ['boolean'],
         ]);
 
@@ -59,7 +60,7 @@ class PlanController extends Controller
         $data['yearly_price_paise'] = $data['yearly_price_rupees']
             ? (int) round($data['yearly_price_rupees'] * 100) : null;
 
-        foreach (['einvoice', 'shopify', 'active'] as $flag) {
+        foreach (['einvoice', 'shopify', 'multi_branch', 'active'] as $flag) {
             $data[$flag] = $request->boolean($flag);
         }
 

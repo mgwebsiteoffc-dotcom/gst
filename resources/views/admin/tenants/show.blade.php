@@ -42,7 +42,7 @@
                     @endforeach
                 </x-select>
             </x-field>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-3 gap-3">
                 <x-field label="Status" name="status">
                     <x-select name="status">
                         @foreach (['trialing','active','past_due','canceled'] as $s)
@@ -50,9 +50,69 @@
                         @endforeach
                     </x-select>
                 </x-field>
-                <x-field label="Extend by (days)" name="trial_days"><x-input type="number" name="trial_days" placeholder="30" /></x-field>
+                <x-field label="Interval" name="interval">
+                    <x-select name="interval">
+                        @foreach (['monthly','yearly'] as $i)
+                            <option value="{{ $i }}" @selected($subscription?->interval === $i)>{{ ucfirst($i) }}</option>
+                        @endforeach
+                    </x-select>
+                </x-field>
+                <x-field label="Period (days)" name="period_days" hint="30 = monthly, 365 = yearly"><x-input type="number" name="period_days" placeholder="30" /></x-field>
             </div>
             <x-btn variant="primary" type="submit">Update subscription</x-btn>
+        </form>
+    </x-card>
+
+    <x-card title="Paid capabilities">
+        <p class="mb-3 text-sm text-slate-500">Give this business a feature without changing its plan — handy for demos and promotions.</p>
+        <div class="grid gap-3">
+            @foreach (['multi_branch' => 'Multiple branches / stores', 'einvoice' => 'e-Invoice (IRN)', 'shopify' => 'Shopify'] as $cap => $label)
+                @php $current = $capabilities[$cap] ?? null; @endphp
+                <form method="POST" action="{{ route('admin.tenants.capability', $tenant) }}"
+                      class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200 px-3 py-2">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="capability" value="{{ $cap }}">
+                    <div class="text-sm">
+                        <span class="font-medium">{{ $label }}</span>
+                        <span class="ml-2 text-xs {{ $current === true ? 'text-emerald-600' : ($current === false ? 'text-rose-600' : 'text-slate-400') }}">
+                            {{ $current === true ? 'Enabled (override)' : ($current === false ? 'Disabled (override)' : 'Plan default') }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        @if ($cap === 'multi_branch')
+                            <x-input type="number" name="extra_branches" class="!w-24 !py-1 text-xs"
+                                     value="{{ $capabilities['extra_branches'] ?? 0 }}" title="Extra branches beyond the first" />
+                        @endif
+                        <x-select name="enabled" class="!w-28 !py-1 text-xs">
+                            <option value="1">Enable</option>
+                            <option value="0">Disable</option>
+                        </x-select>
+                        <button class="text-xs font-medium text-indigo-600 hover:underline">Apply</button>
+                    </div>
+                </form>
+            @endforeach
+        </div>
+        <p class="mt-3 text-xs text-slate-500">Branches for this business: <span class="font-medium">{{ $branchCount }}</span> · allowance {{ $tenant->branchAllowance() }}</p>
+    </x-card>
+
+    <x-card title="Subscription payments (Razorpay)">
+        <p class="mb-3 text-sm text-slate-500">Leave blank to use the platform .env account. Keys stored here are used for this business's checkout.</p>
+        <form method="POST" action="{{ route('admin.tenants.subscription', $tenant) }}" class="grid gap-3">
+            @csrf @method('PUT')
+            <input type="hidden" name="plan_id" value="{{ $subscription?->plan_id ?? $plans->first()->id }}">
+            <input type="hidden" name="status" value="{{ $subscription?->status ?? 'trialing' }}">
+            <input type="hidden" name="period_days" value="30">
+            <x-field label="Key ID" name="razorpay_key">
+                <x-input name="razorpay_key" value="{{ $billingSettings['razorpay_key'] ?? '' }}" placeholder="rzp_live_..." />
+            </x-field>
+            <x-field label="Key secret" name="razorpay_secret">
+                <x-input type="password" name="razorpay_secret" value="{{ $billingSettings['razorpay_secret'] ?? '' }}" />
+            </x-field>
+            <label class="flex items-center gap-2 text-sm text-slate-600">
+                <input type="checkbox" name="razorpay_sandbox" value="1" @checked($billingSettings['razorpay_sandbox'] ?? true) class="rounded border-slate-300 text-indigo-600">
+                Test mode (sandbox)
+            </label>
+            <div><x-btn variant="primary" type="submit">Save payment settings</x-btn></div>
         </form>
     </x-card>
 

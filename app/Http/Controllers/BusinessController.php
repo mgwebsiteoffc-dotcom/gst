@@ -59,6 +59,8 @@ class BusinessController extends Controller
             'counts' => $counts,
             'team' => User::whereIn('tenant_id', $ids)->orderBy('name')->get(),
             'states' => Gstin::STATES,
+            'plan' => $home->subscription?->plan,
+            'canAddBranch' => $home->can('multi_branch') && $home->branches()->count() < max(1, $home->branchAllowance()),
         ]);
     }
 
@@ -87,6 +89,7 @@ class BusinessController extends Controller
     {
         $home = $this->homeTenant();
         $this->authorizeManager($home);
+        $this->guardMultiBranch($home);
 
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
@@ -261,6 +264,26 @@ class BusinessController extends Controller
     protected function authorizeBranch(Tenant $home, Tenant $branch): void
     {
         abort_unless((int) $branch->parent_tenant_id === (int) $home->id, 404);
+    }
+
+    /** Multi-branch is a paid capability — send the vendor to the plans page. */
+    protected function guardMultiBranch(Tenant $home): void
+    {
+        $plan = $home->subscription?->plan;
+
+        if (! $home->can('multi_branch')) {
+            abort(response()->redirect()->route('billing.plans')
+                ->with('error', __('Your :plan plan does not include multiple branches. Upgrade to add retail stores.', [
+                    'plan' => $plan?->name ?? __('current'),
+                ])));
+        }
+
+        if ($home->branches()->count() >= max(1, $home->branchAllowance())) {
+            abort(response()->redirect()->route('billing.plans')
+                ->with('error', __('Your plan allows :count branch(es). Upgrade to add more stores.', [
+                    'count' => $home->branchAllowance(),
+                ])));
+        }
     }
 
     protected function uniqueSlug(string $name): string

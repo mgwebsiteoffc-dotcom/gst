@@ -10,8 +10,10 @@ use App\Http\Controllers\Admin\PayoutController as AdminPayout;
 use App\Http\Controllers\Admin\PlanController as AdminPlan;
 use App\Http\Controllers\Admin\TenantController as AdminTenant;
 use App\Http\Controllers\Admin\UserController as AdminUser;
+use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BusinessController;
 use App\Http\Controllers\ImpersonationController;
+use App\Http\Controllers\TeamController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\OfflineController;
 use App\Http\Controllers\PushController;
@@ -156,7 +158,18 @@ Route::middleware(['auth', 'tenant'])->group(function () {
     Route::put('settings/whatsapp', [SettingsController::class, 'whatsapp'])->name('settings.whatsapp');
     Route::post('settings/whatsapp/test', [SettingsController::class, 'testWhatsApp'])->name('settings.whatsapp.test');
 
-    Route::view('billing/plans', 'billing.plans')->name('billing.plans');
+    // Subscription self-service (kept outside `subscribed` so a lapsed
+    // business can still reach the plans page and pay).
+    Route::get('billing/plans', [BillingController::class, 'plans'])->name('billing.plans');
+    Route::post('billing/checkout', [BillingController::class, 'checkout'])->name('billing.checkout');
+    Route::post('billing/payment', [BillingController::class, 'payment'])->name('billing.payment');
+    Route::post('billing/cancel', [BillingController::class, 'cancel'])->name('billing.cancel');
+    Route::post('billing/downgrade', [BillingController::class, 'downgrade'])->name('billing.downgrade');
+
+    // Team: create logins and assign them to a branch
+    Route::post('team', [TeamController::class, 'store'])->name('team.store');
+    Route::put('team/{user}', [TeamController::class, 'update'])->name('team.update');
+    Route::delete('team/{user}', [TeamController::class, 'destroy'])->name('team.destroy');
 
     // Multi-branch / multi-store: switch, group overview, staff moves
     Route::get('business/branches', [BusinessController::class, 'index'])->name('business.branches');
@@ -226,6 +239,7 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::get('tenants/{tenant}', [AdminTenant::class, 'show'])->name('tenants.show');
     Route::put('tenants/{tenant}', [AdminTenant::class, 'update'])->name('tenants.update');
     Route::put('tenants/{tenant}/subscription', [AdminTenant::class, 'subscription'])->name('tenants.subscription');
+    Route::put('tenants/{tenant}/capability', [AdminTenant::class, 'capability'])->name('tenants.capability');
     Route::put('users/{user}/toggle', [AdminTenant::class, 'toggleUser'])->name('users.toggle');
 
     // Client logins: profile, support impersonation, reset link, sign-out
