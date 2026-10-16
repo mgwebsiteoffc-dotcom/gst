@@ -40,7 +40,7 @@
                     <td class="text-right">{{ number_format($doc->tax_total, 2) }}</td>
                     <td class="text-right font-medium">{{ number_format($doc->grand_total, 2) }}</td>
                     <td class="text-right">{{ number_format($doc->balance_due, 2) }}</td>
-                    <td>@if ($doc->einvoice?->isGenerated())<span class="text-emerald-600 text-xs">✔</span>@endif</td>
+                    <td>@if ($doc->einvoice?->isGenerated())<span class="text-emerald-600 text-xs"><x-icon name="check-circle" class="h-4 w-4 inline text-emerald-600" /></span>@endif</td>
                     <td><span class="text-xs px-2 py-0.5 rounded bg-slate-100">{{ __(ucfirst(str_replace('_', ' ', $doc->status))) }}</span></td>
                     <td class="pr-3 text-right"><a class="text-slate-500 text-xs" href="{{ route('documents.pdf', $doc) }}">PDF</a></td>
                 </tr>

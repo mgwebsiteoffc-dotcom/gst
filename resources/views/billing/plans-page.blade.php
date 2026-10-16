@@ -90,17 +90,17 @@
             </p>
 
             <ul class="mt-3 space-y-1.5 text-sm text-slate-600">
-                <li class="flex gap-2"><span class="text-emerald-600">✓</span> {{ $plan->invoice_limit ? __(':count invoices / month', ['count' => $plan->invoice_limit]) : __('Unlimited invoices') }}</li>
-                <li class="flex gap-2"><span class="text-emerald-600">✓</span> {{ __(':count team users', ['count' => $plan->user_limit]) }}</li>
+                <li class="flex gap-2"><span class="text-emerald-600"></span> {{ $plan->invoice_limit ? __(':count invoices / month', ['count' => $plan->invoice_limit]) : __('Unlimited invoices') }}</li>
+                <li class="flex gap-2"><span class="text-emerald-600"></span> {{ __(':count team users', ['count' => $plan->user_limit]) }}</li>
                 <li class="flex gap-2 {{ $plan->includes('einvoice') ? '' : 'text-slate-400' }}">
-                    <span class="{{ $plan->includes('einvoice') ? 'text-emerald-600' : 'text-slate-300' }}">{{ $plan->includes('einvoice') ? '✓' : '—' }}</span> {{ __('e-Invoice (IRN) & e-Way Bill') }}</li>
+                    <span class="{{ $plan->includes('einvoice') ? 'text-emerald-600' : 'text-slate-300' }}">{{ $plan->includes('einvoice') ? '' : '—' }}</span> {{ __('e-Invoice (IRN) & e-Way Bill') }}</li>
                 <li class="flex gap-2 {{ $plan->includes('shopify') ? '' : 'text-slate-400' }}">
-                    <span class="{{ $plan->includes('shopify') ? 'text-emerald-600' : 'text-slate-300' }}">{{ $plan->includes('shopify') ? '✓' : '—' }}</span> Shopify</li>
+                    <span class="{{ $plan->includes('shopify') ? 'text-emerald-600' : 'text-slate-300' }}">{{ $plan->includes('shopify') ? '' : '—' }}</span> Shopify</li>
                 <li class="flex gap-2 {{ $plan->includes('multi_branch') ? '' : 'text-slate-400' }}">
-                    <span class="{{ $plan->includes('multi_branch') ? 'text-emerald-600' : 'text-slate-300' }}">{{ $plan->includes('multi_branch') ? '✓' : '—' }}</span> {{ __('Multiple branches / retail stores') }}</li>
+                    <span class="{{ $plan->includes('multi_branch') ? 'text-emerald-600' : 'text-slate-300' }}">{{ $plan->includes('multi_branch') ? '' : '—' }}</span> {{ __('Multiple branches / retail stores') }}</li>
 
                 @foreach ((array) ($plan->features ?? []) as $feature)
-                    <li class="flex gap-2"><span class="text-emerald-600">✓</span> {{ $feature }}</li>
+                    <li class="flex gap-2"><span class="text-emerald-600"></span> {{ $feature }}</li>
                 @endforeach
             </ul>
 
@@ -166,7 +166,7 @@
                     <td class="px-3 text-slate-600">{{ ($payment->paid_at ?? $payment->created_at)->format('d M Y') }}</td>
                     <td class="px-3">{{ $payment->plan_name }} <span class="text-xs text-slate-400">· {{ $payment->interval }}</span></td>
                     <td class="px-3 text-xs text-slate-500">
-                        {{ $payment->period_start?->format('d M Y') }} → {{ $payment->period_end?->format('d M Y') }}
+                        {{ $payment->period_start?->format('d M Y') }}  {{ $payment->period_end?->format('d M Y') }}
                     </td>
                     <td class="px-3 text-right tabular-nums">{{ $payment->amountLabel() }}</td>
                     <td class="px-3">

@@ -38,7 +38,7 @@
                 <tr class="border-b border-slate-50 last:border-0 hover:bg-slate-50/60">
                     <td class="px-5 py-3">
                         <div class="flex items-center gap-2">
-                            @if ($t->parent_tenant_id)<span class="text-slate-300">↳</span>@endif
+                            @if ($t->parent_tenant_id)<span class="text-slate-300"></span>@endif
                             <a href="{{ route('admin.tenants.show', $t) }}" class="font-medium text-slate-900 hover:text-indigo-600">{{ $t->name }}</a>
                             <x-badge tone="{{ $t->parent_tenant_id ? 'slate' : 'indigo' }}">
                                 {{ $t->parent_tenant_id ? __('Branch') : __('Head office') }}

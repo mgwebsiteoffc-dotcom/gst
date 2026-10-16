@@ -17,7 +17,7 @@
                     <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600">{{ $where }}</span>
                 </div>
                 <p class="mt-2 text-sm text-slate-600">{{ $what }}</p>
-                <a href="{{ route('contact') }}" class="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline">Apply →</a>
+                <a href="{{ route('contact') }}" class="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline">Apply </a>
             </article>
         @endforeach
     </div>

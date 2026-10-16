@@ -30,7 +30,7 @@
                 <h2 class="mt-1 text-lg font-semibold text-slate-900">{{ $title }}</h2>
                 <ul class="mt-2 space-y-1.5 text-sm text-slate-600">
                     @foreach ($items as $item)
-                        <li class="flex gap-2"><span class="text-emerald-600">✓</span> {{ $item }}</li>
+                        <li class="flex gap-2"><span class="text-emerald-600"></span> {{ $item }}</li>
                     @endforeach
                 </ul>
             </article>

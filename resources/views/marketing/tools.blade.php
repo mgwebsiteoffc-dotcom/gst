@@ -17,7 +17,7 @@
                 <a href="{{ route('tool', $slug) }}" class="group rounded-2xl border border-slate-200 p-6 transition hover:border-indigo-300 hover:shadow-md">
                     <h2 class="font-semibold text-slate-900 group-hover:text-indigo-700">{{ $name }}</h2>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ $desc }}</p>
-                    <span class="mt-4 inline-block text-sm font-medium text-indigo-600">Open tool →</span>
+                    <span class="mt-4 inline-block text-sm font-medium text-indigo-600">Open tool </span>
                 </a>
             @endforeach
         </div>

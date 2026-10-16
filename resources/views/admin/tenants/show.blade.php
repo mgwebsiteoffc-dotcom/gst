@@ -177,7 +177,7 @@
                         <td class="px-5 py-3 font-mono text-xs">{{ $payment->invoice_number }}</td>
                         <td class="px-3 text-slate-600">{{ ($payment->paid_at ?? $payment->created_at)->format('d M Y') }}</td>
                         <td class="px-3">{{ $payment->plan_name }} <span class="text-xs text-slate-400">· {{ $payment->interval }}</span></td>
-                        <td class="px-3 text-xs text-slate-500">{{ $payment->period_start?->format('d M Y') }} → {{ $payment->period_end?->format('d M Y') }}</td>
+                        <td class="px-3 text-xs text-slate-500">{{ $payment->period_start?->format('d M Y') }}  {{ $payment->period_end?->format('d M Y') }}</td>
                         <td class="px-3 text-right tabular-nums">{{ $payment->amountLabel() }}</td>
                         <td class="px-3"><x-badge tone="{{ $payment->status === 'paid' ? 'emerald' : 'amber' }}">{{ ucfirst($payment->status) }}</x-badge></td>
                         <td class="px-5 py-3 text-right">

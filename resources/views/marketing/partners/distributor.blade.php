@@ -69,15 +69,15 @@
 
         <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ([
-                ['💰', __('High margins'), __('Buy at distributor price and set your own selling price. Up to 35% margin plus 20% recurring commission on every renewal.')],
-                ['📦', __('Zero inventory'), __('Software, not stock. No warehouse, no expiry, no dead inventory — deliver licences instantly by email or WhatsApp.')],
-                ['🤝', __('Recurring income'), __('Your customers renew every year and you keep earning. A base of 100 customers becomes predictable monthly income.')],
-                ['📣', __('Marketing kit'), __('Brochures, posters, WhatsApp creatives, demo videos and landing pages — branded and ready to share in your language.')],
-                ['🎓', __('Free training'), __('Sales and product training for you and your team, plus a dedicated partner manager on WhatsApp.')],
-                ['🏆', __('Territory support'), __('Get help targeting your city’s retail clusters, markets and CA associations — with joint campaigns and lead sharing.')],
+                ['rupee', __('High margins'), __('Buy at distributor price and set your own selling price. Up to 35% margin plus 20% recurring commission on every renewal.')],
+                ['inventory', __('Zero inventory'), __('Software, not stock. No warehouse, no expiry, no dead inventory — deliver licences instantly by email or WhatsApp.')],
+                ['handshake', __('Recurring income'), __('Your customers renew every year and you keep earning. A base of 100 customers becomes predictable monthly income.')],
+                ['megaphone', __('Marketing kit'), __('Brochures, posters, WhatsApp creatives, demo videos and landing pages — branded and ready to share in your language.')],
+                ['graduation', __('Free training'), __('Sales and product training for you and your team, plus a dedicated partner manager on WhatsApp.')],
+                ['award', __('Territory support'), __('Get help targeting your city’s retail clusters, markets and CA associations — with joint campaigns and lead sharing.')],
             ] as [$icon, $title, $desc])
                 <div class="rounded-2xl border border-slate-200 bg-white p-6 transition hover:border-indigo-200 hover:shadow-md">
-                    <div class="grid h-11 w-11 place-items-center rounded-xl bg-indigo-50 text-xl">{{ $icon }}</div>
+                    <div class="grid h-11 w-11 place-items-center rounded-xl bg-indigo-50"><x-icon :name="$icon" class="h-6 w-6 text-brand-600" /></div>
                     <h3 class="mt-4 font-semibold text-slate-900">{{ $title }}</h3>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ $desc }}</p>
                 </div>
@@ -92,13 +92,13 @@
         <h2 class="text-center text-3xl font-bold tracking-tight text-slate-900">{{ __('Who can become a distributor?') }}</h2>
         <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @foreach ([
-                ['🏬', __('Software & IT dealers'), __('Already selling Tally, billing or POS software in your area.')],
-                ['🧾', __('CA & tax consultants'), __('Serve 50+ businesses and want to offer billing software with your services.')],
-                ['📱', __('Mobile & electronics shops'), __('Sell to the shops around you and add software to your catalogue.')],
-                ['🚚', __('Distributors & stockists'), __('Existing FMCG, stationery or hardware distribution network.')],
+                ['store', __('Software & IT dealers'), __('Already selling Tally, billing or POS software in your area.')],
+                ['invoice', __('CA & tax consultants'), __('Serve 50+ businesses and want to offer billing software with your services.')],
+                ['mobile', __('Mobile & electronics shops'), __('Sell to the shops around you and add software to your catalogue.')],
+                ['truck', __('Distributors & stockists'), __('Existing FMCG, stationery or hardware distribution network.')],
             ] as [$icon, $title, $desc])
                 <div class="rounded-2xl border border-slate-200 bg-white p-5 text-center">
-                    <div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white text-2xl shadow-sm">{{ $icon }}</div>
+                    <div class="mx-auto grid h-12 w-12 place-items-center rounded-full bg-white shadow-sm"><x-icon :name="$icon" class="h-6 w-6 text-brand-600" /></div>
                     <h3 class="mt-3 font-semibold text-slate-900">{{ $title }}</h3>
                     <p class="mt-1.5 text-sm text-slate-600">{{ $desc }}</p>
                 </div>

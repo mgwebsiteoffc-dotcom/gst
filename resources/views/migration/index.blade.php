@@ -118,7 +118,7 @@
                                     <span class="text-blue-600">~{{ $job->summary['updated'] ?? 0 }}</span>
                                     <span class="text-slate-400">⊘{{ $job->summary['skipped'] ?? 0 }}</span>
                                     @if (($job->summary['failed'] ?? 0) > 0)
-                                        <span class="text-rose-600">✕{{ $job->summary['failed'] }}</span>
+                                        <span class="text-rose-600">{{ $job->summary['failed'] }}</span>
                                     @endif
                                 </div>
                             @endif

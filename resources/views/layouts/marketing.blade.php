@@ -84,7 +84,7 @@
                         </a>
                     @endforeach
                     <a href="{{ route('features') }}" class="mt-1 block rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50">
-                        {{ __('See all features') }} →
+                        {{ __('See all features') }} 
                     </a>
                 </div>
             </div>
@@ -208,12 +208,12 @@
 
         <div class="grid gap-3 sm:grid-cols-3">
             @foreach ([
-                ['⚡', __('30-second billing'), __('Save a GST bill before the customer leaves the counter.')],
-                ['📶', __('Works offline'), __('No signal? Bills queue on the phone and sync later.')],
-                ['🔔', __('Payment reminders'), __('Get notified about overdue bills and send a WhatsApp nudge.')],
+                ['zap', __('30-second billing'), __('Save a GST bill before the customer leaves the counter.')],
+                ['signal', __('Works offline'), __('No signal? Bills queue on the phone and sync later.')],
+                ['bell', __('Payment reminders'), __('Get notified about overdue bills and send a WhatsApp nudge.')],
             ] as [$icon, $title, $desc])
                 <div class="rounded-2xl border border-slate-700 bg-slate-800/60 p-4">
-                    <div class="text-xl">{{ $icon }}</div>
+                    <x-icon :name="$icon" class="h-6 w-6 text-brand-300" />
                     <h3 class="mt-2 text-sm font-semibold text-white">{{ $title }}</h3>
                     <p class="mt-1 text-xs leading-relaxed text-slate-400">{{ $desc }}</p>
                 </div>
@@ -318,7 +318,7 @@
         <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-5 text-xs text-slate-500 lg:px-6">
             <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
             <p class="flex items-center gap-1.5">
-                <span class="text-base leading-none">🇮🇳</span> Made in India, for Indian businesses
+                <span class="text-base leading-none"><x-icon name="globe" class="h-5 w-5 text-brand-600" /></span> Made in India, for Indian businesses
             </p>
         </div>
     </div>

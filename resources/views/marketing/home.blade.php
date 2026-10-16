@@ -14,14 +14,14 @@
                 </span>
                 @if ($rating)
                     <span class="inline-flex items-center gap-1.5 rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-800">
-                        ★ {{ $rating }}/5 {{ __('from shop owners') }}
+                         {{ $rating }}/5 {{ __('from shop owners') }}
                     </span>
                 @endif
             </div>
 
             <h1 class="mt-5 text-[2.1rem] font-bold leading-[1.1] tracking-tight text-slate-900 sm:text-5xl lg:text-[3.4rem]">
                 {{ __('GST invoices in') }}<br>
-                <span class="text-indigo-600">{{ __('30 seconds') }}</span> ⚡
+                <span class="text-indigo-600">{{ __('30 seconds') }}</span> <x-icon name="zap" class="h-6 w-6 text-brand-600" />
             </h1>
 
             <p class="mt-5 max-w-xl text-lg leading-relaxed text-slate-600">
@@ -108,7 +108,7 @@
             <div class="mt-8 grid gap-5 md:grid-cols-3">
                 @foreach ($featuredReviews as $review)
                     <figure class="rounded-2xl border border-slate-200 bg-slate-50/60 p-5">
-                        <div class="text-amber-500">@for ($i = 0; $i < $review->rating; $i++)★@endfor</div>
+                        <div class="text-amber-500">@for ($i = 0; $i < $review->rating; $i++)@endfor</div>
                         <blockquote class="mt-3 text-sm leading-relaxed text-slate-700">“{{ $review->quote }}”</blockquote>
                         <figcaption class="mt-4 flex items-center gap-3">
                             <span class="grid h-9 w-9 place-items-center rounded-full bg-indigo-100 text-xs font-bold text-indigo-700">{{ $review->initials() }}</span>
@@ -138,22 +138,22 @@
 
         <div class="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ([
-                ['🧾', 'GST & non-GST invoicing', 'Tax invoice or plain bill, switched per document with separate numbering series.', 'solution:gst-billing'],
-                ['⚡', 'e-Invoice (IRN) in one click', 'Straight to the NIC portal. IRN and signed QR printed on the PDF.', 'solution:e-invoicing'],
-                ['🚚', 'e-Way Bills', 'Generated from the IRN with transporter and vehicle details.', 'solution:e-way-bill'],
-                ['📦', 'Inventory & stock', 'Live levels, low-stock alerts, purchase orders and purchase bills.', 'solution:inventory'],
-                ['🛒', 'Shopify sync', 'Orders become invoices; refunds become credit notes automatically.', 'solution:shopify'],
-                ['📊', 'GST returns & reports', 'GSTR-1, GSTR-3B, profit & loss, item-wise and party-wise reports.', 'features'],
-                ['💬', 'WhatsApp invoicing', 'Send the bill as a WhatsApp link with a UPI QR in the same message.', 'features'],
-                ['👥', 'Team with roles', 'Owner, admin, accountant, counter staff and read-only CA access.', 'features'],
-                ['🏬', 'Multi-branch', 'Run several shops or stores from one login and switch between them.', 'features'],
+                ['invoice', 'GST & non-GST invoicing', 'Tax invoice or plain bill, switched per document with separate numbering series.', 'solution:gst-billing'],
+                ['zap', 'e-Invoice (IRN) in one click', 'Straight to the NIC portal. IRN and signed QR printed on the PDF.', 'solution:e-invoicing'],
+                ['truck', 'e-Way Bills', 'Generated from the IRN with transporter and vehicle details.', 'solution:e-way-bill'],
+                ['inventory', 'Inventory & stock', 'Live levels, low-stock alerts, purchase orders and purchase bills.', 'solution:inventory'],
+                ['cart', 'Shopify sync', 'Orders become invoices; refunds become credit notes automatically.', 'solution:shopify'],
+                ['chart', 'GST returns & reports', 'GSTR-1, GSTR-3B, profit & loss, item-wise and party-wise reports.', 'features'],
+                ['message', 'WhatsApp invoicing', 'Send the bill as a WhatsApp link with a UPI QR in the same message.', 'features'],
+                ['users', 'Team with roles', 'Owner, admin, accountant, counter staff and read-only CA access.', 'features'],
+                ['store', 'Multi-branch', 'Run several shops or stores from one login and switch between them.', 'features'],
             ] as [$icon, $title, $desc, $link])
                 <a href="{{ str_starts_with($link, 'solution:') ? route('solution', substr($link, 9)) : route($link) }}"
                    class="group rounded-2xl border border-slate-200 bg-white p-6 transition hover:-translate-y-0.5 hover:border-indigo-300 hover:shadow-lg">
-                    <span class="grid h-11 w-11 place-items-center rounded-xl bg-indigo-50 text-xl">{{ $icon }}</span>
+                    <span class="grid h-11 w-11 place-items-center rounded-xl bg-indigo-50"><x-icon :name="$icon" class="h-6 w-6 text-brand-600" /></span>
                     <h3 class="mt-4 font-semibold text-slate-900">{{ __($title) }}</h3>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ __($desc) }}</p>
-                    <span class="mt-3 inline-block text-xs font-medium text-indigo-600 opacity-0 transition group-hover:opacity-100">{{ __('Learn more') }} →</span>
+                    <span class="mt-3 inline-block text-xs font-medium text-indigo-600 opacity-0 transition group-hover:opacity-100">{{ __('Learn more') }} </span>
                 </a>
             @endforeach
         </div>
@@ -170,13 +170,13 @@
 
         <ol class="mt-12 grid gap-6 md:grid-cols-3">
             @foreach ([
-                [__('Add your items once'), __('Type a product name and price, set the GST rate, or paste your existing list. HSN codes are searchable from a built-in master.'), '📝'],
-                [__('Make the bill'), __('Pick the customer, tap items, hit save. Tax is calculated, the PDF is numbered and the stock is updated — offline if needed.'), '⚡'],
-                [__('Send and get paid'), __('Share the invoice link on WhatsApp, collect by UPI QR, and track who has paid and who is overdue.'), '💰'],
+                [__('Add your items once'), __('Type a product name and price, set the GST rate, or paste your existing list. HSN codes are searchable from a built-in master.'), 'file'],
+                [__('Make the bill'), __('Pick the customer, tap items, hit save. Tax is calculated, the PDF is numbered and the stock is updated — offline if needed.'), 'zap'],
+                [__('Send and get paid'), __('Share the invoice link on WhatsApp, collect by UPI QR, and track who has paid and who is overdue.'), 'rupee'],
             ] as $i => [$title, $desc, $icon])
                 <li class="relative rounded-2xl border border-slate-200 bg-white p-6">
                     <span class="absolute -top-3 left-6 rounded-full bg-indigo-600 px-3 py-1 text-xs font-bold text-white">{{ __('Step') }} {{ $i + 1 }}</span>
-                    <div class="mt-2 text-3xl">{{ $icon }}</div>
+                    <x-icon :name="$icon" class="mt-2 h-8 w-8 text-brand-600" />
                     <h3 class="mt-3 font-semibold text-slate-900">{{ $title }}</h3>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ $desc }}</p>
                 </li>
@@ -195,19 +195,19 @@
 
         <div class="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
             @foreach ([
-                ['🏪', 'Kirana & retail', 'Fast counter billing'],
-                ['📦', 'Wholesalers', 'Bulk rates & credit'],
-                ['🚛', 'Distributors', 'Routes & stock'],
-                ['🏭', 'Manufacturers', 'BOM & job work'],
-                ['🧾', 'Chartered accountants', 'Client dashboards'],
-                ['🛒', 'Online sellers', 'Shopify orders'],
-                ['💼', 'Freelancers', 'Non-GST bills'],
-                ['🔧', 'Service businesses', 'SAC codes'],
-                ['☕', 'Cafes & restaurants', 'Quick daily bills'],
-                ['🏗️', 'Traders & suppliers', 'e-Way bills'],
+                ['store-front', 'Kirana & retail', 'Fast counter billing'],
+                ['inventory', 'Wholesalers', 'Bulk rates & credit'],
+                ['truck', 'Distributors', 'Routes & stock'],
+                ['factory', 'Manufacturers', 'BOM & job work'],
+                ['invoice', 'Chartered accountants', 'Client dashboards'],
+                ['cart', 'Online sellers', 'Shopify orders'],
+                ['briefcase', 'Freelancers', 'Non-GST bills'],
+                ['wrench', 'Service businesses', 'SAC codes'],
+                ['coffee', 'Cafes & restaurants', 'Quick daily bills'],
+                ['building', 'Traders & suppliers', 'e-Way bills'],
             ] as [$icon, $title, $desc])
                 <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 text-center transition hover:border-indigo-200 hover:bg-white">
-                    <div class="text-2xl">{{ $icon }}</div>
+                    <x-icon :name="$icon" class="mx-auto h-7 w-7 text-brand-600" />
                     <h3 class="mt-2 text-sm font-semibold text-slate-900">{{ __($title) }}</h3>
                     <p class="mt-0.5 text-[11px] text-slate-500">{{ __($desc) }}</p>
                 </div>
@@ -215,7 +215,7 @@
         </div>
 
         <div class="mt-8 text-center">
-            <a href="{{ route('features') }}" class="text-sm font-medium text-indigo-600 hover:underline">{{ __('See every feature') }} →</a>
+            <a href="{{ route('features') }}" class="text-sm font-medium text-indigo-600 hover:underline">{{ __('See every feature') }} </a>
         </div>
     </div>
 </section>
@@ -248,7 +248,7 @@
                         <tr>
                             <td class="px-5 py-3 font-medium text-slate-900">{{ __($need) }}</td>
                             <td class="px-3 py-3 text-slate-500">{{ __($old) }}</td>
-                            <td class="px-5 py-3 font-medium text-emerald-700">✓ {{ __($new) }}</td>
+                            <td class="px-5 py-3 font-medium text-emerald-700"> {{ __($new) }}</td>
                         </tr>
                     @endforeach
                 </tbody>
@@ -265,7 +265,7 @@
                 <h2 class="text-3xl font-bold tracking-tight text-slate-900">{{ __('Business owners who switched') }}</h2>
                 @if ($rating)
                     <p class="mt-3 text-slate-600">
-                        <span class="font-semibold text-amber-600">★ {{ $rating }}/5</span>
+                        <span class="font-semibold text-amber-600"> {{ $rating }}/5</span>
                         {{ __('average rating from') }} {{ $testimonials->count() }}+ {{ __('reviews') }}
                     </p>
                 @endif
@@ -274,7 +274,7 @@
             <div class="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
                 @foreach ($testimonials as $review)
                     <figure class="flex flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-                        <div class="text-amber-500">@for ($i = 0; $i < $review->rating; $i++)★@endfor</div>
+                        <div class="text-amber-500">@for ($i = 0; $i < $review->rating; $i++)@endfor</div>
                         <blockquote class="mt-3 flex-1 text-sm leading-relaxed text-slate-700">“{{ $review->quote }}”</blockquote>
                         <figcaption class="mt-5 flex items-center gap-3 border-t border-slate-100 pt-4">
                             @if ($review->photo)
@@ -318,11 +318,11 @@
                         @endif
                     </p>
                     <ul class="mt-5 flex-1 space-y-2 text-sm text-slate-600">
-                        <li>✓ {{ $plan->invoice_limit ? __(':count invoices / month', ['count' => $plan->invoice_limit]) : __('Unlimited invoices') }}</li>
-                        <li>✓ {{ __(':count team users', ['count' => $plan->user_limit]) }}</li>
-                        <li class="{{ $plan->includes('einvoice') ? '' : 'text-slate-400' }}">{{ $plan->includes('einvoice') ? '✓' : '—' }} {{ __('e-Invoice (IRN) & e-Way Bill') }}</li>
-                        <li class="{{ $plan->includes('shopify') ? '' : 'text-slate-400' }}">{{ $plan->includes('shopify') ? '✓' : '—' }} Shopify</li>
-                        <li class="{{ $plan->includes('multi_branch') ? '' : 'text-slate-400' }}">{{ $plan->includes('multi_branch') ? '✓' : '—' }} {{ __('Multiple branches') }}</li>
+                        <li> {{ $plan->invoice_limit ? __(':count invoices / month', ['count' => $plan->invoice_limit]) : __('Unlimited invoices') }}</li>
+                        <li> {{ __(':count team users', ['count' => $plan->user_limit]) }}</li>
+                        <li class="{{ $plan->includes('einvoice') ? '' : 'text-slate-400' }}">{{ $plan->includes('einvoice') ? '' : '—' }} {{ __('e-Invoice (IRN) & e-Way Bill') }}</li>
+                        <li class="{{ $plan->includes('shopify') ? '' : 'text-slate-400' }}">{{ $plan->includes('shopify') ? '' : '—' }} Shopify</li>
+                        <li class="{{ $plan->includes('multi_branch') ? '' : 'text-slate-400' }}">{{ $plan->includes('multi_branch') ? '' : '—' }} {{ __('Multiple branches') }}</li>
                     </ul>
                     <a href="{{ route('register') }}"
                        class="mt-6 rounded-xl px-5 py-3 text-center text-sm font-semibold transition {{ $loop->index === 1 ? 'bg-indigo-600 text-white hover:bg-indigo-700' : 'border border-slate-300 text-slate-700 hover:bg-slate-50' }}">
@@ -333,7 +333,7 @@
         </div>
 
         <div class="mt-8 text-center">
-            <a href="{{ route('pricing') }}" class="text-sm font-medium text-indigo-600 hover:underline">{{ __('Compare all plans') }} →</a>
+            <a href="{{ route('pricing') }}" class="text-sm font-medium text-indigo-600 hover:underline">{{ __('Compare all plans') }} </a>
         </div>
     </div>
 </section>
@@ -430,13 +430,13 @@
 
         <div class="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             @foreach ([
-                ['🇮🇳', __('GST from the ground up'), __('CGST, SGST, IGST, cess, reverse charge, exports, SEZ and composition — all handled.')],
-                ['🔐', __('Your data stays yours'), __('Encrypted NIC credentials, role-based access and a full audit trail of who did what.')],
-                ['🌐', __('Bilingual interface'), __('English, Hindi or Hinglish — switch any time, even for your counter staff.')],
-                ['📞', __('Support that speaks your language'), __('Chat, email or WhatsApp support for as long as you use BikriBook.')],
+                ['globe', __('GST from the ground up'), __('CGST, SGST, IGST, cess, reverse charge, exports, SEZ and composition — all handled.')],
+                ['lock', __('Your data stays yours'), __('Encrypted NIC credentials, role-based access and a full audit trail of who did what.')],
+                ['globe', __('Bilingual interface'), __('English, Hindi or Hinglish — switch any time, even for your counter staff.')],
+                ['phone', __('Support that speaks your language'), __('Chat, email or WhatsApp support for as long as you use BikriBook.')],
             ] as [$icon, $title, $desc])
                 <div class="rounded-2xl border border-slate-200 p-6 text-center">
-                    <div class="text-3xl">{{ $icon }}</div>
+                    <x-icon :name="$icon" class="mx-auto h-8 w-8 text-brand-600" />
                     <h3 class="mt-3 font-semibold text-slate-900">{{ $title }}</h3>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ $desc }}</p>
                 </div>
@@ -492,7 +492,7 @@
                     <h2 class="text-2xl font-bold tracking-tight text-slate-900">{{ __('GST guides, in plain English') }}</h2>
                     <p class="mt-2 text-sm text-slate-600">{{ __('Practical answers to the questions shop owners actually ask.') }}</p>
                 </div>
-                <a href="{{ route('blog.index') }}" class="text-sm font-medium text-indigo-600 hover:underline">{{ __('All articles') }} →</a>
+                <a href="{{ route('blog.index') }}" class="text-sm font-medium text-indigo-600 hover:underline">{{ __('All articles') }} </a>
             </div>
 
             <div class="mt-8 grid gap-6 md:grid-cols-3">

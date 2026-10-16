@@ -21,7 +21,7 @@
                         Start free for 14 days
                     </a>
                     <a href="{{ route('contact') }}" class="rounded-xl border border-slate-300 bg-white px-6 py-3.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                        Request a demo →
+                        Request a demo 
                     </a>
                 </div>
             </div>

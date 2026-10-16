@@ -63,7 +63,7 @@
                 </div>
             </x-card>
 
-            {{-- FAQs → FAQPage schema --}}
+            {{-- FAQs  FAQPage schema --}}
             <x-card title="FAQs for this post" subtitle="Shown on the page and published as FAQ schema, which answer engines quote.">
                 <template x-for="(faq, i) in faqs" :key="i">
                     <div class="mb-3 rounded-lg border border-slate-200 p-3">

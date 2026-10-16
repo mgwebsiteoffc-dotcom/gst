@@ -12,7 +12,7 @@
             <a href="{{ route('locale', $code) }}"
                class="flex items-center justify-between px-4 py-2 text-sm {{ app()->getLocale() === $code ? 'font-semibold text-indigo-600' : 'text-slate-600 hover:bg-slate-50' }}">
                 {{ $label }}
-                @if (app()->getLocale() === $code)<span>✓</span>@endif
+                @if (app()->getLocale() === $code)<span></span>@endif
             </a>
         @endforeach
     </div>

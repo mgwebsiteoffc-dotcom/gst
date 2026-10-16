@@ -60,7 +60,7 @@
                             </div>
 
                             <p class="mb-3 text-xs text-slate-500">
-                                📎 The invoice PDF will be attached automatically.
+                                <x-icon name="clip" class="h-4 w-4" /> The invoice PDF will be attached automatically.
                             </p>
 
                             <div class="flex gap-2">

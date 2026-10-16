@@ -47,7 +47,7 @@
         <template x-if="clean.length === 15">
             <div class="mt-5 rounded-xl p-4" :class="valid ? 'bg-emerald-50 border border-emerald-200' : 'bg-rose-50 border border-rose-200'">
                 <p class="font-semibold" :class="valid ? 'text-emerald-800' : 'text-rose-800'"
-                   x-text="valid ? '✓ Valid GSTIN' : '✗ Invalid GSTIN'"></p>
+                   x-text="valid ? ' Valid GSTIN' : ' Invalid GSTIN'"></p>
 
                 <dl class="mt-3 space-y-1.5 text-sm">
                     <div class="flex justify-between"><dt class="text-slate-500">Format</dt>

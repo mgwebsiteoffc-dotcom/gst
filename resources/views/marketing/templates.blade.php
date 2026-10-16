@@ -52,7 +52,7 @@
                     'Bank and UPI details', 'Terms and conditions', 'HSN summary table',
                 ] as $f)
                     <p class="flex items-center gap-2 text-sm text-slate-600">
-                        <span class="text-emerald-600">✓</span> {{ $f }}
+                        <span class="text-emerald-600"></span> {{ $f }}
                     </p>
                 @endforeach
             </div>

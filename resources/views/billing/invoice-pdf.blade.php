@@ -61,7 +61,7 @@
             </td>
             <td>
                 <div class="label">Subscription period</div>
-                {{ $payment->period_start?->format('d M Y') }} → {{ $payment->period_end?->format('d M Y') }}<br>
+                {{ $payment->period_start?->format('d M Y') }}  {{ $payment->period_end?->format('d M Y') }}<br>
                 <span class="muted">Interval: {{ ucfirst($payment->interval) }}</span>
                 @if ($payment->gateway_payment_id)
                     <br><span class="muted">Payment ref: {{ $payment->gateway_payment_id }}</span>

@@ -22,7 +22,7 @@
         </dl>
 
         <p class="mt-3 text-xs text-slate-500">
-            {{ __('Period') }}: {{ now()->format('d M Y') }} → {{ now()->addMonths($interval === 'yearly' ? 12 : 1)->format('d M Y') }}
+            {{ __('Period') }}: {{ now()->format('d M Y') }}  {{ now()->addMonths($interval === 'yearly' ? 12 : 1)->format('d M Y') }}
             @if ($gstin) · GSTIN {{ $gstin }}@endif
         </p>
 
@@ -45,7 +45,7 @@
                     </x-btn>
                 </form>
                 <p class="mt-2 text-xs text-amber-700">
-                    {{ __('Online payments are not configured yet. Continue to activate the plan now, or add Razorpay keys in Platform Admin → Businesses → Billing.') }}
+                    {{ __('Online payments are not configured yet. Continue to activate the plan now, or add Razorpay keys in Platform Admin  Businesses  Billing.') }}
                 </p>
             @endif
 
@@ -58,13 +58,13 @@
 
     <x-card :title="__('What happens next')">
         <ul class="space-y-2 text-sm text-slate-600">
-            <li class="flex gap-2"><span class="text-emerald-600">✓</span> {{ __('Billing, reports and e-invoicing unlock immediately.') }}</li>
+            <li class="flex gap-2"><span class="text-emerald-600"></span> {{ __('Billing, reports and e-invoicing unlock immediately.') }}</li>
             @if ($plan->includes('multi_branch'))
-                <li class="flex gap-2"><span class="text-emerald-600">✓</span> {{ __('Create branches / retail stores from Setup → Business & Branches.') }}</li>
+                <li class="flex gap-2"><span class="text-emerald-600"></span> {{ __('Create branches / retail stores from Setup  Business & Branches.') }}</li>
             @else
                 <li class="flex gap-2"><span class="text-slate-300">—</span> {{ __('Multi-branch is not included in this plan.') }}</li>
             @endif
-            <li class="flex gap-2"><span class="text-emerald-600">✓</span> {{ __('You will get a reminder before the period ends — renew with one tap.') }}</li>
+            <li class="flex gap-2"><span class="text-emerald-600"></span> {{ __('You will get a reminder before the period ends — renew with one tap.') }}</li>
         </ul>
     </x-card>
 </div>

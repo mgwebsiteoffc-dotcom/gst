@@ -47,7 +47,7 @@
                         <x-field :label="__('Rating')" name="rating" required>
                             <x-select name="rating">
                                 @foreach ([5, 4, 3, 2, 1] as $r)
-                                    <option value="{{ $r }}" @selected((int) $t->rating === $r)>{{ $r }} ★</option>
+                                    <option value="{{ $r }}" @selected((int) $t->rating === $r)>{{ $r }} </option>
                                 @endforeach
                             </x-select>
                         </x-field>
@@ -110,7 +110,7 @@
             </x-field>
             <x-field :label="__('Rating')" name="rating" required>
                 <x-select name="rating">
-                    @foreach ([5, 4, 3, 2, 1] as $r)<option value="{{ $r }}">{{ $r }} ★</option>@endforeach
+                    @foreach ([5, 4, 3, 2, 1] as $r)<option value="{{ $r }}">{{ $r }} </option>@endforeach
                 </x-select>
             </x-field>
             <x-field :label="__('Photo')" name="photo" hint="{{ __('Optional — a square photo looks best') }}">

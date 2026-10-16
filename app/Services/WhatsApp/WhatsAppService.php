@@ -288,28 +288,30 @@ class WhatsAppService
         $party = $document->party;
         $publicUrl = URL::signedRoute('documents.public', ['document' => $document->id]);
 
+        // Plain text: WhatsApp messages cannot carry icons, so the layout uses
+        // WhatsApp's own *bold* markup and clean labels instead of emojis.
         $lines = [
-            "Namaste " . ($party?->name ?: 'ji') . ", 🙏",
+            "Namaste " . ($party?->name ?: 'ji') . ",",
             "",
-            "Your *{$document->title} {$document->number}* from {$tenant?->name}.",
+            "Your *{$document->title} {$document->number}* from *{$tenant?->name}*.",
             "",
-            "📋 *Amount:* ₹" . number_format((float) $document->grand_total, 2),
-            "📅 *Date:* " . $document->issue_date->format('d M Y'),
+            "*Amount:* ₹" . number_format((float) $document->grand_total, 2),
+            "*Date:* " . $document->issue_date->format('d M Y'),
         ];
 
         if ($document->balance_due > 0 && $document->due_date) {
-            $lines[] = "⏰ *Due by:* " . $document->due_date->format('d M Y');
+            $lines[] = "*Due by:* " . $document->due_date->format('d M Y');
         }
 
         if ($document->balance_due <= 0 && in_array($document->status, ['paid'], true)) {
-            $lines[] = "✅ *Status:* Paid";
+            $lines[] = "*Status:* Paid";
         }
 
         $lines[] = "";
-        $lines[] = "📄 View / Download: {$publicUrl}";
+        $lines[] = "*View or download:*";
+        $lines[] = $publicUrl;
         $lines[] = "";
-        $lines[] = "Thank you for your business!";
-        $lines[] = "— {$tenant?->name}";
+        $lines[] = "Thank you for your business.";
 
         return implode("\n", $lines);
     }
@@ -326,22 +328,24 @@ class WhatsAppService
             "",
             "This is a gentle reminder for your pending *{$document->title} {$document->number}*.",
             "",
-            "💰 *Balance Due:* ₹" . number_format((float) $document->balance_due, 2),
+            "*Balance due:* ₹" . number_format((float) $document->balance_due, 2),
         ];
 
         if ($daysOverdue > 0) {
-            $lines[] = "⚠️ *Overdue by* {$daysOverdue} day(s)";
+            $lines[] = "*Overdue by:* {$daysOverdue} day(s)";
         }
 
         if ($document->due_date) {
-            $lines[] = "📅 *Due Date:* " . $document->due_date->format('d M Y');
+            $lines[] = "*Due date:* " . $document->due_date->format('d M Y');
         }
 
         $lines[] = "";
-        $lines[] = "📄 View invoice: {$publicUrl}";
+        $lines[] = "*View the invoice:*";
+        $lines[] = $publicUrl;
         $lines[] = "";
         $lines[] = "Please make the payment at your earliest convenience.";
-        $lines[] = "Thank you, {$tenant?->name}";
+        $lines[] = "Thank you,";
+        $lines[] = "{$tenant?->name}";
 
         return implode("\n", $lines);
     }

@@ -17,7 +17,7 @@
                 </label>
 
                 <x-field label="Phone Number ID" name="whatsapp_phone_number_id" required
-                         hint="From Meta Business Manager → WhatsApp → API Setup.">
+                         hint="From Meta Business Manager  WhatsApp  API Setup.">
                     <x-input name="whatsapp_phone_number_id"
                              value="{{ old('whatsapp_phone_number_id', $tenant->setting('whatsapp.phone_number_id')) }}"
                              placeholder="e.g. 123456789012345" />
@@ -67,10 +67,10 @@
                 @foreach ([
                     'Go to <a href="https://business.facebook.com" target="_blank" class="text-indigo-600 underline">Meta Business Manager</a> and create a WhatsApp Business Account.',
                     'Add a phone number and complete the verification process.',
-                    'Create a <strong>System User</strong> under Business Settings → Users → System Users.',
+                    'Create a <strong>System User</strong> under Business Settings  Users  System Users.',
                     'Assign the <code class="rounded bg-slate-100 px-1">whatsapp_business_messaging</code> permission.',
                     'Generate a permanent access token for the system user.',
-                    'Copy the <strong>Phone Number ID</strong> from WhatsApp → API Setup.',
+                    'Copy the <strong>Phone Number ID</strong> from WhatsApp  API Setup.',
                     'Paste both values above and click "Test Connection".',
                 ] as $i => $step)
                     <li class="flex gap-2.5">
@@ -84,13 +84,13 @@
         <x-card title="What you can send">
             <div class="space-y-3 text-sm text-slate-600">
                 @foreach ([
-                    ['📄', 'Invoices', 'PDF attached with amount, due date, and payment link'],
-                    ['📋', 'Quotations', 'Share quotes instantly with a view link'],
-                    ['⏰', 'Payment Reminders', 'Automatic overdue reminders with balance due'],
-                    ['💬', 'Custom Messages', 'Any text message to your contacts'],
+                    ['file', 'Invoices', 'PDF attached with amount, due date, and payment link'],
+                    ['layers', 'Quotations', 'Share quotes instantly with a view link'],
+                    ['clock', 'Payment Reminders', 'Automatic overdue reminders with balance due'],
+                    ['message', 'Custom Messages', 'Any text message to your contacts'],
                 ] as [$icon, $title, $desc])
                     <div class="flex items-start gap-3">
-                        <span class="text-lg">{{ $icon }}</span>
+                        <x-icon :name="$icon" class="mt-0.5 h-5 w-5 shrink-0 text-brand-600" />
                         <div>
                             <p class="font-medium text-slate-800">{{ $title }}</p>
                             <p class="text-xs text-slate-500">{{ $desc }}</p>

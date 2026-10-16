@@ -22,7 +22,7 @@
                         'Priority support and training',
                     ] as $point)
                         <p class="flex items-start gap-2 text-sm text-slate-700">
-                            <span class="text-emerald-600">✓</span> {{ $point }}
+                            <span class="text-emerald-600"></span> {{ $point }}
                         </p>
                     @endforeach
                 </div>
@@ -79,7 +79,7 @@
         </div>
         <p class="mt-6 text-center text-sm text-slate-500">
             Looking for a one-off referral instead?
-            <a href="{{ route('partners.affiliate') }}" class="font-medium text-indigo-600 hover:underline">Join the affiliate program →</a>
+            <a href="{{ route('partners.affiliate') }}" class="font-medium text-indigo-600 hover:underline">Join the affiliate program </a>
         </p>
     </div>
 </section>

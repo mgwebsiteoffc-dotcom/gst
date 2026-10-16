@@ -171,7 +171,7 @@
                     @include('partials.push-bell')
                     <a href="{{ route('offline.create') }}" data-offline-wrap title="{{ __('bills waiting to sync') }}"
                        class="hidden items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-700">
-                        ⏳ <span data-offline-count>0</span>
+                        <x-icon name="clock" class="h-3.5 w-3.5" /> <span data-offline-count>0</span>
                     </a>
                 @endif
                 @if (! $partnerProfile && ! $isPlatform && $tenant)

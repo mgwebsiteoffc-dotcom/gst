@@ -56,7 +56,7 @@
                                 @if ($option->gstin) · <span class="font-mono">{{ $option->gstin }}</span>@endif
                             </span>
                         </span>
-                        @if ($isCurrent)<span class="text-indigo-600">✓</span>@endif
+                        @if ($isCurrent)<span class="text-indigo-600"></span>@endif
                     </button>
                 </form>
             @endforeach

@@ -83,7 +83,7 @@
                 @if ($document->balance_due > 0)
                     <div class="flex justify-between text-rose-600"><dt>Balance due</dt><dd>₹{{ number_format($document->balance_due, 2) }}</dd></div>
                 @else
-                    <div class="flex justify-between text-emerald-600"><dt>Paid in full</dt><dd>✓</dd></div>
+                    <div class="flex justify-between text-emerald-600"><dt>Paid in full</dt><dd></dd></div>
                 @endif
             </dl>
         </div>

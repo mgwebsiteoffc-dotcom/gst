@@ -33,7 +33,7 @@
                     </div>
                     <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ $desc }}</p>
                     @if ($route)
-                        <a href="{{ route($route, $param) }}" class="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline">Learn more →</a>
+                        <a href="{{ route($route, $param) }}" class="mt-3 inline-block text-sm font-medium text-indigo-600 hover:underline">Learn more </a>
                     @endif
                 </article>
             @endforeach

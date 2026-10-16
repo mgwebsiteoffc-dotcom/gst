@@ -66,7 +66,7 @@
                 <ul class="mt-5 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
                     @foreach (['Nine document types', 'WhatsApp & UPI sharing', 'Profit & loss reports',
                                'Party ledgers', 'CSV export', 'Custom branding'] as $inc)
-                        <li class="flex items-start gap-2"><span class="text-emerald-600">✓</span> {{ $inc }}</li>
+                        <li class="flex items-start gap-2"><span class="text-emerald-600"></span> {{ $inc }}</li>
                     @endforeach
                 </ul>
             </div>

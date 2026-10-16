@@ -109,7 +109,7 @@
                         <div class="flex items-end">
                             <div class="rounded-lg border px-3 py-2 text-sm"
                                  :class="isInterstate ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-slate-200 bg-slate-50 text-slate-600'">
-                                <span x-text="isInterstate ? 'Inter-state → IGST' : 'Intra-state → CGST + SGST'"></span>
+                                <span x-text="isInterstate ? 'Inter-state  IGST' : 'Intra-state  CGST + SGST'"></span>
                             </div>
                         </div>
                     </div>

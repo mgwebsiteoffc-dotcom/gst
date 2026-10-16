@@ -22,7 +22,7 @@
                         'Monthly payouts by UPI',
                     ] as $point)
                         <p class="flex items-start gap-2 text-sm text-slate-700">
-                            <span class="text-emerald-600">✓</span> {{ $point }}
+                            <span class="text-emerald-600"></span> {{ $point }}
                         </p>
                     @endforeach
                 </div>
@@ -90,7 +90,7 @@
         </dl>
         <p class="mt-6 text-sm text-slate-500">
             Run an agency or CA practice instead?
-            <a href="{{ route('partners.channel') }}" class="font-medium text-indigo-600 hover:underline">See the channel partner program →</a>
+            <a href="{{ route('partners.channel') }}" class="font-medium text-indigo-600 hover:underline">See the channel partner program </a>
         </p>
     </div>
 </section>

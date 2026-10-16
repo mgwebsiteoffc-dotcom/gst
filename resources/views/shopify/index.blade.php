@@ -40,7 +40,7 @@
             <ul class="space-y-3 text-sm text-slate-600">
                 @foreach ([
                     'A Shopify store you own or staff-access',
-                    'Your GSTIN saved under Settings → Business details',
+                    'Your GSTIN saved under Settings  Business details',
                     'A default HSN code and GST rate for products missing one',
                 ] as $req)
                     <li class="flex items-start gap-2">
@@ -101,7 +101,7 @@
                         <x-btn type="submit" form="sync-{{ $store->id }}">Sync products now</x-btn>
                         <x-btn variant="success" type="submit" form="sync-orders-{{ $store->id }}">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z"/></svg>
-                            Sync Orders → Invoices
+                            Sync Orders  Invoices
                         </x-btn>
                     </div>
                 </form>
@@ -173,11 +173,11 @@
                             <div>
                                 <div class="font-medium text-slate-700">
                                     @if ($log->topic === 'orders-sync')
-                                        <span class="text-indigo-600">🛒</span>
+                                        <span class="text-indigo-600"><x-icon name="cart" class="h-6 w-6 text-brand-600" /></span>
                                     @elseif ($log->topic === 'orders-create' || $log->topic === 'orders-updated')
-                                        <span class="text-emerald-600">📦</span>
+                                        <span class="text-emerald-600"><x-icon name="inventory" class="h-6 w-6 text-brand-600" /></span>
                                     @elseif (str_contains($log->topic, 'refund') || str_contains($log->topic, 'cancel'))
-                                        <span class="text-rose-600">↩️</span>
+                                        <span class="text-rose-600"></span>
                                     @endif
                                     {{ $log->topic }}
                                 </div>
