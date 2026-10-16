@@ -8,6 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('partials.gtm-head')
     @include('partials.pwa-head')
+    @stack('head')
 </head>
 <body class="h-full text-slate-800 antialiased">
     @include('partials.gtm-body')
@@ -269,6 +270,7 @@
 </div>
 
 @include('partials.pwa-install')
+@stack('scripts')
 <script>
 window.BB_I18N = @json($bbI18n);
 </script>

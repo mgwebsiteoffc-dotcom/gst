@@ -52,35 +52,12 @@
 
                     <x-field label="Body" name="body" hint="Use H2 headings — they build the table of contents automatically.">
                         {{-- Rich text editor; the textarea is the real form field --}}
-                        <div wire:ignore>
-                            <div id="editor-toolbar" class="flex flex-wrap gap-1 rounded-t-lg border border-b-0 border-slate-300 bg-slate-50 p-1.5">
-                                @foreach ([
-                                    ['bold','B','font-bold'], ['italic','I','italic'], ['underline','U','underline'],
-                                ] as [$cmd,$label,$cls])
-                                    <button type="button" @click="exec('{{ $cmd }}')" class="h-8 w-8 rounded text-sm hover:bg-slate-200 {{ $cls }}">{{ $label }}</button>
-                                @endforeach
-                                <span class="mx-1 w-px bg-slate-300"></span>
-                                @foreach ([['h2','H2'],['h3','H3'],['p','P']] as [$tag,$label])
-                                    <button type="button" @click="format('{{ $tag }}')" class="h-8 rounded px-2 text-xs font-medium hover:bg-slate-200">{{ $label }}</button>
-                                @endforeach
-                                <span class="mx-1 w-px bg-slate-300"></span>
-                                <button type="button" @click="exec('insertUnorderedList')" class="h-8 rounded px-2 text-xs hover:bg-slate-200">• List</button>
-                                <button type="button" @click="exec('insertOrderedList')" class="h-8 rounded px-2 text-xs hover:bg-slate-200">1. List</button>
-                                <button type="button" @click="addLink()" class="h-8 rounded px-2 text-xs hover:bg-slate-200">Link</button>
-                                <button type="button" @click="$refs.img.click()" class="h-8 rounded px-2 text-xs hover:bg-slate-200">Image</button>
-                                <button type="button" @click="exec('formatBlock','blockquote')" class="h-8 rounded px-2 text-xs hover:bg-slate-200">Quote</button>
-                                <button type="button" @click="exec('removeFormat')" class="h-8 rounded px-2 text-xs hover:bg-slate-200">Clear</button>
-                            </div>
-
-                            <div x-ref="editor" contenteditable="true" @input="syncBody()" @blur="syncBody()"
-                                 class="prose prose-sm min-h-[420px] max-w-none rounded-b-lg border border-slate-300 bg-white p-4 focus:outline-none focus:ring-1 focus:ring-indigo-500">{!! old('body', $post->body) !!}</div>
-
-                            <input type="file" x-ref="img" accept="image/*" class="hidden" @change="uploadImage($event)">
-                        </div>
-
-                        <textarea name="body" x-ref="bodyField" class="hidden">{{ old('body', $post->body) }}</textarea>
-                        <p class="mt-1 text-xs text-slate-500">
-                            <span x-text="wordCount"></span> words · about <span x-text="readingTime"></span> min read
+                        {{-- TinyMCE: real rich-text editing (tables, images,
+                             links, code view) instead of the old contenteditable. --}}
+                        <textarea id="post-body" name="body" class="hidden">{{ old('body', $post->body) }}</textarea>
+                        <p class="mt-2 text-xs text-slate-500">
+                            <span id="body-words">0</span> {{ __('words') }} · {{ __('about') }}
+                            <span id="body-minutes">1</span> {{ __('min read') }}
                         </p>
                     </x-field>
                 </div>
@@ -196,4 +173,60 @@
         @csrf @method('DELETE')
     </form>
 @endif
+
+@push('head')
+    <script src="{{ asset('vendor/tinymce/tinymce.min.js') }}"></script>
+@endpush
+
+@push('scripts')
+<script>
+(function () {
+    var uploadUrl = @js(route('admin.posts.upload'));
+    var token = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+    function refreshStats(editor) {
+        var text = (editor.getContent({ format: 'text' }) || '').trim();
+        var words = text ? text.split(/\s+/).length : 0;
+        document.getElementById('body-words').textContent = words;
+        document.getElementById('body-minutes').textContent = Math.max(1, Math.round(words / 200));
+    }
+
+    tinymce.init({
+        selector: '#post-body',
+        license_key: 'gpl',
+        height: 620,
+        menubar: 'file edit view insert format table tools',
+        branding: false,
+        promotion: false,
+        plugins: 'lists link image table code media fullscreen wordcount quickbars autolink searchreplace visualblocks preview anchor charmap insertdatetime hr pagebreak nonbreaking directionality emoticons accordion',
+        toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent | link image table media | blockquote hr charmap emoticons | removeformat code fullscreen preview',
+        toolbar_mode: 'sliding',
+        /* Brand the editor content to match the published blog. */
+        content_style: 'body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;font-size:16px;line-height:1.7;color:#1e293b;max-width:46rem;margin:16px auto;padding:0 16px} h2{font-size:1.5rem;font-weight:650;margin:2rem 0 .75rem} h3{font-size:1.2rem;font-weight:600;margin:1.5rem 0 .5rem} blockquote{border-left:3px solid #4f46e5;margin:1.25rem 0;padding:.25rem 0 .25rem 1rem;color:#475569} img{max-width:100%;height:auto;border-radius:.75rem} table{border-collapse:collapse;width:100%} td,th{border:1px solid #cbd5e1;padding:.5rem .75rem} a{color:#4f46e5}',
+        /* Uploads go to the existing blog media endpoint. */
+        images_upload_handler: function (blobInfo) {
+            return new Promise(function (resolve, reject) {
+                var form = new FormData();
+                form.append('file', blobInfo.blob(), blobInfo.filename());
+                form.append('_token', token);
+                fetch(uploadUrl, { method: 'POST', body: form, headers: { 'X-CSRF-TOKEN': token, Accept: 'application/json' } })
+                    .then(function (r) { return r.json(); })
+                    .then(function (json) { json && json.location ? resolve(json.location) : reject('Upload failed'); })
+                    .catch(function () { reject('Upload failed'); });
+            });
+        },
+        setup: function (editor) {
+            editor.on('init change keyup undo redo', function () { refreshStats(editor); });
+            editor.on('init', function () {
+                var ta = document.getElementById('post-body');
+                var form = ta.closest('form');
+                /* Keep the hidden textarea in sync before submit. */
+                form.addEventListener('submit', function () { editor.save(); });
+            });
+        },
+    });
+})();
+</script>
+@endpush
+
 @endsection

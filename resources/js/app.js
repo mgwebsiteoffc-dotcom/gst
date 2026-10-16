@@ -158,12 +158,9 @@ Alpine.data('postEditor', (config = {}) => ({
     metaDescription: config.metaDescription ?? '',
     faqs: config.faqs?.length ? config.faqs : [{ question: '', answer: '' }],
     isEdit: config.isEdit ?? false,
-    wordCount: 0,
 
-    init() {
-        this.syncBody();
-    },
-
+    /* The body editor is TinyMCE now (see admin/posts/form.blade.php), so this
+       component only handles slug, SEO counters and the FAQ repeater. */
     slugify(text) {
         return (text || '')
             .toLowerCase().trim()
@@ -180,47 +177,6 @@ Alpine.data('postEditor', (config = {}) => ({
 
     get titleLen() { return (this.metaTitle || this.title || '').length; },
     get descLen() { return (this.metaDescription || '').length; },
-    get readingTime() { return Math.max(1, Math.ceil(this.wordCount / 200)); },
-
-    exec(cmd, value = null) {
-        this.$refs.editor.focus();
-        document.execCommand(cmd, false, value);
-        this.syncBody();
-    },
-
-    format(tag) { this.exec('formatBlock', tag.toUpperCase()); },
-
-    addLink() {
-        const url = prompt('Link URL (include https://)');
-        if (url) this.exec('createLink', url);
-    },
-
-    syncBody() {
-        const html = this.$refs.editor.innerHTML;
-        this.$refs.bodyField.value = html;
-        this.wordCount = (this.$refs.editor.innerText.trim().match(/\S+/g) || []).length;
-    },
-
-    async uploadImage(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const data = new FormData();
-        data.append('file', file);
-        data.append('_token', document.querySelector('meta[name=csrf-token]').content);
-
-        try {
-            const res = await fetch('/admin/posts/upload', { method: 'POST', body: data });
-            const json = await res.json();
-            if (json.url) {
-                this.exec('insertHTML',
-                    `<img src="${json.url}" alt="" loading="lazy" class="rounded-lg">`);
-            }
-        } catch (e) {
-            alert('Image upload failed.');
-        }
-        event.target.value = '';
-    },
 
     addFaq() { this.faqs.push({ question: '', answer: '' }); },
     removeFaq(i) {
@@ -229,5 +185,3 @@ Alpine.data('postEditor', (config = {}) => ({
     },
 }));
 
-window.Alpine = Alpine;
-Alpine.start();

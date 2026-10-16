@@ -54,7 +54,10 @@ class PartnerController extends Controller
             'commission_plan_id' => ['nullable', 'exists:commission_plans,id'],
             'tier' => ['required', Rule::in(array_keys(Partner::TIERS))],
             'admin_note' => ['nullable', 'string', 'max:1000'],
-        ]);
+                    'current_business' => ['nullable', 'string', 'max:150'],
+            'territory' => ['nullable', 'string', 'max:150'],
+            'years_experience' => ['nullable', 'integer', 'min:0', 'max:60'],
+]);
 
         // Stamp the approval the first time it happens.
         if ($data['status'] === 'approved' && $partner->status !== 'approved') {

@@ -46,72 +46,135 @@
 <body class="flex min-h-full flex-col text-slate-800 antialiased">
     @include('partials.gtm-body')
 
-<header x-data="{ open: false }" class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
-    <nav class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-6" aria-label="Main">
-        <a href="{{ route('home') }}" class="flex items-center gap-2" aria-label="{{ config('app.name') }} home">
+<header x-data="{ open: false }" class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+    {{-- Thin announcement strip (Vyapar-style promo bar). --}}
+    <div class="bg-slate-900 px-4 py-1.5 text-center text-xs text-slate-200">
+        <span class="font-medium text-white">{{ __('Limited launch offer:') }}</span>
+        {{ __('flat 50% off on yearly plans —') }}
+        <a href="{{ route('pricing') }}" class="font-semibold text-indigo-300 underline hover:text-indigo-200">{{ __('see pricing') }}</a>
+    </div>
+
+    <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6" aria-label="Main">
+        <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2" aria-label="{{ config('app.name') }} home">
             <span class="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">B</span>
             <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
         </a>
 
-        <div class="hidden items-center gap-7 md:flex">
+        {{-- Desktop navigation --}}
+        <div class="hidden items-center gap-1 lg:flex">
             <div x-data="{ p: false }" class="relative" @mouseleave="p = false">
                 <button @mouseenter="p = true" @click="p = !p"
-                        class="flex items-center gap-1 text-sm text-slate-600 hover:text-slate-900">
-                    Product
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                         stroke-linecap="round" style="width:14px;height:14px"><path d="m19 9-7 7-7-7"/></svg>
+                        class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    {{ __('Product') }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
                 </button>
-
-                <div x-show="p" x-cloak x-transition
-                     class="absolute left-0 z-40 mt-1 w-72 rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
+                <div x-show="p" x-cloak x-transition.origin.top
+                     class="absolute left-0 z-40 mt-1 w-[26rem] rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
                     @foreach ([
-                        ['gst-billing', 'GST Billing', 'Invoices that follow the rules'],
-                        ['e-invoicing', 'e-Invoicing (IRN)', 'Report to NIC in one click'],
+                        ['gst-billing', 'GST Billing & Invoicing', 'Invoices that follow every rule'],
+                        ['e-invoicing', 'e-Invoice (IRN)', 'Report to NIC in one click'],
                         ['e-way-bill', 'e-Way Bills', 'Generated from the IRN'],
-                        ['inventory', 'Inventory', 'Stock that counts itself'],
-                        ['shopify', 'Shopify', 'Orders billed automatically'],
+                        ['inventory', 'Inventory & Stock', 'Know what is on the shelf'],
+                        ['shopify', 'Shopify Sync', 'Orders billed automatically'],
                     ] as [$slug, $label, $desc])
                         <a href="{{ route('solution', $slug) }}" class="block rounded-lg px-3 py-2 hover:bg-slate-50">
                             <span class="block text-sm font-medium text-slate-900">{{ $label }}</span>
                             <span class="block text-xs text-slate-500">{{ $desc }}</span>
                         </a>
                     @endforeach
+                    <a href="{{ route('features') }}" class="mt-1 block rounded-lg bg-slate-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-50">
+                        {{ __('See all features') }} →
+                    </a>
                 </div>
             </div>
 
-            @foreach (['features' => 'Features', 'pricing' => 'Pricing', 'blog.index' => 'Blog', 'contact' => 'Contact'] as $r => $label)
-                <a href="{{ route($r) }}" class="text-sm {{ request()->routeIs($r) ? 'font-medium text-indigo-700' : 'text-slate-600 hover:text-slate-900' }}">{{ $label }}</a>
-            @endforeach
+            <a href="{{ route('pricing') }}" class="rounded-lg px-3 py-2 text-sm {{ request()->routeIs('pricing') ? 'font-medium text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">{{ __('Pricing') }}</a>
+
+            <div x-data="{ p: false }" class="relative" @mouseleave="p = false">
+                <button @mouseenter="p = true" @click="p = !p"
+                        class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    {{ __('Partners') }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div x-show="p" x-cloak x-transition.origin.top
+                     class="absolute left-0 z-40 mt-1 w-72 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                    @foreach ([
+                        ['partners.distributor', 'Become a Distributor', 'Sell BikriBook in your city'],
+                        ['partners.channel', 'Channel Partner', 'Resell to your client base'],
+                        ['partners.affiliate', 'Influencer / Affiliate', 'Earn from your audience'],
+                    ] as [$route, $label, $desc])
+                        <a href="{{ route($route) }}" class="block rounded-lg px-3 py-2 hover:bg-slate-50">
+                            <span class="block text-sm font-medium text-slate-900">{{ __($label) }}</span>
+                            <span class="block text-xs text-slate-500">{{ __($desc) }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <div x-data="{ p: false }" class="relative" @mouseleave="p = false">
+                <button @mouseenter="p = true" @click="p = !p"
+                        class="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900">
+                    {{ __('Resources') }}
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div x-show="p" x-cloak x-transition.origin.top
+                     class="absolute left-0 z-40 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl">
+                    @foreach ([
+                        ['blog.index', 'Blog', 'GST guides in plain English'],
+                        ['tools', 'Free Tools', 'Calculators and HSN finder'],
+                        ['templates', 'Invoice Formats', 'Downloadable templates'],
+                        ['integrations', 'Integrations', 'Shopify, WhatsApp and more'],
+                        ['about', 'About us', 'Who builds BikriBook'],
+                    ] as [$route, $label, $desc])
+                        <a href="{{ route($route) }}" class="block rounded-lg px-3 py-2 hover:bg-slate-50">
+                            <span class="block text-sm font-medium text-slate-900">{{ __($label) }}</span>
+                            <span class="block text-xs text-slate-500">{{ __($desc) }}</span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+
+            <a href="{{ route('contact') }}" class="rounded-lg px-3 py-2 text-sm {{ request()->routeIs('contact') ? 'font-medium text-indigo-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' }}">{{ __('Contact') }}</a>
         </div>
 
         <div class="flex items-center gap-2">
             @auth
-                {{-- Already signed in: send them straight back to the app. --}}
                 <a href="{{ auth()->user()->is_super_admin ? route('admin.dashboard') : route('dashboard') }}"
                    class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">{{ __('Dashboard') }}</a>
             @else
-                <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">{{ __('Sign in') }}</a>
-                <a href="{{ route('register') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">Start free</a>
+                <a href="{{ route('login') }}" class="rounded-lg px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100">{{ __('Login') }}</a>
+                <a href="{{ route('register') }}" class="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700">
+                    {{ __('Start free trial') }}
+                </a>
             @endauth
-            <button @click="open = !open" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 md:hidden" aria-label="Menu">
+
+            <button @click="open = !open" class="rounded-lg p-2 text-slate-500 hover:bg-slate-100 lg:hidden" aria-label="Menu">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
         </div>
     </nav>
 
-    <div x-show="open" x-cloak class="border-t border-slate-200 bg-white md:hidden">
-        @foreach (['features' => 'Features', 'pricing' => 'Pricing', 'tools' => 'Free Tools', 'blog.index' => 'Blog', 'about' => 'About', 'contact' => 'Contact'] as $r => $label)
-            <a href="{{ route($r) }}" class="block border-b border-slate-100 px-5 py-3 text-sm text-slate-700">{{ $label }}</a>
-        @endforeach
+    {{-- Mobile menu --}}
+    <div x-show="open" x-cloak class="border-t border-slate-200 bg-white lg:hidden">
+        <div class="max-h-[70vh] overflow-y-auto px-2 py-2">
+            @foreach ([
+                ['Product', [['features', 'All features'], ['solution:gst-billing', 'GST Billing'], ['solution:e-invoicing', 'e-Invoice (IRN)'], ['solution:e-way-bill', 'e-Way Bill'], ['solution:inventory', 'Inventory'], ['solution:shopify', 'Shopify Sync']]],
+                ['Partners', [['partners.distributor', 'Become a Distributor'], ['partners.channel', 'Channel Partner'], ['partners.affiliate', 'Influencer / Affiliate']]],
+                ['Resources', [['blog.index', 'Blog'], ['tools', 'Free Tools'], ['templates', 'Invoice Formats'], ['integrations', 'Integrations'], ['about', 'About us']]],
+            ] as [$group, $links])
+                <p class="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ __($group) }}</p>
+                @foreach ($links as [$target, $label])
+                    @php $href = str_starts_with($target, 'solution:') ? route('solution', substr($target, 9)) : route($target); @endphp
+                    <a href="{{ $href }}" class="block rounded-lg px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">{{ __($label) }}</a>
+                @endforeach
+            @endforeach
 
-        {{-- Auth links: phones previously had no way to reach the login page. --}}
-        @auth
-            <a href="{{ auth()->user()->is_super_admin ? route('admin.dashboard') : route('dashboard') }}"
-               class="block border-b border-slate-100 px-5 py-3 text-sm font-semibold text-indigo-700">{{ __('Dashboard') }}</a>
-        @else
-            <a href="{{ route('login') }}" class="block border-b border-slate-100 px-5 py-3 text-sm font-medium text-indigo-700">{{ __('Sign in') }}</a>
-            <a href="{{ route('register') }}" class="block border-b border-slate-100 px-5 py-3 text-sm font-semibold text-indigo-700">{{ __('Create an account') }}</a>
-        @endauth
+            <div class="mt-2 border-t border-slate-100 pt-2">
+                <a href="{{ route('pricing') }}" class="block rounded-lg px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">{{ __('Pricing') }}</a>
+                <a href="{{ route('contact') }}" class="block rounded-lg px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">{{ __('Contact') }}</a>
+                <a href="{{ route('download') }}" class="block rounded-lg px-3 py-2.5 text-sm text-slate-700 hover:bg-slate-50">{{ __('Install the app') }}</a>
+            </div>
+        </div>
     </div>
 </header>
 
@@ -123,6 +186,40 @@
     @endif
     @yield('content')
 </main>
+
+{{-- App download + newsletter band --}}
+<section class="bg-slate-900">
+    <div class="mx-auto grid max-w-7xl gap-8 px-4 py-12 lg:grid-cols-2 lg:items-center lg:px-6">
+        <div>
+            <h2 class="text-2xl font-bold tracking-tight text-white sm:text-3xl">{{ __('Run your business from your phone') }}</h2>
+            <p class="mt-3 max-w-lg text-sm leading-relaxed text-slate-300">
+                {{ __('Install the BikriBook app on your phone — bill even without internet, send invoices on WhatsApp and get payment reminders. No app store needed.') }}
+            </p>
+            <div class="mt-5 flex flex-wrap gap-3">
+                <a href="{{ route('download') }}" class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100">
+                    {{ __('Install the app') }}
+                </a>
+                <a href="{{ route('register') }}" class="rounded-xl border border-slate-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800">
+                    {{ __('Start 14-day free trial') }}
+                </a>
+            </div>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-3">
+            @foreach ([
+                ['⚡', __('30-second billing'), __('Save a GST bill before the customer leaves the counter.')],
+                ['📶', __('Works offline'), __('No signal? Bills queue on the phone and sync later.')],
+                ['🔔', __('Payment reminders'), __('Get notified about overdue bills and send a WhatsApp nudge.')],
+            ] as [$icon, $title, $desc])
+                <div class="rounded-2xl border border-slate-700 bg-slate-800/60 p-4">
+                    <div class="text-xl">{{ $icon }}</div>
+                    <h3 class="mt-2 text-sm font-semibold text-white">{{ $title }}</h3>
+                    <p class="mt-1 text-xs leading-relaxed text-slate-400">{{ $desc }}</p>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</section>
 
 <footer class="border-t border-slate-200 bg-slate-50">
     <div class="mx-auto max-w-7xl px-4 py-14 lg:px-8">
@@ -185,6 +282,7 @@
                         ['solution', ['accountants'], 'For Accountants'],
                         ['solution', ['startups'], 'For Startups'],
                         ['solution', ['api'], 'Developers'],
+                        ['partners.distributor', [], 'Become a Distributor'],
                         ['partners.channel', [], 'Channel Partners'],
                         ['partners.affiliate', [], 'Affiliate Program'],
                         ['simple', ['product-updates'], 'Product Updates'],

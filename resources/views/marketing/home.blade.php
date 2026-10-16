@@ -163,6 +163,23 @@
 </section>
 @endforeach
 
+{{-- Social proof / stat bar --}}
+<section class="border-y border-slate-200 bg-slate-50">
+    <div class="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-4 py-8 lg:grid-cols-4 lg:px-6">
+        @foreach ([
+            ['10,000+', 'Bills raised every week'],
+            ['30 sec', 'Average time per GST invoice'],
+            ['4.8/5', 'Rated by shop owners'],
+            ['₹0', 'Setup fee. Ever.'],
+        ] as [$big, $label])
+            <div class="text-center">
+                <div class="text-2xl font-bold text-slate-900 sm:text-3xl">{{ $big }}</div>
+                <div class="mt-1 text-xs text-slate-500 sm:text-sm">{{ $label }}</div>
+            </div>
+        @endforeach
+    </div>
+</section>
+
 {{-- Feature grid --}}
 <section class="border-t border-slate-200 py-20">
     <div class="mx-auto max-w-6xl px-4 lg:px-6">
@@ -188,6 +205,65 @@
                     <p class="mt-1.5 text-sm leading-relaxed text-slate-600">{{ $desc }}</p>
                 </article>
             @endforeach
+        </div>
+    </div>
+</section>
+
+{{-- How it works --}}
+<section class="py-20">
+    <div class="mx-auto max-w-6xl px-4 lg:px-6">
+        <div class="mx-auto max-w-2xl text-center">
+            <h2 class="text-3xl font-bold tracking-tight text-slate-900">From counter to WhatsApp in three steps</h2>
+            <p class="mt-3 text-slate-600">No training needed. If you can use WhatsApp, you can use BikriBook.</p>
+        </div>
+
+        <ol class="mt-12 grid gap-6 md:grid-cols-3">
+            @foreach ([
+                ['Add your items once', 'Type a product name and price, set the GST rate, or paste your existing list. HSN codes are searchable.', 'add items'],
+                ['Make the bill', 'Pick the customer, tap items, hit save. Tax is calculated, the PDF is numbered and the stock is updated.', 'save invoice'],
+                ['Send on WhatsApp', 'Share the invoice link, collect by UPI QR, and track who has paid and who is overdue.', 'share'],
+            ] as $i => [$title, $desc, $tag])
+                <li class="relative rounded-2xl border border-slate-200 bg-white p-6">
+                    <span class="grid h-9 w-9 place-items-center rounded-full bg-indigo-600 text-sm font-bold text-white">{{ $i + 1 }}</span>
+                    <h3 class="mt-4 font-semibold text-slate-900">{{ $title }}</h3>
+                    <p class="mt-2 text-sm leading-relaxed text-slate-600">{{ $desc }}</p>
+                </li>
+            @endforeach
+        </ol>
+    </div>
+</section>
+
+{{-- Why switch: comparison --}}
+<section class="border-y border-slate-200 bg-slate-50 py-20">
+    <div class="mx-auto max-w-4xl px-4 lg:px-6">
+        <h2 class="text-center text-3xl font-bold tracking-tight text-slate-900">Why businesses move from registers and spreadsheets</h2>
+
+        <div class="mt-10 overflow-x-auto rounded-2xl border border-slate-200 bg-white">
+            <table class="w-full min-w-[560px] text-sm">
+                <thead class="border-b border-slate-200 bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                    <tr>
+                        <th class="px-5 py-3 font-medium">What you need</th>
+                        <th class="px-3 py-3 font-medium">Register / Excel</th>
+                        <th class="px-5 py-3 font-medium text-indigo-700">With BikriBook</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    @foreach ([
+                        ['GST-compliant invoice with HSN', 'Made by hand, easy to get wrong', 'Auto-calculated, always correct'],
+                        ['Monthly GSTR-1 data', 'Hours of retyping', 'Export in seconds'],
+                        ['Stock that matches reality', 'Counted at month end', 'Updates with every bill'],
+                        ['Sending the bill to the customer', 'Photo of a paper bill', 'WhatsApp link with UPI QR'],
+                        ['Knowing who owes you money', 'Memory and follow-ups', 'Overdue list with reminders'],
+                        ['Working from home or the shop', 'Only where the book is', 'Phone, laptop, any device'],
+                    ] as [$need, $old, $new])
+                        <tr>
+                            <td class="px-5 py-3 font-medium text-slate-900">{{ $need }}</td>
+                            <td class="px-3 py-3 text-slate-500">{{ $old }}</td>
+                            <td class="px-5 py-3 font-medium text-emerald-700">✓ {{ $new }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
         </div>
     </div>
 </section>
@@ -222,6 +298,45 @@
 @endif
 
 @include('marketing._faq')
+
+{{-- Partner programme CTA --}}
+<section class="border-t border-slate-200 py-16">
+    <div class="mx-auto max-w-6xl px-4 lg:px-6">
+        <div class="grid gap-6 overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-600 to-indigo-800 p-8 lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)] lg:items-center lg:p-10">
+            <div>
+                <span class="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white">Partner programme</span>
+                <h2 class="mt-4 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+                    Sell BikriBook in your city and earn on every sale
+                </h2>
+                <p class="mt-3 max-w-xl text-sm leading-relaxed text-indigo-100">
+                    Become a distributor, channel partner or affiliate. Up to 35% margin, 20% recurring commission on renewals,
+                    marketing material and training included — with monthly payouts.
+                </p>
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <a href="{{ route('partners.distributor') }}" class="rounded-xl bg-white px-5 py-3 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
+                        Become a distributor
+                    </a>
+                    <a href="{{ route('partners.affiliate') }}" class="rounded-xl border border-white/40 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10">
+                        Affiliate / influencer
+                    </a>
+                </div>
+            </div>
+
+            <div class="grid gap-3">
+                @foreach ([
+                    ['Up to 35%', 'margin per sale'],
+                    ['20%', 'recurring on renewals'],
+                    ['Monthly', 'payouts to your bank'],
+                ] as [$big, $label])
+                    <div class="rounded-2xl bg-white/10 px-5 py-4 backdrop-blur">
+                        <div class="text-xl font-bold text-white">{{ $big }}</div>
+                        <div class="text-xs text-indigo-100">{{ $label }}</div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
 
 {{-- CTA --}}
 <section class="bg-slate-900 py-20">

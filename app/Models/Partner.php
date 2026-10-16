@@ -10,7 +10,11 @@ class Partner extends Model
 {
     use SoftDeletes;
 
-    public const TYPES = ['channel' => 'Channel Partner', 'affiliate' => 'Influencer / Affiliate'];
+    public const TYPES = [
+        'distributor' => 'Distributor',
+        'channel' => 'Channel Partner',
+        'affiliate' => 'Influencer / Affiliate',
+    ];
     public const TIERS = ['bronze' => 'Bronze', 'silver' => 'Silver', 'gold' => 'Gold'];
 
     protected $guarded = [];

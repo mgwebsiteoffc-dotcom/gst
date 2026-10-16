@@ -56,6 +56,7 @@ Route::get('integrations', [PageController::class, 'integrations'])->name('integ
 Route::get('page/{page}', [PageController::class, 'simple'])->name('simple');
 
 // Partner programs
+Route::get('partners/distributor', [PartnerApplicationController::class, 'distributor'])->name('partners.distributor');
 Route::get('partners/channel', [PartnerApplicationController::class, 'channel'])->name('partners.channel');
 Route::get('partners/affiliate', [PartnerApplicationController::class, 'affiliate'])->name('partners.affiliate');
 Route::post('partners/apply', [PartnerApplicationController::class, 'store'])

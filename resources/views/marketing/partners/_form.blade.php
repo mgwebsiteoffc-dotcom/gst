@@ -21,13 +21,23 @@
 
         <div class="grid gap-4 sm:grid-cols-2">
             <x-field label="Phone" name="phone" required><x-input name="phone" value="{{ old('phone') }}" required /></x-field>
-            @if ($type === 'channel')
-                <x-field label="Company" name="company"><x-input name="company" value="{{ old('company') }}" /></x-field>
-            @else
+            @if ($type === 'affiliate')
                 <x-field label="Audience size" name="audience_size" hint="Total followers or subscribers.">
                     <x-input type="number" name="audience_size" value="{{ old('audience_size') }}" /></x-field>
+            @else
+                <x-field label="Company / firm" name="company"><x-input name="company" value="{{ old('company') }}" /></x-field>
             @endif
         </div>
+
+        @if ($type === 'distributor')
+            <div class="grid gap-4 sm:grid-cols-3">
+                <x-field label="City" name="city"><x-input name="city" value="{{ old('city') }}" /></x-field>
+                <x-field label="Territory you can cover" name="territory">
+                    <x-input name="territory" value="{{ old('territory') }}" placeholder="Lucknow + 3 districts" /></x-field>
+                <x-field label="Years in business" name="years_experience">
+                    <x-input type="number" name="years_experience" value="{{ old('years_experience') }}" /></x-field>
+            </div>
+        @endif
 
         <div class="grid gap-4 sm:grid-cols-2">
             @if ($type === 'channel')
@@ -37,19 +47,32 @@
                 <x-input type="url" name="website" value="{{ old('website') }}" placeholder="https://" /></x-field>
         </div>
 
-        <x-field :label="$type === 'channel' ? 'Tell us about your business' : 'Tell us about your audience'" name="pitch" required>
+        <x-field :label="match ($type) {
+                'distributor' => 'What do you sell today, and which areas can you cover?',
+                'channel' => 'Tell us about your business',
+                default => 'Tell us about your audience',
+            }" name="pitch" required>
             <textarea name="pitch" rows="4" required
                       class="block w-full rounded-lg border border-slate-300 p-2 text-sm"
-                      placeholder="{{ $type === 'channel'
-                          ? 'What do you sell today, and how many SMB clients do you work with?'
-                          : 'Who follows you, and how would you introduce BikriBook to them?' }}">{{ old('pitch') }}</textarea>
+                      placeholder="{{ match ($type) {
+                          'distributor' => 'Which software/products do you sell today, how many shops are in your area, and how will you reach them?',
+                          'channel' => 'What do you sell today, and how many SMB clients do you work with?',
+                          default => 'Who follows you, and how would you introduce BikriBook to them?',
+                      } }}">{{ old('pitch') }}</textarea>
         </x-field>
+
+        @if ($type === 'distributor')
+            <x-field label="Current business (name & type)" name="current_business"
+                     hint="Helps us understand your network.">
+                <x-input name="current_business" value="{{ old('current_business') }}"
+                         placeholder="e.g. Sharma Computers — Tally dealer, 12 years" /></x-field>
+        @endif
 
         <label class="flex items-start gap-2 text-sm text-slate-600">
             <input type="checkbox" name="terms" value="1" @checked(old('terms')) class="mt-0.5 rounded border-slate-300 text-indigo-600">
             <span>I agree to the partner terms and the privacy policy.</span>
         </label>
 
-        <x-btn variant="primary" type="submit">Apply to join</x-btn>
+        <x-btn variant="primary" type="submit">{{ __('Apply to join') }}</x-btn>
     </div>
 </form>

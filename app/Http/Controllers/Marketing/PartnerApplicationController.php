@@ -30,10 +30,21 @@ class PartnerApplicationController extends Controller
         return view('marketing.partners.affiliate', compact('seo'));
     }
 
+    /** Distributor programme — buy at partner pricing, resell locally. */
+    public function distributor(Seo $seo)
+    {
+        $seo->for([
+            'title' => 'Become a BikriBook Distributor — Apply Now',
+            'description' => 'Distribute BikriBook in your city or state. Special distributor pricing, marketing material, training and territory support for software resellers, IT dealers and CA firms.',
+        ])->schema(Seo::organization());
+
+        return view('marketing.partners.distributor', ['seo' => $seo]);
+    }
+
     public function store(Request $request)
     {
         $data = $request->validate([
-            'type' => ['required', Rule::in(['channel', 'affiliate'])],
+            'type' => ['required', Rule::in(['distributor', 'channel', 'affiliate'])],
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'email', 'max:190', 'unique:partners,email'],
             'phone' => ['required', 'string', 'max:20'],
@@ -42,6 +53,9 @@ class PartnerApplicationController extends Controller
             'website' => ['nullable', 'url', 'max:190'],
             'audience_size' => ['nullable', 'integer', 'min:0', 'max:1000000000'],
             'pitch' => ['required', 'string', 'max:2000'],
+            'current_business' => ['nullable', 'string', 'max:150'],
+            'years_experience' => ['nullable', 'integer', 'min:0', 'max:60'],
+            'territory' => ['nullable', 'string', 'max:150'],
             'terms' => ['accepted'],
             'website_url' => ['nullable', 'size:0'],   // honeypot
         ], [
