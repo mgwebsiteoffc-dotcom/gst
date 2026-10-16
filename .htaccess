@@ -8,10 +8,13 @@
 #
 # It never issues a redirect, so it cannot cause ERR_TOO_MANY_REDIRECTS.
 #
-# PREFERRED SETUP (do this instead if you can): point the domain's document
-# root at <project>/public — then this file is outside the web root and unused.
+# PREFERRED SETUP: point the domain's document root at <project>/public — then
+# this file is outside the web root and the blocks below are belt-and-braces.
 # Steps are in DEPLOY.md.
 
+# ---------------------------------------------------------------------------
+# 1. Front controller: serve everything from public/ without changing the URL.
+# ---------------------------------------------------------------------------
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
@@ -24,8 +27,35 @@
 </IfModule>
 
 # ---------------------------------------------------------------------------
-# Safety net: when the project root is web-exposed, the application internals
-# must never be downloadable. Ignored on hosts without mod_alias.
+# 2. Never serve these file types, whatever they are called.
+#
+# <FilesMatch> is core Apache, so this works even when mod_alias (which
+# RedirectMatch needs) is disabled — the most common reason a "blocked" .env
+# is still downloadable on shared hosting.
+# ---------------------------------------------------------------------------
+<FilesMatch "(?i)^\.env|\.(env\..*|zip|tar|gz|tgz|bz2|7z|rar|sql|sqlite|sqlite3|db|bak|backup|old|orig|save|swp|log|ini|conf|cfg|yml|yaml|sh|bash|pem|key|crt|cer|p12|pfx|jks|htpasswd)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Dotfiles (except the well-known ACME challenge used by Let's Encrypt).
+<FilesMatch "^\.(?!well-known)">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# ---------------------------------------------------------------------------
+# 3. Application internals must never be reachable (mod_alias, best effort).
 # ---------------------------------------------------------------------------
 <IfModule mod_alias.c>
     # Source code, config, database dumps, storage, tests, vendor
@@ -35,15 +65,28 @@
     # reached through public/storage instead.
     RedirectMatch 404 ^/storage/(app|framework|logs)(/|$)
 
-    # Environment files, CLI tooling and dependency manifests
-    RedirectMatch 404 ^/(\.env.*|artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|vite\.config\.js|README\.md|MIGRATION_MODULE_README\.md)$
+    # CLI tooling, dependency manifests and project documentation
+    RedirectMatch 404 ^/(artisan|composer\.(json|lock)|package(-lock)?\.json|phpunit\.xml|vite\.config\.js|.*\.md)$
 </IfModule>
 
-# Keep directory listings off.
+# ---------------------------------------------------------------------------
+# 4. Directory listings off.
+# ---------------------------------------------------------------------------
 Options -Indexes
 
-# Sensible defaults for asset delivery.
+# ---------------------------------------------------------------------------
+# 5. Baseline response headers.
+# ---------------------------------------------------------------------------
 <IfModule mod_headers.c>
+    Header set X-Content-Type-Options "nosniff"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+
+    # The service worker must never be cached, or clients keep an old version.
+    <FilesMatch "sw\.js$">
+        Header set Cache-Control "no-cache, no-store, must-revalidate"
+    </FilesMatch>
+
     <FilesMatch "\.(css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$">
         Header set Cache-Control "public, max-age=604800"
     </FilesMatch>

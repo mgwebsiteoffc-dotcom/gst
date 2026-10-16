@@ -7,3 +7,28 @@
 .phpunit.result.cache
 /database/database.sqlite
 /storage/app/invoices
+
+# Backups, archives and database dumps must never be committed or uploaded
+# into the web root — they expose full source or customer data.
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+*.sql
+*.sqlite
+*.sqlite3
+*.bak
+*.backup
+*.old
+*.orig
+*.save
+*.log
+/workspace-*.zip
+/bikribook.zip
+
+# Editor and OS noise
+.DS_Store
+Thumbs.db
+*.swp

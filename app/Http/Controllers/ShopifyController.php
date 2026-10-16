@@ -26,11 +26,23 @@ class ShopifyController extends Controller
 
     public function install(Request $request)
     {
-        $request->validate(['shop' => ['required', 'string']]);
+        // Only a real *.myshopify.com handle is accepted — see normalizeShop().
+        $data = $request->validate([
+            'shop' => ['required', 'string', 'max:80', 'regex:/^[a-zA-Z0-9][a-zA-Z0-9-]{0,60}(\.myshopify\.com)?$/'],
+        ], [
+            'shop.regex' => __('That does not look like a Shopify store address (name.myshopify.com).'),
+        ]);
+
         $state = Str::random(32);
         session(['shopify_state' => $state]);
 
-        return redirect()->away($this->oauth->installUrl($request->shop, $state, route('shopify.callback')));
+        try {
+            $url = $this->oauth->installUrl($data['shop'], $state, route('shopify.callback'));
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        return redirect()->away($url);
     }
 
     public function callback(Request $request)

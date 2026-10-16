@@ -98,3 +98,81 @@ defence-in-depth hardenings. Three medium/low items remain as follow-ups.
   `admin/tenants/show.blade.php`, `layouts/app.blade.php` (banner),
   `auth/login.blade.php`, `DatabaseSeeder`, `UsersSeeder`, `PartnerSeeder`,
   `Admin/PostController`, `MigrationController`, `.env.example`.
+
+
+---
+
+# VAPT Round 2 — after the launch features
+
+Scope: the whole application again, with emphasis on everything added since the
+first audit (multi-branch, offline sync, billing, testimonials, TinyMCE editor,
+push notifications).
+
+## Fixed in this round
+
+| # | Severity | Finding | Fix |
+|---|----------|---------|-----|
+| C-1 | **CRITICAL** | **Payment bypass.** `BillingController@payment` only verified the Razorpay signature when a `razorpay_payment_id` was supplied — omitting the field skipped verification entirely and set the subscription to `active`. Any logged-in user could give themselves Enterprise for free. | A live gateway now *requires* a payment id **and** a matching signature (missing → refused, mismatch → logged + refused). Without gateway keys the plan can only be granted by super-admin, or outside production. |
+| C-2 | **CRITICAL** | **No authorization on billing.** Any role in the business — including counter staff (`operator`) — could upgrade the plan, change the interval or **cancel the business subscription** (a denial-of-service on the owner). | `authorizeBilling()` requires owner/admin in the billing tenant, applied to checkout, payment, cancel, downgrade and invoice download. |
+| H-1 | **HIGH** | **Open redirect + client-secret leak (Shopify).** `normalizeShop()` accepted anything containing `.myshopify.com`, so `shop=attacker.myshopify.com.evil.com` was redirected to verbatim, and `exchangeCode()` would POST the app's `client_secret` to that host. | Strict whitelist: strip scheme/path/query, drop the suffix, then require `^[a-z0-9][a-z0-9-]{0,60}$` and rebuild the host from the bare handle. The controller validates with the same regex. |
+| H-2 | **HIGH** | **Source code and database archives in the web root.** `bikribook.zip` (17,250 files of full source + a SQLite database) and `workspace-*.zip` (which also contains a `.env`) sit in the project root, which is web-exposed on this install (URLs show `/public/`). Nothing blocked `.zip` downloads. | `<FilesMatch>` denial for `.env*`, `.zip`, `.sql`, `.sqlite`, `.bak`, `.log`, keys/certs and other sensitive extensions in **both** `.htaccess` files. `<FilesMatch>` is core Apache, so this still works when `mod_alias` (needed by `RedirectMatch`) is disabled — the usual reason a "blocked" `.env` remains downloadable on shared hosting. Archives are also git-ignored and no longer tracked. |
+| M-1 | MEDIUM | Dead CSRF exemptions for `webhooks/razorpay` and `stripe/*` matched no route — an unsigned exemption waiting for a future route to land on it. | Removed; only the HMAC-verified Shopify webhook is exempt. |
+| M-2 | MEDIUM | Raw exception text shown to end users in e-Invoice, WhatsApp-send and partner-payout failures (can reveal paths, hostnames, gateway responses). | Logged via `report()` and replaced with friendly messages in production. |
+| M-3 | MEDIUM | `DocumentLine` had no tenant isolation. Not exploitable today (no route binds it; always read through a scoped `Document`), but a future `DocumentLine::find($id)` would cross tenants. | Defensive global scope constraining lines to documents of the active business. |
+| L-1 | LOW | The service worker could be cached by the host/CDN, leaving clients on an old version. | `Cache-Control: no-store` for `sw.js` in both `.htaccess` files. |
+| L-2 | LOW | Mobile header packed 378px of controls into a 360px screen, pushing the account menu off-screen (a usability bug that also hid sign-out). | Mobile controls moved into the drawer; header is now ~138px. |
+
+## Verified clean this round
+
+- No `eval/shell_exec/system/popen/proc_open/unserialize` anywhere.
+- All `DB::raw`/`selectRaw` calls use **static** SQL (`SUM(...)`, `COUNT(*)`) — no user input reaches them.
+- No `$request->all()` into `create/update` — validated data only.
+- No hardcoded live secrets (`sk_live_`, `rzp_live_`, `AKIA…`, `ghp_…`) in the repo.
+- Tenant isolation: all 16 business-data models carry the scope (`Document`, `DocumentLine`, `DocumentSeries`, `Einvoice`, `EwayBill`, `Expense`, `ImportJob`, `Item`, `Party`, `Payment`, `ShopifyStore`, `StockMovement`, `Subscription`, `SubscriptionPayment`, `Warehouse`, `WhatsAppMessage`).
+- Public post-auth endpoints: only `/`, marketing pages, `/i/{document}` (signed URL), and the HMAC-verified Shopify webhook. Everything else needs a session.
+- CSRF tokens on every state-changing form (`@csrf` present on all forms; POST/PUT/DELETE only).
+- Uploads: images only, mime + size validated (`mimes:png,jpg,jpeg,webp`, max size), stored with hashed names.
+- Impersonation: super-admin only, staff accounts cannot be impersonated, no nesting, both hops written to the log.
+- Blog HTML sanitised on save (`<script>`, `on*=` handlers, `javascript:` URLs stripped).
+- Rate limiting on login (5/min per email+IP), register, password reset, contact and partner applications.
+- Security headers (nosniff, SAMEORIGIN, referrer policy, HSTS over HTTPS) on every response.
+
+## Deliberately *not* scoped (and why)
+
+`User` and `PushSubscription` hold a `tenant_id` but have no global scope:
+platform administrators legitimately query users across businesses, and push
+subscriptions are always addressed by the authenticated user. Every route that
+binds them (`admin.users.*`, `team.*`, `business.users.*`) performs its own
+membership check — see `TeamController::guardTeamMember()`. **Residual risk:**
+any *new* route that binds `{user}` under the `tenant` middleware must add that
+check itself.
+
+## Still open (accepted risk, revisit when convenient)
+
+1. **Public invoice links never expire** (`signedRoute`). Consider
+   `temporarySignedRoute` for new links.
+2. **No CSP header.** A strict policy would need nonces for Alpine, GTM and
+   Razorpay's inline script; worth doing deliberately rather than by reflex.
+3. **Super-admin 2FA** — the platform hinges on staff passwords.
+4. **`.env` on the server must be set** to `APP_ENV=production`,
+   `APP_DEBUG=false`, `SESSION_SECURE_COOKIE=true` with a unique `APP_KEY`
+   (see DEPLOY.md).
+
+## Operator actions required (do these on the server)
+
+```bash
+git pull
+php artisan migrate        # documents.client_uuid etc.
+php artisan optimize:clear
+npm run build
+```
+
+1. **Delete the archives from the server** — they are not needed there and are
+   the single largest exposure found:
+   ```bash
+   rm -f bikribook.zip workspace-*.zip
+   ```
+2. **Prefer putting the document root at `public/`** (DEPLOY.md, Setup A). The
+   `.htaccess` blocks are a safety net, not a substitute.
+3. Confirm `https://bikribook.com/.env`, `/bikribook.zip`, `/database/` and
+   `/storage/logs/` all return **403 or 404**.

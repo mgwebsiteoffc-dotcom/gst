@@ -186,7 +186,10 @@ class DocumentController extends Controller
 
             return back()->with('success', "WhatsApp message sent to {$message->to}. Message ID: {$message->whatsapp_message_id}");
         } catch (\Throwable $e) {
-            return back()->with('error', 'WhatsApp send failed: ' . $e->getMessage());
+            report($e);
+            return back()->with('error', app()->isProduction()
+                ? __('WhatsApp send failed. Please check the number and try again.')
+                : 'WhatsApp send failed: '.$e->getMessage());
         }
     }
 
@@ -208,7 +211,10 @@ class DocumentController extends Controller
 
             return back()->with('success', "Payment reminder sent to {$message->to}.");
         } catch (\Throwable $e) {
-            return back()->with('error', 'WhatsApp send failed: ' . $e->getMessage());
+            report($e);
+            return back()->with('error', app()->isProduction()
+                ? __('WhatsApp send failed. Please check the number and try again.')
+                : 'WhatsApp send failed: '.$e->getMessage());
         }
     }
 }

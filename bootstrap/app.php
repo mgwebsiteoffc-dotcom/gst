@@ -41,11 +41,15 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
         ]);
 
-        // Shopify + payment gateway webhooks post raw JSON without CSRF tokens.
+        /*
+         * Only the Shopify webhook is exempt, and it is HMAC-verified by the
+         * shopify.webhook middleware. The Razorpay/Stripe entries that used to
+         * be listed here matched no route at all — an exemption with no
+         * signature check is a hole waiting for a future route to land on it,
+         * so they are gone.
+         */
         $middleware->validateCsrfTokens(except: [
             'webhooks/shopify/*',
-            'webhooks/razorpay',
-            'stripe/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -15,7 +15,10 @@ class EinvoiceController extends Controller
         try {
             $einvoice = $this->service->generate($document);
         } catch (\Throwable $e) {
-            return back()->with('error', $e->getMessage());
+            report($e);
+            return back()->with('error', app()->isProduction()
+                ? __('Could not reach the e-Invoice portal. Please try again.')
+                : $e->getMessage());
         }
 
         return back()->with('success', 'IRN generated: '.$einvoice->irn);
@@ -31,7 +34,10 @@ class EinvoiceController extends Controller
         try {
             $this->service->cancel($document, $data['reason_code'], $data['remarks']);
         } catch (\Throwable $e) {
-            return back()->with('error', $e->getMessage());
+            report($e);
+            return back()->with('error', app()->isProduction()
+                ? __('Could not reach the e-Invoice portal. Please try again.')
+                : $e->getMessage());
         }
 
         return back()->with('success', 'IRN cancelled.');

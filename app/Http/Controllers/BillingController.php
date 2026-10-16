@@ -20,6 +20,28 @@ use Illuminate\Support\Facades\DB;
  */
 class BillingController extends Controller
 {
+    /**
+     * Only a business owner or admin may spend money.
+     *
+     * Without this, counter staff (operator) could upgrade the plan or cancel
+     * the business subscription from a shared login.
+     */
+    protected function authorizeBilling(): void
+    {
+        $user = auth()->user();
+        abort_unless($user, 403);
+
+        $tenant = \App\Support\TenantContext::get()?->billingTenant();
+        abort_unless($tenant, 403);
+
+        $activeTeam = \App\Support\TenantContext::id();
+        setPermissionsTeamId($tenant->id);
+        $allowed = (int) $user->tenant_id === (int) $tenant->id && $user->hasAnyRole(['owner', 'admin']);
+        setPermissionsTeamId($activeTeam);
+
+        abort_unless($allowed, 403, __('Only the business owner or an admin can manage the subscription.'));
+    }
+
     /** The plan chooser. Reachable even when the subscription lapsed. */
     public function plans(Request $request, GatewayResolver $gateways)
     {
@@ -45,6 +67,8 @@ class BillingController extends Controller
     /** Start (or renew) the subscription on the chosen plan. */
     public function checkout(Request $request, GatewayResolver $gateways)
     {
+        $this->authorizeBilling();
+
         $tenant = TenantContext::get()->billingTenant();
 
         $data = $request->validate([
@@ -100,6 +124,8 @@ class BillingController extends Controller
     /** Confirm the payment that Razorpay Checkout handed back. */
     public function payment(Request $request, GatewayResolver $gateways)
     {
+        $this->authorizeBilling();
+
         $tenant = TenantContext::get()->billingTenant();
 
         $data = $request->validate([
@@ -117,14 +143,32 @@ class BillingController extends Controller
         $key = $tenant->setting('billing.razorpay_key') ?: config('services.razorpay.key');
         $secret = $tenant->setting('billing.razorpay_secret') ?: config('services.razorpay.secret');
 
-        // Verify the gateway signature whenever a real payment was made.
-        if ($key && $secret && ! empty($data['razorpay_payment_id'])) {
+        /*
+         * Payment verification — previously the signature was only checked when
+         * a payment id was supplied, so omitting the field skipped verification
+         * entirely and activated the plan for free. Now a live gateway REQUIRES
+         * a verified payment, and without a gateway configured the plan can
+         * only be granted by platform staff (or on a non-production install).
+         */
+        $live = (bool) ($key && $secret);
+
+        if ($live) {
+            if (empty($data['razorpay_payment_id']) || empty($data['razorpay_signature'])) {
+                return redirect()->route('billing.plans')
+                    ->with('error', __('Payment was not completed. Nothing has been charged.'));
+            }
+
             $expected = hash_hmac('sha256', $data['razorpay_order_id'].'|'.$data['razorpay_payment_id'], $secret);
 
             if (! hash_equals($expected, (string) $data['razorpay_signature'])) {
+                report(new \RuntimeException('Razorpay signature mismatch for tenant '.$tenant->id));
+
                 return redirect()->route('billing.plans')
                     ->with('error', __('Payment could not be verified. If money was deducted, contact support.'));
             }
+        } elseif (app()->isProduction() && ! auth()->user()?->is_super_admin) {
+            return redirect()->route('billing.plans')
+                ->with('error', __('Online payments are not configured yet. Please contact support to activate a plan.'));
         }
 
         $subscription = $tenant->subscription()->firstOrNew(['tenant_id' => $tenant->id]);
@@ -205,6 +249,8 @@ class BillingController extends Controller
     /** One invoice from the payment history (PDF). */
     public function invoicePdf(Request $request, int $payment)
     {
+        $this->authorizeBilling();
+
         $tenant = TenantContext::get()->billingTenant();
 
         // Resolved manually: implicit binding applies the tenant global scope,
@@ -223,6 +269,8 @@ class BillingController extends Controller
     /** Stop the subscription at the end of the paid period. */
     public function cancel(Request $request)
     {
+        $this->authorizeBilling();
+
         $tenant = TenantContext::get()->billingTenant();
         $subscription = $tenant->subscriptionRecord();
 
@@ -248,6 +296,8 @@ class BillingController extends Controller
     /** Move to a lower plan / switch billing interval. */
     public function downgrade(Request $request)
     {
+        $this->authorizeBilling();
+
         $tenant = TenantContext::get()->billingTenant();
 
         $data = $request->validate([

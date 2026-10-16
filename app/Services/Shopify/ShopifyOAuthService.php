@@ -77,10 +77,31 @@ class ShopifyOAuthService
         return $store;
     }
 
+    /**
+     * Turn user input into a Shopify store host, or refuse it.
+     *
+     * The old version used str_contains($shop, '.myshopify.com') and simply
+     * appended the suffix, so `attacker.myshopify.com.evil.com` passed and the
+     * browser was sent there — an open redirect, and exchangeCode() would have
+     * POSTed the app's client secret to the attacker's server too.
+     *
+     * Now only a bare subdomain label is accepted and the host is rebuilt from
+     * it, so nothing outside *.myshopify.com can ever be produced.
+     */
     public function normalizeShop(string $shop): string
     {
-        $shop = strtolower(trim(preg_replace('#^https?://#', '', $shop), '/'));
+        $shop = strtolower(trim($shop));
+        $shop = preg_replace('#^https?://#', '', $shop) ?? $shop;
+        $shop = explode('/', $shop)[0];          // drop any path, query or fragment
+        $shop = explode('?', $shop)[0];
+        $shop = explode('#', $shop)[0];
+        $shop = preg_replace('#\.myshopify\.com$#', '', $shop) ?? $shop;
 
-        return str_contains($shop, '.myshopify.com') ? $shop : $shop.'.myshopify.com';
+        // A Shopify handle is letters, digits and hyphens only.
+        if (! preg_match('/^[a-z0-9][a-z0-9-]{0,60}$/', $shop)) {
+            throw new \InvalidArgumentException('Invalid Shopify store address.');
+        }
+
+        return $shop.'.myshopify.com';
     }
 }

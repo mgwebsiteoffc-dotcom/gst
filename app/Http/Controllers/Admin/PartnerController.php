@@ -75,7 +75,8 @@ class PartnerController extends Controller
         try {
             $payout = $this->payouts->create($partner, $request->user()->id);
         } catch (\Throwable $e) {
-            return back()->with('error', $e->getMessage());
+            report($e);
+            return back()->with('error', app()->isProduction() ? __('That action could not be completed.') : $e->getMessage());
         }
 
         return back()->with('success', 'Payout '.$payout->reference.' created for ₹'.number_format($payout->amount, 2));
