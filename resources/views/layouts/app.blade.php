@@ -107,9 +107,14 @@
     <aside class="fixed inset-y-0 left-0 z-40 w-64 max-w-[82vw] -translate-x-full overflow-y-auto border-r border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] transition-transform lg:static lg:w-60 lg:max-w-none lg:translate-x-0"
            :class="nav && '!translate-x-0'">
         <div class="flex h-14 items-center justify-between gap-2 px-5">
-            <span class="flex items-center gap-2">
-                <span class="grid h-7 w-7 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">B</span>
-                <span class="font-semibold tracking-tight">{{ config('app.name') }}</span>
+            <span class="flex min-w-0 flex-col">
+                <span class="flex items-center gap-2">
+                    <span class="grid h-7 w-7 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">B</span>
+                    <span class="font-semibold tracking-tight">{{ config('app.name') }}</span>
+                </span>
+                @if ($tenant)
+                    <span class="mt-0.5 truncate pl-9 text-[11px] text-slate-500">{{ $tenant->name }}</span>
+                @endif
             </span>
             <button @click="nav = false" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden" aria-label="{{ __('Close') }}">
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
@@ -144,7 +149,7 @@
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
-            <div class="flex min-w-0 items-center gap-2 text-sm text-slate-500">
+            <div class="hidden min-w-0 items-center gap-2 text-sm text-slate-500 lg:flex">
                 @if ($tenant)
                     <span class="truncate font-medium text-slate-700 max-w-[7rem] sm:max-w-none">{{ $tenant->name }}</span>
                     @if ($tenant->gstin)

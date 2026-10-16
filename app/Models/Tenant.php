@@ -124,8 +124,11 @@ class Tenant extends Model
     }
 
     /**
-     * Businesses this login may switch between: a staff member attached to a
-     * branch sees only that branch; users of the main business see all of it.
+     * Businesses this login may switch between.
+     *
+     * Staff attached to a branch are locked to that branch — they never get to
+     * see the head office or a sibling store, even if they post a tenant id.
+     * Users of the main business may move across the whole group.
      */
     public function switchableFor(User $user)
     {
@@ -133,9 +136,18 @@ class Tenant extends Model
             return collect();
         }
 
-        return $user->tenant_id === $this->id
-            ? $this->businessGroup()
-            : collect([$this]);
+        $own = static::find($user->tenant_id);
+
+        if (! $own) {
+            return collect();
+        }
+
+        // Branch staff: single business, no switching.
+        if ($own->parent_tenant_id) {
+            return collect([$own]);
+        }
+
+        return $own->businessGroup();
     }
 
 
