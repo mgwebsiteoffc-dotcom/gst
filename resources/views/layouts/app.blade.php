@@ -96,6 +96,7 @@
         ];
         $groups[__('Content')] = [
             ['admin.posts.index', __('Blog Posts'), []],
+            ['admin.testimonials.index', __('Testimonials'), []],
             ['admin.faqs.index', __('Marketing FAQs'), []],
             ['admin.leads.index', __('Enquiries'), []],
         ];

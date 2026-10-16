@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\PartnerController as AdminPartner;
 use App\Http\Controllers\Admin\PayoutController as AdminPayout;
 use App\Http\Controllers\Admin\PlanController as AdminPlan;
 use App\Http\Controllers\Admin\TenantController as AdminTenant;
+use App\Http\Controllers\Admin\TestimonialController as AdminTestimonial;
 use App\Http\Controllers\Admin\UserController as AdminUser;
 use App\Http\Controllers\BillingController;
 use App\Http\Controllers\BusinessController;
@@ -261,6 +262,12 @@ Route::middleware(['auth', 'super-admin'])->prefix('admin')->name('admin.')->gro
     Route::put('posts/{post}', [AdminPost::class, 'update'])->name('posts.update');
     Route::delete('posts/{post}', [AdminPost::class, 'destroy'])->name('posts.destroy');
     Route::post('posts/upload', [AdminPost::class, 'upload'])->name('posts.upload');
+
+    // Customer testimonials shown on the marketing site
+    Route::get('testimonials', [AdminTestimonial::class, 'index'])->name('testimonials.index');
+    Route::post('testimonials', [AdminTestimonial::class, 'store'])->name('testimonials.store');
+    Route::put('testimonials/{testimonial}', [AdminTestimonial::class, 'update'])->name('testimonials.update');
+    Route::delete('testimonials/{testimonial}', [AdminTestimonial::class, 'destroy'])->name('testimonials.destroy');
 
     // Marketing FAQs
     Route::get('faqs', [AdminFaq::class, 'index'])->name('faqs.index');

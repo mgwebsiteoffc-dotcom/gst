@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Faq;
 use App\Models\Lead;
 use App\Models\Plan;
+use App\Models\Testimonial;
 use App\Models\Post;
 use App\Services\Seo\Seo;
 use App\Support\SiteMap;
@@ -28,11 +29,22 @@ class PageController extends Controller
             $seo->schema($f);
         }
 
+        // Live numbers only: nothing on the homepage is a hardcoded claim.
+        $stats = [
+            'documents' => \App\Models\Document::withoutGlobalScope('tenant')->count(),
+            'businesses' => \App\Models\Tenant::count(),
+            'cities' => \App\Models\Tenant::whereNotNull('state_code')->distinct('state_code')->count('state_code'),
+        ];
+
         return view('marketing.home', [
             'seo' => $seo,
             'faqs' => $faqs,
             'plans' => Plan::where('active', true)->orderBy('price_paise')->get(),
             'posts' => Post::published()->with('category')->latest('published_at')->take(3)->get(),
+            'testimonials' => Testimonial::live()->take(9)->get(),
+            'featuredReviews' => Testimonial::live()->where('featured', true)->take(3)->get(),
+            'rating' => Testimonial::averageRating(),
+            'stats' => $stats,
         ]);
     }
 
@@ -52,7 +64,11 @@ class PageController extends Controller
             $seo->schema($f);
         }
 
-        return view('marketing.features', compact('seo', 'faqs'));
+        return view('marketing.features', [
+            'seo' => $seo, 'faqs' => $faqs,
+            'testimonials' => Testimonial::live()->take(6)->get(),
+            'rating' => Testimonial::averageRating(),
+        ]);
     }
 
     public function pricing(Seo $seo)
@@ -75,6 +91,8 @@ class PageController extends Controller
             'seo' => $seo,
             'faqs' => $faqs,
             'plans' => Plan::where('active', true)->orderBy('price_paise')->get(),
+            'testimonials' => Testimonial::live()->take(6)->get(),
+            'rating' => Testimonial::averageRating(),
         ]);
     }
 
