@@ -27,6 +27,18 @@ class OfflineController extends Controller
         ]);
     }
 
+    /**
+     * A fresh CSRF token.
+     *
+     * The offline billing page may be served from the service-worker cache long
+     * after the session was regenerated, so its embedded token can be stale.
+     * The client calls this before syncing and retries once.
+     */
+    public function token()
+    {
+        return response()->json(['token' => csrf_token()]);
+    }
+
     /** Catalog snapshot for offline use: parties + items + tax profile. */
     public function catalog()
     {
@@ -115,9 +127,13 @@ class OfflineController extends Controller
         } catch (\Throwable $e) {
             report($e);
 
-            return ['client_uuid' => $uuid, 'ok' => false, 'errors' => [
-                '_server' => [app()->isProduction() ? 'Could not save this bill.' : $e->getMessage()],
-            ]];
+            // The most common real cause on a fresh deploy: the client_uuid
+            // column (offline idempotency key) has not been migrated yet.
+            $message = str_contains($e->getMessage(), 'client_uuid')
+                ? 'Setup incomplete: run "php artisan migrate" to enable offline sync.'
+                : (app()->isProduction() ? 'Could not save this bill. It stays queued and will retry.' : $e->getMessage());
+
+            return ['client_uuid' => $uuid, 'ok' => false, 'errors' => ['_server' => [$message]]];
         }
     }
 

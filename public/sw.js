@@ -1,14 +1,21 @@
-/* BikriBook service worker v2.
- * - Navigations: network-first, offline fallback page.
- * - billing/offline: runtime-cached shell so vendors can bill with no internet.
- * - Static assets (css/js/images/fonts): cache-first, refreshed in background.
- * - Everything else (API, POSTs, cross-origin): untouched, straight to network.
+/* BikriBook service worker v3.
  *
- * All paths are derived from the registration scope, so the worker keeps
- * working whether the app is served from / or from a sub-folder.
+ * v3 fixes why offline billing "did not work":
+ *   - The billing shell was only cached when it arrived as a page NAVIGATION.
+ *     A background warm-up fetch therefore never populated the cache, so going
+ *     offline showed the generic offline page instead of the billing screen.
+ *     It is now cached for ANY request mode.
+ *   - Cache version bumped so older caches are purged on activate.
+ *
+ * Behaviour:
+ *   - billing/offline: network-first, always re-cached (any request mode)
+ *   - other navigations: network-first, offline fallback page
+ *   - static assets (css/js/images/fonts): cache-first, refreshed in background
+ *   - everything else (API, POSTs, cross-origin): untouched
  */
 const BASE = new URL(self.registration.scope).pathname.replace(/\/+$/, '');
-const CACHE = 'bikribook-v2';
+const CACHE = 'bikribook-v3';
+const OFFLINE_PAGE = BASE + '/billing/offline';
 const PRECACHE = [BASE + '/offline.html', BASE + '/icons/icon-192.png'];
 
 self.addEventListener('install', (event) => {
@@ -34,8 +41,9 @@ self.addEventListener('fetch', (event) => {
 
   const pathname = new URL(request.url).pathname;
 
-  // Offline billing page: fresh when online, cached shell when offline.
-  if (request.mode === 'navigate' && pathname === BASE + '/billing/offline') {
+  // Offline billing shell: always fresh when online, cached when not.
+  // Cached for every request mode so the app's warm-up call can prime it.
+  if (pathname === OFFLINE_PAGE) {
     event.respondWith(
       caches.open(CACHE).then((cache) =>
         fetch(request)
@@ -43,19 +51,23 @@ self.addEventListener('fetch', (event) => {
             if (res && res.ok) cache.put(request, res.clone());
             return res;
           })
-          .catch(() => cache.match(request).then((hit) => hit || caches.match(BASE + '/offline.html')))
+          .catch(() =>
+            cache.match(request)
+              .then((hit) => hit || caches.match(OFFLINE_PAGE))
+              .then((hit) => hit || caches.match(BASE + '/offline.html'))
+          )
       )
     );
     return;
   }
 
-  // Page navigations: always try network first so data is never stale.
+  // Any other page: network-first, generic offline page as the fallback.
   if (request.mode === 'navigate') {
     event.respondWith(fetch(request).catch(() => caches.match(BASE + '/offline.html')));
     return;
   }
 
-  // Static assets: serve from cache, refresh from network in background.
+  // Static assets: serve from cache, refresh in the background.
   if (/\.(css|js|png|jpg|jpeg|webp|svg|ico|woff2?)$/.test(pathname)) {
     event.respondWith(
       caches.open(CACHE).then((cache) =>

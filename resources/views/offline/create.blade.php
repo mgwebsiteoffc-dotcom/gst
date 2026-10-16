@@ -5,29 +5,61 @@
 <x-page :title="__('Offline billing')" :subtitle="__('No internet? Bill offline — it syncs later.')" :back="route('dashboard')" />
 
 <div x-data="offlineBilling(@js($catalog))" x-init="init()">
-    {{-- Connection + pending outbox --}}
-    <div class="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
-        <div class="flex items-center gap-2 text-sm">
-            <span class="h-2.5 w-2.5 rounded-full" :class="online ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-            <span class="font-medium" x-text="online ? @js(__('You are online')) : @js(__('You are offline'))"></span>
-            <span class="text-slate-500" x-show="pending.length" x-cloak>
-                · <span x-text="pending.length"></span> {{ __('bills waiting to sync') }}
-            </span>
+    {{-- Connection, offline readiness and the sync queue --}}
+    <div class="mb-4 rounded-xl border border-slate-200 bg-white p-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2 text-sm">
+                <span class="h-2.5 w-2.5 rounded-full" :class="online ? 'bg-emerald-500' : 'bg-rose-500'"></span>
+                <span class="font-medium" x-text="online ? @js(__('You are online')) : @js(__('You are offline'))"></span>
+
+                <span class="text-slate-500" x-show="pending.length" x-cloak>
+                    · <span x-text="pending.length"></span> {{ __('bills waiting to sync') }}
+                </span>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+                {{-- Readiness: tells the vendor whether this page will open without internet --}}
+                <span class="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium"
+                      :class="ready ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'">
+                    <span class="h-1.5 w-1.5 rounded-full" :class="ready ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                    <span x-text="ready ? @js(__('Ready for offline use')) : @js(__('Preparing for offline use…'))"></span>
+                </span>
+
+                <button type="button" @click="prepare()"
+                        class="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
+                        x-text="@js(__('Refresh offline copy'))"></button>
+
+                <x-btn variant="secondary" size="sm" @click="syncNow()" x-show="pending.length" x-cloak>{{ __('Sync now') }}</x-btn>
+            </div>
         </div>
-        <x-btn variant="secondary" size="sm" @click="syncNow()" x-show="pending.length" x-cloak>{{ __('Sync now') }}</x-btn>
     </div>
 
     {{-- Queued bills --}}
     <template x-if="pending.length">
         <div class="mb-4 space-y-2">
             <template x-for="inv in pending" :key="inv.client_uuid">
-                <div class="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm">
-                    <div class="min-w-0">
-                        <p class="truncate font-medium" x-text="inv.party_name || partyName(inv.party_id) || @js(__('Walk-in customer'))"></p>
-                        <p class="text-xs text-slate-500"><span x-text="inv.lines.length"></span> {{ __('Items') }} · <span x-text="money(invTotal(inv))"></span></p>
+                <div class="rounded-xl border px-4 py-3 text-sm"
+                     :class="inv.last_error ? 'border-rose-200 bg-rose-50' : 'border-amber-200 bg-amber-50'">
+                    <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                            <p class="truncate font-medium" x-text="inv.party_name || partyName(inv.party_id) || @js(__('Walk-in customer'))"></p>
+                            <p class="text-xs text-slate-500">
+                                <span x-text="inv.lines.length"></span> {{ __('Items') }} ·
+                                <span x-text="money(invTotal(inv))"></span>
+                                <span x-show="inv.queued_at" x-cloak> · <span x-text="when(inv.queued_at)"></span></span>
+                            </p>
+                            <p class="mt-1 flex items-start gap-1.5 text-xs font-medium text-rose-700" x-show="inv.last_error" x-cloak>
+                                <x-icon name="x-circle" class="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                                <span x-text="inv.last_error"></span>
+                            </p>
+                        </div>
+                        <div class="flex shrink-0 items-center gap-1">
+                            <button type="button" @click="syncNow()"
+                                    class="rounded-lg px-2 py-1 text-xs font-medium text-brand-600 hover:bg-white">{{ __('Retry') }}</button>
+                            <button type="button" @click="removePending(inv.client_uuid)"
+                                    class="rounded-lg px-2 py-1 text-xs text-slate-500 hover:bg-white">{{ __('Discard') }}</button>
+                        </div>
                     </div>
-                    <button type="button" @click="removePending(inv.client_uuid)"
-                            class="shrink-0 rounded-lg px-2 py-1 text-xs text-rose-600 hover:bg-rose-100">{{ __('Remove') }}</button>
                 </div>
             </template>
         </div>
@@ -157,12 +189,33 @@ function offlineBilling(catalog) {
         busy: false,
         result: null,
         pending: [],
+        ready: false,
         init() {
             this.addLine();
             this.refreshPending();
-            window.addEventListener('online', () => { this.online = true; });
+            this.checkReady();
+            window.addEventListener('online', () => { this.online = true; this.checkReady(); });
             window.addEventListener('offline', () => { this.online = false; });
             document.addEventListener('bb:outbox-synced', () => this.refreshPending());
+        },
+        checkReady() {
+            if (!window.BBOffline) return;
+            BBOffline.isReady().then((ok) => { this.ready = ok; });
+        },
+        prepare() {
+            if (!window.BBOffline) return;
+            BBOffline.warmup().then(() => {
+                this.checkReady();
+                BBOffline.toast(@js(__('Offline copy updated')), 'warn');
+            });
+        },
+        when(iso) {
+            if (!iso) return '';
+            const mins = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
+            if (mins < 1) return @js(__('just now'));
+            if (mins < 60) return mins + ' ' + @js(__('min ago'));
+            const hrs = Math.round(mins / 60);
+            return hrs < 24 ? hrs + ' ' + @js(__('h ago')) : new Date(iso).toLocaleDateString();
         },
         get isGst() { return this.catalog.tenant && this.catalog.tenant.tax_mode === 'gst'; },
         refreshPending() { this.pending = (window.BBOffline ? BBOffline.readOutbox() : []); },
@@ -247,9 +300,17 @@ function offlineBilling(catalog) {
                 try {
                     const res = await fetch('/offline/sync', {
                         method: 'POST',
+                        credentials: 'same-origin',
                         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf.content },
                         body: JSON.stringify({ invoices: [data] }),
                     });
+
+                    // Session regenerated since this page was cached: refresh the
+                    // token and try once more instead of showing a false failure.
+                    if (res.status === 419 && window.BBOffline) {
+                        await BBOffline.refreshToken();
+                        return this.submit();
+                    }
                     const body = await res.json();
                     const r = body.results && body.results[0];
                     if (res.ok && r && r.ok) {

@@ -126,6 +126,7 @@ Route::middleware(['auth', 'tenant'])->group(function () {
         // Offline billing (PWA): cached page + catalog + outbox sync
         Route::get('billing/offline', [OfflineController::class, 'create'])->name('offline.create');
         Route::get('offline/catalog', [OfflineController::class, 'catalog'])->name('offline.catalog');
+        Route::get('offline/token', [OfflineController::class, 'token'])->name('offline.token');
         Route::post('offline/sync', [OfflineController::class, 'sync'])->name('offline.sync');
 
         // Reports

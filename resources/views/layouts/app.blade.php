@@ -122,6 +122,26 @@
             </button>
         </div>
 
+        {{-- Mobile-only controls. These used to sit in the header, where they
+             measured ~378px against a 360px screen and pushed the account menu
+             off-screen, so nothing could be opened on a phone. --}}
+        <div class="border-b border-slate-100 px-3 pb-3 lg:hidden">
+            @include('partials.branch-menu')
+            @include('partials.locale-menu')
+
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+                @include('partials.push-bell')
+                @if (! $partnerProfile && ! $isPlatform && $tenant)
+                    <a href="{{ route('offline.create') }}" @click="nav = false"
+                       class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-600">
+                        <x-icon name="signal" class="h-4 w-4 text-brand-600" />
+                        {{ __('Offline billing') }}
+                        <span class="hidden" data-offline-wrap><span data-offline-count>0</span></span>
+                    </a>
+                @endif
+            </div>
+        </div>
+
         <nav class="px-3 pb-6">
             @unless ($partnerProfile || $isPlatform)
                 <a href="{{ route('dashboard') }}" @click="nav = false"
@@ -150,7 +170,7 @@
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
-            <div class="hidden min-w-0 items-center gap-2 text-sm text-slate-500 lg:flex">
+            <div class="hidden min-w-0 flex-1 items-center gap-2 truncate text-sm text-slate-500 lg:flex">
                 @if ($tenant)
                     <span class="truncate font-medium text-slate-700 max-w-[7rem] sm:max-w-none">{{ $tenant->name }}</span>
                     @if ($tenant->gstin)
@@ -164,13 +184,16 @@
                 @endif
             </div>
 
-            <div class="flex items-center gap-2">
-                @include('partials.locale-switcher')
-                @include('partials.branch-switcher')
+            <div class="flex shrink-0 items-center gap-2">
+                {{-- Desktop only: on phones these live in the drawer. --}}
+                <span class="hidden items-center gap-2 lg:flex">
+                    @include('partials.locale-switcher')
+                    @include('partials.branch-switcher')
+                </span>
                 @if (! $partnerProfile && ! $isPlatform && $tenant)
-                    @include('partials.push-bell')
+                    <span class="hidden lg:inline-flex">@include('partials.push-bell')</span>
                     <a href="{{ route('offline.create') }}" data-offline-wrap title="{{ __('bills waiting to sync') }}"
-                       class="hidden items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-700">
+                       class="hidden items-center gap-1 rounded-lg border border-amber-300 bg-amber-50 px-2 py-1.5 text-xs font-medium text-amber-700 lg:inline-flex">
                         <x-icon name="clock" class="h-3.5 w-3.5" /> <span data-offline-count>0</span>
                     </a>
                 @endif

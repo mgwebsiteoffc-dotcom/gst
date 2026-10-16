@@ -921,5 +921,21 @@
   "Install BikriBook from your browser. It opens full-screen like an app, saves bills offline and syncs them automatically when the signal returns.": "Browser se BikriBook install karein. App ki tarah poori screen par khulta hai, bina internet bill save karta hai aur signal aane par sync karta hai.",
   "No signal at the counter? Bills queue on the phone and sync when you are back online.": "Counter par signal nahi? Bill phone mein jama hote hain aur online hote hi sync hote hain.",
   "Share the invoice on WhatsApp, collect by UPI QR, and track who has paid and who is overdue.": "Bill WhatsApp par bhejein, UPI QR se paise lein aur dekhein kisne diya aur kiska baaki hai.",
-  "Shop owner using BikriBook at the counter": "Counter par BikriBook istemal karte dukandar"
+  "Shop owner using BikriBook at the counter": "Counter par BikriBook istemal karte dukandar",
+  "Ready for offline use": "Offline ke liye taiyar",
+  "Preparing for offline use…": "Offline ke liye taiyar ho raha hai…",
+  "Refresh offline copy": "Offline copy update karein",
+  "Offline copy updated": "Offline copy update ho gayi",
+  "Saved for offline use": "Offline ke liye save hai",
+  "Retry": "Dobara koshish",
+  "Discard": "Hataein",
+  "just now": "abhi",
+  "min ago": "minute pehle",
+  "h ago": "ghante pehle",
+  "sync_failed": "Save nahi ho saka",
+  "synced_short": "sync hue",
+  "failed_short": "nahi ho sake",
+  "session_expired": "Sync ke liye dobara sign in karein",
+  "Could not be saved": "Save nahi ho saka",
+  "Please sign in again to sync": "Sync ke liye dobara sign in karein"
 }

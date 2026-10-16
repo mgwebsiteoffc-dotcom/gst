@@ -26,12 +26,28 @@
                 <span id="offline-state" class="text-slate-500">{{ __('You are online') }}</span>
                 <span class="hidden text-slate-500" data-offline-wrap>· <span data-offline-count>0</span> {{ __('bills waiting to sync') }}</span>
             </div>
-            <div class="flex w-full flex-wrap gap-2 sm:w-auto">
-                <x-btn variant="secondary" size="sm" :href="route('offline.create')" class="flex-1 sm:flex-none">{{ __('New offline bill') }}</x-btn>
-                <x-btn variant="primary" size="sm" onclick="window.BBOffline && BBOffline.syncNow()" class="flex-1 sm:flex-none">{{ __('Sync now') }}</x-btn>
-            </div>
+<div class="flex w-full flex-wrap gap-2 sm:w-auto">
+                    <x-btn variant="secondary" size="sm" :href="route('offline.create')" class="flex-1 sm:flex-none">{{ __('New offline bill') }}</x-btn>
+                    <x-btn variant="primary" size="sm" onclick="window.BBOffline && BBOffline.syncNow()" class="flex-1 sm:flex-none">{{ __('Sync now') }}</x-btn>
+                </div>
         </div>
-        <p class="mt-1 text-xs text-slate-500">{{ __('No internet? Bill offline — it syncs later.') }}</p>
+        <p class="mt-1 text-xs text-slate-500">
+            {{ __('No internet? Bill offline — it syncs later.') }}
+            <span class="ml-1 font-medium text-emerald-600" id="offline-ready" hidden>{{ __('Saved for offline use') }}</span>
+        </p>
+
+        <script>
+        /* Prime the offline copy and report whether it is ready. */
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.BBOffline) return;
+            BBOffline.warmup().then(function () {
+                BBOffline.isReady().then(function (ok) {
+                    var el = document.getElementById('offline-ready');
+                    if (ok && el) el.hidden = false;
+                });
+            });
+        });
+        </script>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
