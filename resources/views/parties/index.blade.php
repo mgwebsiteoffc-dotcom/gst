@@ -6,15 +6,15 @@
     <x-btn variant="primary" :href="route('parties.create')">+ {{ __('New contact') }}</x-btn>
 </x-page>
 
-<form class="mb-4 flex flex-wrap gap-2">
-    <x-input name="q" value="{{ request('q') }}" placeholder="{{ __('Search name, email, phone or GSTIN') }}" class="!w-72"/>
-    <x-select name="type" class="!w-40" onchange="this.form.submit()">
+<form class="mb-4 grid gap-2 sm:flex sm:flex-wrap">
+    <x-input name="q" value="{{ request('q') }}" placeholder="{{ __('Search name, email, phone or GSTIN') }}" class="w-full sm:!w-72"/>
+    <x-select name="type" class="w-full sm:!w-40" onchange="this.form.submit()">
         <option value="">{{ __('All types') }}</option>
         @foreach (['customer' => __('Clients'), 'vendor' => __('Vendors'), 'both' => __('Both')] as $v => $t)
             <option value="{{ $v }}" @selected(request('type') === $v)>{{ $t }}</option>
         @endforeach
     </x-select>
-    <x-btn type="submit">{{ __('Search') }}</x-btn>
+    <x-btn type="submit" class="w-full sm:w-auto">{{ __('Search') }}</x-btn>
 </form>
 
 <x-card class="!p-0">

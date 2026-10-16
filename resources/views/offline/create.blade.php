@@ -89,7 +89,7 @@
                             <input x-model="line.name" placeholder="{{ __('Item') }}"
                                    class="mb-2 block w-full rounded-lg border-slate-300 text-sm focus:border-indigo-500 focus:ring-indigo-500">
                         </template>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
                             <label class="block">
                                 <span class="mb-1 block text-xs text-slate-500">{{ __('Qty') }}</span>
                                 <input type="number" step="0.001" min="0.001" x-model.number="line.quantity"

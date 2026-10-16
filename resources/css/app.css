@@ -106,3 +106,50 @@ input[type="number"] { -moz-appearance: textfield; }
 
 /* Prevent Alpine-managed elements flashing before hydration. */
 [x-cloak] { display: none !important; }
+
+/* ---------------------------------------------------------------
+   Mobile / PWA behaviour
+   Small vendors run this from a phone's home screen, so the app must
+   never scroll sideways, must not zoom when a field is focused, and
+   wide tables scroll inside their own card.
+   --------------------------------------------------------------- */
+
+html {
+    /* iOS: don't inflate text in landscape, keep our own sizing. */
+    -webkit-text-size-adjust: 100%;
+}
+
+body {
+    /* `clip` stops page-level horizontal scrolling WITHOUT creating a
+       scroll container, so position: sticky keeps working (unlike hidden). */
+    overflow-x: clip;
+    /* Native feel: no grey flash when tapping links/buttons. */
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* iOS Safari zooms the whole page when a control smaller than 16px is
+   focused. Bumping controls to 16px on phones prevents that jump. */
+@media (max-width: 640px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+    select,
+    textarea {
+        font-size: 1rem;
+    }
+
+    /* Comfortable tap targets. */
+    input:not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+    select {
+        min-height: 2.75rem;
+    }
+}
+
+/* Momentum scrolling inside any scroll container (tables, tab strips). */
+.overflow-x-auto,
+.overflow-y-auto,
+.overflow-auto {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+}
+
+/* Tables opt into horizontal scroll with an explicit min-width (set per table
+   in the Blade views). No blanket nowrap: text-heavy tables stay readable. */

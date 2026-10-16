@@ -7,17 +7,17 @@
         <a href="{{ route('documents.create', $type) }}" class="rounded bg-indigo-600 px-4 py-2 text-white text-sm">{{ __('New') }}</a>
     </div>
 
-    <form class="mb-4 flex gap-2 text-sm">
-        <input name="q" value="{{ request('q') }}" placeholder="{{ __('Search number or party') }}" class="rounded border-slate-300 px-3 py-2">
-        <input type="date" name="from" value="{{ request('from') }}" class="rounded border-slate-300 px-3 py-2">
-        <input type="date" name="to" value="{{ request('to') }}" class="rounded border-slate-300 px-3 py-2">
-        <select name="status" class="rounded border-slate-300 px-3 py-2">
+    <form class="mb-4 grid gap-2 text-sm sm:flex sm:flex-wrap">
+        <input name="q" value="{{ request('q') }}" placeholder="{{ __('Search number or party') }}" class="rounded border-slate-300 px-3 py-2 w-full sm:w-auto sm:max-w-xs">
+        <input type="date" name="from" value="{{ request('from') }}" class="rounded border-slate-300 px-3 py-2 w-full sm:w-auto sm:max-w-xs">
+        <input type="date" name="to" value="{{ request('to') }}" class="rounded border-slate-300 px-3 py-2 w-full sm:w-auto sm:max-w-xs">
+        <select name="status" class="rounded border-slate-300 px-3 py-2 w-full sm:w-auto sm:max-w-xs">
             <option value="">{{ __('All statuses') }}</option>
             @foreach (['draft','sent','partially_paid','paid','overdue','cancelled'] as $s)
                 <option value="{{ $s }}" @selected(request('status') === $s)>{{ __(ucfirst(str_replace('_',' ',$s))) }}</option>
             @endforeach
         </select>
-        <button class="rounded bg-slate-800 px-4 py-2 text-white">{{ __('Filter') }}</button>
+        <button class="rounded bg-slate-800 px-4 py-2 text-white w-full sm:w-auto">{{ __('Filter') }}</button>
     </form>
 
     <div class="rounded-xl bg-white border border-slate-200 overflow-x-auto">

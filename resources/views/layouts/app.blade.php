@@ -103,16 +103,21 @@
 
 <div x-data="{ nav: false }" class="min-h-full lg:flex">
     {{-- Sidebar --}}
-    <aside class="fixed inset-y-0 left-0 z-40 w-60 -translate-x-full overflow-y-auto border-r border-slate-200 bg-white transition-transform lg:static lg:translate-x-0"
+    <aside class="fixed inset-y-0 left-0 z-40 w-64 max-w-[82vw] -translate-x-full overflow-y-auto border-r border-slate-200 bg-white pb-[env(safe-area-inset-bottom)] transition-transform lg:static lg:w-60 lg:max-w-none lg:translate-x-0"
            :class="nav && '!translate-x-0'">
-        <div class="flex h-14 items-center gap-2 px-5">
-            <span class="grid h-7 w-7 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">B</span>
-            <span class="font-semibold tracking-tight">{{ config('app.name') }}</span>
+        <div class="flex h-14 items-center justify-between gap-2 px-5">
+            <span class="flex items-center gap-2">
+                <span class="grid h-7 w-7 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">B</span>
+                <span class="font-semibold tracking-tight">{{ config('app.name') }}</span>
+            </span>
+            <button @click="nav = false" class="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 lg:hidden" aria-label="{{ __('Close') }}">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></svg>
+            </button>
         </div>
 
         <nav class="px-3 pb-6">
             @unless ($partnerProfile || $isPlatform)
-                <a href="{{ route('dashboard') }}"
+                <a href="{{ route('dashboard') }}" @click="nav = false"
                    class="mb-3 block rounded-lg px-3 py-2 text-sm font-medium {{ request()->routeIs('dashboard') ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-100' }}">
                     Dashboard
                 </a>
@@ -122,7 +127,7 @@
                 <p class="px-3 pb-1 pt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">{{ $label }}</p>
                 @foreach ($links as [$route, $text, $params])
                     @php $active = request()->routeIs($route) && (! isset($params['type']) || request('type') === $params['type'] || request()->route('type') === $params['type']); @endphp
-                    <a href="{{ route($route, $params) }}"
+                    <a href="{{ route($route, $params) }}" @click="nav = false"
                        class="block rounded-lg px-3 py-1.5 text-sm {{ $active ? 'bg-indigo-50 font-medium text-indigo-700' : 'text-slate-600 hover:bg-slate-100' }}">{!! $text !!}</a>
                 @endforeach
             @endforeach
@@ -138,9 +143,9 @@
                 <svg class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
             </button>
 
-            <div class="flex items-center gap-2 text-sm text-slate-500">
+            <div class="flex min-w-0 items-center gap-2 text-sm text-slate-500">
                 @if ($tenant)
-                    <span class="font-medium text-slate-700">{{ $tenant->name }}</span>
+                    <span class="truncate font-medium text-slate-700 max-w-[7rem] sm:max-w-none">{{ $tenant->name }}</span>
                     @if ($tenant->gstin)
                         <span class="hidden font-mono text-xs text-slate-400 sm:inline">{{ $tenant->gstin }}</span>
                     @else
@@ -163,7 +168,10 @@
                     </a>
                 @endif
                 @if (! $partnerProfile && ! $isPlatform && $tenant)
-                    <x-btn variant="primary" size="sm" :href="route('documents.create', 'invoice')" onclick="if(!navigator.onLine){window.location.href='{{ route('offline.create') }}';return false;}">+ {{ __('New Invoice') }}</x-btn>
+                    {{-- Phones get the round + button in the bottom bar instead. --}}
+                    <span class="hidden md:inline-flex">
+                        <x-btn variant="primary" size="sm" :href="route('documents.create', 'invoice')" onclick="if(!navigator.onLine){window.location.href='{{ route('offline.create') }}';return false;}">+ {{ __('New Invoice') }}</x-btn>
+                    </span>
                 @endif
 
                 @auth

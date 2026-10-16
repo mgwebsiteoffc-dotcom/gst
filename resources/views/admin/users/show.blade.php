@@ -70,7 +70,7 @@
                         @csrf
                         <x-btn type="submit" class="w-full">Send password-reset link</x-btn>
                     </form>
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid gap-3 sm:grid-cols-2">
                         <form method="POST" action="{{ route('admin.users.toggle', $user) }}">
                             @csrf @method('PUT')
                             <x-btn type="submit" class="w-full">{{ $user->is_active ? 'Disable login' : 'Enable login' }}</x-btn>

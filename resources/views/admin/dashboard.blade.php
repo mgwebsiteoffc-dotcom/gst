@@ -26,30 +26,32 @@
 </div>
 
 <x-card title="Businesses" class="!p-0">
-    <table class="w-full text-sm">
-        <thead class="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-                <th class="px-5 py-3 font-medium">Name</th>
-                <th class="px-3 font-medium">GSTIN</th>
-                <th class="px-3 font-medium">Mode</th>
-                <th class="px-3 text-right font-medium">Users</th>
-                <th class="px-5 font-medium">Trial ends</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach ($tenants as $t)
-            <tr class="border-b border-slate-50 last:border-0">
-                <td class="px-5 py-3">
-                    <div class="font-medium text-slate-900">{{ $t->name }}</div>
-                    <div class="text-xs text-slate-400">{{ $t->slug }}</div>
-                </td>
-                <td class="px-3 font-mono text-xs">{{ $t->gstin ?: '—' }}</td>
-                <td class="px-3"><x-badge tone="{{ $t->tax_mode === 'gst' ? 'slate' : 'amber' }}">{{ $t->tax_mode === 'gst' ? 'GST' : 'Non-GST' }}</x-badge></td>
-                <td class="px-3 text-right tabular-nums">{{ $t->users_count }}</td>
-                <td class="px-5 text-slate-500">{{ $t->trial_ends_at?->format('d M Y') ?? '—' }}</td>
-            </tr>
-        @endforeach
-        </tbody>
-    </table>
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead class="border-b border-slate-100 text-left text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                    <th class="px-5 py-3 font-medium">Name</th>
+                    <th class="px-3 font-medium">GSTIN</th>
+                    <th class="px-3 font-medium">Mode</th>
+                    <th class="px-3 text-right font-medium">Users</th>
+                    <th class="px-5 font-medium">Trial ends</th>
+                </tr>
+            </thead>
+            <tbody>
+            @foreach ($tenants as $t)
+                <tr class="border-b border-slate-50 last:border-0">
+                    <td class="px-5 py-3">
+                        <div class="font-medium text-slate-900">{{ $t->name }}</div>
+                        <div class="text-xs text-slate-400">{{ $t->slug }}</div>
+                    </td>
+                    <td class="px-3 font-mono text-xs">{{ $t->gstin ?: '—' }}</td>
+                    <td class="px-3"><x-badge tone="{{ $t->tax_mode === 'gst' ? 'slate' : 'amber' }}">{{ $t->tax_mode === 'gst' ? 'GST' : 'Non-GST' }}</x-badge></td>
+                    <td class="px-3 text-right tabular-nums">{{ $t->users_count }}</td>
+                    <td class="px-5 text-slate-500">{{ $t->trial_ends_at?->format('d M Y') ?? '—' }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
+    </div>
 </x-card>
 @endsection

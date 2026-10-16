@@ -27,14 +27,14 @@
     @endforeach
 </div>
 
-<form class="mb-4 flex flex-wrap items-end gap-2">
-    <x-input name="q" value="{{ request('q') }}" placeholder="{{ __('Search name, SKU or HSN') }}" class="!w-72" />
+<form class="mb-4 grid gap-2 sm:flex sm:flex-wrap sm:items-end">
+    <x-input name="q" value="{{ request('q') }}" placeholder="{{ __('Search name, SKU or HSN') }}" class="w-full sm:!w-72" />
     <label class="flex items-center gap-2 pb-2 text-sm text-slate-600">
         <input type="checkbox" name="low" value="1" @checked(request()->boolean('low'))
                class="rounded border-slate-300 text-indigo-600">
         {{ __('Low stock only') }}
     </label>
-    <x-btn type="submit">{{ __('Search') }}</x-btn>
+    <x-btn type="submit" class="w-full sm:w-auto">{{ __('Search') }}</x-btn>
     @if (request('q') || request()->boolean('low'))
         <x-btn variant="ghost" :href="route('reports.stock')">{{ __('Clear') }}</x-btn>
     @endif

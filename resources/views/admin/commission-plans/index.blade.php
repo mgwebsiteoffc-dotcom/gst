@@ -75,15 +75,15 @@
                     <option value="hybrid">Percentage + flat bonus</option>
                 </x-select>
             </x-field>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
                 <x-field label="Percentage" name="percentage"><x-input type="number" step="0.01" name="percentage" value="20" /></x-field>
                 <x-field label="Flat (₹)" name="flat_rupees"><x-input type="number" name="flat_rupees" value="0" /></x-field>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
                 <x-field label="Recurring months" name="recurring_months"><x-input type="number" name="recurring_months" value="12" /></x-field>
                 <x-field label="Cookie days" name="cookie_days"><x-input type="number" name="cookie_days" value="60" /></x-field>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
                 <x-field label="Min payout (₹)" name="min_payout_rupees"><x-input type="number" name="min_payout_rupees" value="1000" /></x-field>
                 <x-field label="Hold days" name="hold_days"><x-input type="number" name="hold_days" value="30" /></x-field>
             </div>

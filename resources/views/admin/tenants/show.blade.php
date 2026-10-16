@@ -42,7 +42,7 @@
                     @endforeach
                 </x-select>
             </x-field>
-            <div class="grid grid-cols-3 gap-3">
+            <div class="grid gap-3 sm:grid-cols-3">
                 <x-field label="Status" name="status">
                     <x-select name="status">
                         @foreach (['trialing','active','past_due','canceled'] as $s)
@@ -301,7 +301,7 @@
             <x-field label="{{ __('Confirm password') }}" name="password_confirmation" required>
                 <x-input type="password" name="password_confirmation" required autocomplete="new-password" />
             </x-field>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
                 <x-field label="{{ __('Role') }}" name="role" required>
                     <x-select name="role">
                         @foreach (['owner','admin','accountant','operator','viewer'] as $role)

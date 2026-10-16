@@ -44,20 +44,22 @@
         @if ($referrals->isEmpty())
             <x-empty title="No signups yet" message="Share your link to start earning." />
         @else
-            <table class="w-full text-sm">
-                <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
-                    <tr><th class="px-5 py-2.5 font-medium">Business</th><th class="px-3 font-medium">Status</th><th class="px-5 font-medium">Joined</th></tr>
-                </thead>
-                <tbody>
-                @foreach ($referrals as $r)
-                    <tr class="border-b border-slate-50 last:border-0">
-                        <td class="px-5 py-2.5">{{ $r->tenant?->name ?? '—' }}</td>
-                        <td class="px-3"><x-badge tone="{{ $r->status === 'converted' ? 'emerald' : 'slate' }}">{{ ucfirst($r->status) }}</x-badge></td>
-                        <td class="px-5 text-slate-500">{{ $r->created_at->format('d M Y') }}</td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
+                        <tr><th class="px-5 py-2.5 font-medium">Business</th><th class="px-3 font-medium">Status</th><th class="px-5 font-medium">Joined</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach ($referrals as $r)
+                        <tr class="border-b border-slate-50 last:border-0">
+                            <td class="px-5 py-2.5">{{ $r->tenant?->name ?? '—' }}</td>
+                            <td class="px-3"><x-badge tone="{{ $r->status === 'converted' ? 'emerald' : 'slate' }}">{{ ucfirst($r->status) }}</x-badge></td>
+                            <td class="px-5 text-slate-500">{{ $r->created_at->format('d M Y') }}</td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
         @endif
     </x-card>
 
@@ -78,22 +80,24 @@
         @if ($commissions->isEmpty())
             <x-empty title="No commissions yet" />
         @else
-            <table class="w-full text-sm">
-                <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
-                    <tr><th class="px-5 py-2.5 font-medium">Date</th><th class="px-3 font-medium">Month</th>
-                        <th class="px-3 text-right font-medium">Amount</th><th class="px-5 font-medium">Status</th></tr>
-                </thead>
-                <tbody>
-                @foreach ($commissions as $c)
-                    <tr class="border-b border-slate-50 last:border-0">
-                        <td class="px-5 py-2.5 text-slate-500">{{ $c->created_at->format('d M Y') }}</td>
-                        <td class="px-3 text-slate-500">#{{ $c->month_number }}</td>
-                        <td class="px-3 text-right font-medium tabular-nums">₹{{ number_format($c->amount_paise / 100, 2) }}</td>
-                        <td class="px-5"><x-badge tone="{{ ['paid'=>'emerald','approved'=>'indigo','pending'=>'amber','reversed'=>'rose'][$c->status] }}">{{ ucfirst($c->status) }}</x-badge></td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="border-b border-slate-100 text-left text-xs uppercase text-slate-500">
+                        <tr><th class="px-5 py-2.5 font-medium">Date</th><th class="px-3 font-medium">Month</th>
+                            <th class="px-3 text-right font-medium">Amount</th><th class="px-5 font-medium">Status</th></tr>
+                    </thead>
+                    <tbody>
+                    @foreach ($commissions as $c)
+                        <tr class="border-b border-slate-50 last:border-0">
+                            <td class="px-5 py-2.5 text-slate-500">{{ $c->created_at->format('d M Y') }}</td>
+                            <td class="px-3 text-slate-500">#{{ $c->month_number }}</td>
+                            <td class="px-3 text-right font-medium tabular-nums">₹{{ number_format($c->amount_paise / 100, 2) }}</td>
+                            <td class="px-5"><x-badge tone="{{ ['paid'=>'emerald','approved'=>'indigo','pending'=>'amber','reversed'=>'rose'][$c->status] }}">{{ ucfirst($c->status) }}</x-badge></td>
+                        </tr>
+                    @endforeach
+                    </tbody>
+                </table>
+            </div>
         @endif
     </x-card>
 

@@ -44,7 +44,7 @@
         <h2 class="text-center text-3xl font-bold tracking-tight text-slate-900">What you could earn</h2>
         <p class="mt-3 text-center text-slate-600">Assuming the ₹999/month Growth plan and 20% recurring commission.</p>
 
-        <div class="mt-10 overflow-hidden rounded-2xl border border-slate-200">
+        <div class="mt-10 overflow-x-auto rounded-2xl border border-slate-200">
             <table class="w-full text-sm">
                 <thead class="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase text-slate-500">
                     <tr><th class="px-5 py-3 font-medium">Paying signups / month</th>

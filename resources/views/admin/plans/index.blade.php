@@ -15,7 +15,7 @@
                         <span class="text-sm text-slate-500">{{ $plan->subscriptions_count }} subscriber(s)</span>
                     </div>
 
-                    <div class="grid gap-3 sm:grid-cols-4">
+                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                         <x-field label="Name" name="name"><x-input name="name" value="{{ $plan->name }}" /></x-field>
                         <x-field label="Monthly (₹)" name="price_rupees"><x-input type="number" name="price_rupees" value="{{ $plan->price_paise / 100 }}" /></x-field>
                         <x-field label="Yearly (₹)" name="yearly_price_rupees"><x-input type="number" name="yearly_price_rupees" value="{{ $plan->yearly_price_paise ? $plan->yearly_price_paise / 100 : '' }}" /></x-field>
@@ -44,11 +44,11 @@
         <form method="POST" action="{{ route('admin.plans.store') }}" class="grid gap-3">
             @csrf
             <x-field label="Name" name="name" required><x-input name="name" required placeholder="Professional" /></x-field>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
                 <x-field label="Monthly (₹)" name="price_rupees" required><x-input type="number" name="price_rupees" value="999" required /></x-field>
                 <x-field label="Yearly (₹)" name="yearly_price_rupees"><x-input type="number" name="yearly_price_rupees" value="9990" /></x-field>
             </div>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid gap-3 sm:grid-cols-2">
                 <x-field label="Users" name="user_limit" required><x-input type="number" name="user_limit" value="5" required /></x-field>
                 <x-field label="Invoice limit" name="invoice_limit"><x-input type="number" name="invoice_limit" placeholder="Unlimited" /></x-field>
             </div>

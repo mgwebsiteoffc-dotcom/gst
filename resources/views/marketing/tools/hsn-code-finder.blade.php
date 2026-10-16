@@ -49,7 +49,7 @@
         <input x-model="q" placeholder="Search by product name or code — try 'rice' or '8471'"
               >
 
-        <div class="mt-4 overflow-hidden rounded-2xl border border-slate-200">
+        <div class="mt-4 overflow-x-auto rounded-2xl border border-slate-200">
             <table class="w-full text-sm">
                 <thead class="border-b border-slate-100 bg-slate-50 text-left text-xs uppercase text-slate-500">
                     <tr><th class="px-4 py-2.5 font-medium">Code</th><th class="px-3 font-medium">Description</th><th class="px-4 text-right font-medium">GST</th></tr>
