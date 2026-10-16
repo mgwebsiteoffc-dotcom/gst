@@ -31,6 +31,8 @@
     <meta name="twitter:image" content="{{ $seo->get('image') }}">
 
     <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/brand/favicon-32.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('images/brand/apple-touch-icon.png') }}">
     <link rel="alternate" type="application/rss+xml" title="{{ config('app.name') }} Blog" href="{{ route('blog.index') }}">
 
     {{-- ── AEO: structured data for answer engines ─────────── --}}
@@ -49,15 +51,14 @@
 <header x-data="{ open: false }" class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
     {{-- Thin announcement strip (Vyapar-style promo bar). --}}
     <div class="bg-slate-900 px-4 py-1.5 text-center text-xs text-slate-200">
-        <span class="font-medium text-white">{{ __('Limited launch offer:') }}</span>
+        <span class="font-semibold text-accent-500">{{ __('Limited launch offer:') }}</span>
         {{ __('flat 50% off on yearly plans —') }}
         <a href="{{ route('pricing') }}" class="font-semibold text-indigo-300 underline hover:text-indigo-200">{{ __('see pricing') }}</a>
     </div>
 
     <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 lg:px-6" aria-label="Main">
         <a href="{{ route('home') }}" class="flex shrink-0 items-center gap-2" aria-label="{{ config('app.name') }} home">
-            <span class="grid h-8 w-8 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">B</span>
-            <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
+            <x-brand :href="route('home')" />
         </a>
 
         {{-- Desktop navigation --}}
@@ -228,7 +229,7 @@
             {{-- Brand + socials --}}
             <div class="sm:col-span-3 lg:col-span-1">
                 <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <span class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
+                    <img src="{{ asset('images/brand/mark-256.png') }}" alt="{{ config('app.name') }}" width="72" height="72" class="h-9 w-9">
                     <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
                 </a>
 
@@ -246,7 +247,7 @@
                         ['Facebook', 'https://facebook.com/bikribook', 'M22 12a10 10 0 1 0-11.6 9.9v-7H7.9V12h2.5V9.8c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2v2.4h-1.2c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 2.9h-2.3v7A10 10 0 0 0 22 12Z'],
                     ] as [$name, $href, $path])
                         <a href="{{ $href }}" target="_blank" rel="noopener" aria-label="{{ config('app.name') }} on {{ $name }}"
-                           class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-indigo-300 hover:text-indigo-600">
+                           class="grid h-9 w-9 place-items-center rounded-lg border border-slate-200 bg-white text-slate-500 transition hover:border-accent-500 hover:text-accent-600">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><path d="{{ $path }}"/></svg>
                         </a>
                     @endforeach

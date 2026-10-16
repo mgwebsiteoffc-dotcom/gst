@@ -3,7 +3,7 @@
 
 @section('content')
 <form method="POST" action="{{ route('branding.update') }}" enctype="multipart/form-data"
-      x-data="{ accent: @js($tenant->branding['accent_color'] ?? '#4f46e5') }">
+      x-data="{ accent: @js($tenant->branding['accent_color'] ?? '#006FD1') }">
     @csrf
 
     <x-page title="Business Profile" subtitle="Your details, logo and defaults — these appear on every invoice.">

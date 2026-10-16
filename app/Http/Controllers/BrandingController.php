@@ -65,7 +65,7 @@ class BrandingController extends Controller
             }
         }
 
-        $branding['accent_color'] = $data['accent_color'] ?? '#4f46e5';
+        $branding['accent_color'] = $data['accent_color'] ?? '#006FD1';
 
         $tenant->update([
             'name' => $data['name'],

@@ -306,7 +306,7 @@
             @foreach ($plans->take(3) as $plan)
                 <div class="flex flex-col rounded-2xl border-2 border-slate-200 bg-white p-6 {{ $loop->index === 1 ? 'border-indigo-500 shadow-lg' : '' }}">
                     @if ($loop->index === 1)
-                        <span class="mb-3 inline-block w-fit rounded-full bg-indigo-600 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
+                        <span class="mb-3 inline-block w-fit rounded-full bg-accent-500 px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white">
                             {{ __('Most popular') }}
                         </span>
                     @endif
@@ -511,7 +511,10 @@
 <section class="relative overflow-hidden bg-slate-900 py-20">
     <div class="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-indigo-600/20 blur-3xl"></div>
     <div class="relative mx-auto max-w-3xl px-4 text-center lg:px-6">
-        <h2 class="text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ __('Stop writing bills by hand') }}</h2>
+        <img src="{{ asset('images/brand/logo-on-color.png') }}"
+             alt="{{ config('app.name') }}" width="240" height="67"
+             class="mx-auto h-11 w-auto" loading="lazy">
+        <h2 class="mt-6 text-3xl font-bold tracking-tight text-white sm:text-4xl">{{ __('Stop writing bills by hand') }}</h2>
         <p class="mt-4 text-lg text-slate-300">
             {{ __('Free for 14 days. No card, no training, no setup fee. Cancel any time.') }}
         </p>

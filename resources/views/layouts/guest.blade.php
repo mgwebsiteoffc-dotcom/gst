@@ -17,7 +17,7 @@
         <div class="mx-auto w-full max-w-md">
             <div class="mb-4 flex justify-end">@include('partials.locale-switcher')</div>
             <a href="{{ url('/') }}" class="mb-8 inline-flex items-center gap-2">
-                <span class="grid h-9 w-9 place-items-center rounded-xl bg-indigo-600 text-base font-bold text-white">B</span>
+                <img src="{{ asset('images/brand/mark-256.png') }}" alt="{{ config('app.name') }}" width="72" height="72" class="h-9 w-9">
                 <span class="text-lg font-semibold tracking-tight">{{ config('app.name') }}</span>
             </a>
 

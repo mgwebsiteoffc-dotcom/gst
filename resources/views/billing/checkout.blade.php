@@ -81,7 +81,7 @@
                 name: @js(config('app.name')),
                 description: @js($plan->name.' · '.$interval),
                 prefill: { email: @js(auth()->user()->email), contact: @js(auth()->user()->phone) },
-                theme: { color: '#4f46e5' },
+                theme: { color: '#006FD1' },
                 handler: function (response) {
                     var form = document.createElement('form');
                     form.method = 'POST';

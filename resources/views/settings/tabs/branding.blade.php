@@ -1,5 +1,5 @@
 <form method="POST" action="{{ route('branding.update') }}" enctype="multipart/form-data"
-      x-data="{ accent: @js($tenant->branding['accent_color'] ?? '#4f46e5') }">
+      x-data="{ accent: @js($tenant->branding['accent_color'] ?? '#006FD1') }">
     @csrf
     {{-- Preserve fields owned by other tabs. --}}
     <input type="hidden" name="name" value="{{ $tenant->name }}">

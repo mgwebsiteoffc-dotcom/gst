@@ -202,7 +202,7 @@
         toolbar: 'undo redo | blocks | bold italic underline strikethrough | alignleft aligncenter alignright | bullist numlist outdent indent | link image table media | blockquote hr charmap emoticons | removeformat code fullscreen preview',
         toolbar_mode: 'sliding',
         /* Brand the editor content to match the published blog. */
-        content_style: 'body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;font-size:16px;line-height:1.7;color:#1e293b;max-width:46rem;margin:16px auto;padding:0 16px} h2{font-size:1.5rem;font-weight:650;margin:2rem 0 .75rem} h3{font-size:1.2rem;font-weight:600;margin:1.5rem 0 .5rem} blockquote{border-left:3px solid #4f46e5;margin:1.25rem 0;padding:.25rem 0 .25rem 1rem;color:#475569} img{max-width:100%;height:auto;border-radius:.75rem} table{border-collapse:collapse;width:100%} td,th{border:1px solid #cbd5e1;padding:.5rem .75rem} a{color:#4f46e5}',
+        content_style: 'body{font-family:Inter,system-ui,-apple-system,Segoe UI,sans-serif;font-size:16px;line-height:1.7;color:#1e293b;max-width:46rem;margin:16px auto;padding:0 16px} h2{font-size:1.5rem;font-weight:650;margin:2rem 0 .75rem} h3{font-size:1.2rem;font-weight:600;margin:1.5rem 0 .5rem} blockquote{border-left:3px solid #006FD1;margin:1.25rem 0;padding:.25rem 0 .25rem 1rem;color:#475569} img{max-width:100%;height:auto;border-radius:.75rem} table{border-collapse:collapse;width:100%} td,th{border:1px solid #cbd5e1;padding:.5rem .75rem} a{color:#006FD1}',
         /* Uploads go to the existing blog media endpoint. */
         images_upload_handler: function (blobInfo) {
             return new Promise(function (resolve, reject) {

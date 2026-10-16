@@ -110,7 +110,7 @@
         <div class="flex h-14 items-center justify-between gap-2 px-5">
             <span class="flex min-w-0 flex-col">
                 <span class="flex items-center gap-2">
-                    <span class="grid h-7 w-7 place-items-center rounded-lg bg-indigo-600 text-sm font-bold text-white">B</span>
+                    <img src="{{ asset('images/brand/mark-256.png') }}" alt="{{ config('app.name') }}" width="56" height="56" class="h-7 w-7">
                     <span class="font-semibold tracking-tight">{{ config('app.name') }}</span>
                 </span>
                 @if ($tenant)
