@@ -185,3 +185,8 @@ Alpine.data('postEditor', (config = {}) => ({
     },
 }));
 
+
+/* Alpine must be started AFTER all Alpine.data() components are registered.
+   Without this call every menu, dropdown and accordion stays inert. */
+window.Alpine = Alpine;
+Alpine.start();

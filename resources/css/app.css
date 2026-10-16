@@ -2,8 +2,13 @@
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
 
-/* Tailwind 4 scans Blade templates for class names. */
+/* Tailwind 4 scans Blade templates for class names.
+   The framework's own views (pagination, error pages) live in vendor/ and are
+   NOT scanned by default — that is why pagination controls rendered unstyled.
+   We ship our own pagination view, and this line keeps any remaining framework
+   markup styled too. */
 @source "../views/**/*.blade.php";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 
 @theme {
     --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;

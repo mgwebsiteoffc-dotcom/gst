@@ -52,6 +52,8 @@
         'mobile' => '<rect x="7" y="2.5" width="10" height="19" rx="2.5"/><path d="M11 18.5h2"/>',
         'refresh' => '<path d="M20 11a8 8 0 1 0-2.5 6"/><path d="M20 5v6h-6"/>',
         'layers' => '<path d="m12 3 8 4.5-8 4.5-8-4.5L12 3Z"/><path d="m4 12 8 4.5 8-4.5"/>',
+        'arrow-right' => '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+        'star' => '<path d="m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8L3.5 9.7l5.9-.9z" fill="currentColor" stroke="none"/>',
         'clock' => '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
         'zap' => '<path d="M13 2 4.5 13.5H11L10 22l8.5-11.5H12L13 2Z"/>',
         'check-circle' => '<circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.5 2.5 5.5-6"/>',
